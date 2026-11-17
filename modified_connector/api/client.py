@@ -43,8 +43,12 @@ class ModifiedClient:
 	def _store_token(self, path: str, response: requests.Response) -> None:
 		if response.status_code != 200:
 			raise ModifiedAPIError(response.status_code, path, response.text)
-		data = response.json()
-		self._access_token = data["access_token"]
+		try:
+			data = response.json()
+			access_token = data["access_token"]
+		except (ValueError, KeyError, TypeError) as e:
+			raise ModifiedAPIError(response.status_code, path, "invalid token response") from e
+		self._access_token = access_token
 		self._refresh_token = data.get("refresh_token")
 		# `expires` is an absolute unix timestamp (verified against the live shop).
 		self._expires = int(data.get("expires") or 0)
@@ -87,7 +91,12 @@ class ModifiedClient:
 
 	def request(self, method: str, path: str, *, params: dict | None = None, json: dict | None = None):
 		"""Send an authenticated request. `path` is relative to /api/v1 (or an absolute URL)."""
-		url = path if path.startswith("http") else self.api_url + path
+		if path.startswith("http"):
+			if not path.startswith(self.api_url + "/"):
+				raise ModifiedAPIError(None, path, "refusing URL outside the shop API")
+			url = path
+		else:
+			url = self.api_url + path
 		self._ensure_token()
 		response = self._send(method, url, params, json)
 		if response.status_code == 401:
@@ -97,7 +106,10 @@ class ModifiedClient:
 			raise ModifiedAPIError(response.status_code, path, response.text)
 		if not response.text:
 			return None
-		return response.json()
+		try:
+			return response.json()
+		except ValueError as e:
+			raise ModifiedAPIError(response.status_code, path, "invalid JSON response") from e
 
 	# -- endpoints ----------------------------------------------------------
 
@@ -114,7 +126,9 @@ class ModifiedClient:
 				if e.status == 404 and next_url == path:
 					return
 				raise
-			yield from page.get("data", [])
+			if not isinstance(page, dict):
+				return
+			yield from page.get("data") or []
 			next_url = (page.get("paging") or {}).get("next")
 
 	def iter_orders(
@@ -150,6 +164,6 @@ class ModifiedClient:
 	def add_status(self, order_id: str, status_id: int, comment: str = "", notify: bool = False) -> None:
 		self.request(
 			"POST",
-			f"/orders/{order_id}/history",
+			f"/orders/{order_id}/status_history",
 			json={"orders_status_id": status_id, "comments": comment, "customer_notified": int(notify)},
 		)

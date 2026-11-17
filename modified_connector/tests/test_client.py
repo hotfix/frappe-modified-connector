@@ -175,4 +175,25 @@ class TestModifiedClient(UnitTestCase):
 		self.assertEqual(
 			req.call_args_list[1].kwargs["json"], {"carrier_id": 3, "parcel_id": "XYZ"}
 		)
-		self.assertEqual(req.call_args_list[2].args[:2], ("POST", API + "/orders/1000/history"))
+		self.assertEqual(req.call_args_list[2].args[:2], ("POST", API + "/orders/1000/status_history"))
+		self.assertEqual(
+			req.call_args_list[2].kwargs["json"],
+			{"orders_status_id": 4, "comments": "hi", "customer_notified": 1},
+		)
+
+	def test_foreign_next_url_is_rejected(self):
+		nxt = "https://evil.example/api/v1/orders?page=2"
+		page = resp(200, {"paging": {"next": nxt}, "data": [{"a": 1}]})
+		with patch("requests.Session.request") as req:
+			req.side_effect = [token(), page]
+			it = make_client().iter_orders(None)
+			self.assertEqual(next(it), {"a": 1})
+			with self.assertRaises(ModifiedAPIError):
+				next(it)
+		self.assertEqual(len(req.call_args_list), 2)
+
+	def test_missing_access_token_raises(self):
+		with patch("requests.Session.request") as req:
+			req.side_effect = [resp(200, {"nope": 1})]
+			with self.assertRaises(ModifiedAPIError):
+				make_client().me()
