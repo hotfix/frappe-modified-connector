@@ -1,4 +1,8 @@
+import json
+from pathlib import Path
+
 import frappe
+from frappe.model import no_value_fields, table_fields
 from frappe.utils import nowdate
 
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
@@ -6,6 +10,13 @@ from modified_connector.modified_connector.doctype.modified_shop.modified_shop i
 COMPANY = "MC Test GmbH"
 ABBR = "MCT"
 SUPPLIER = "MC Test Supplier"
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def load_raw(name: str) -> dict:
+	"""Raw shop API order from tests/fixtures/<name>.json."""
+	with open(FIXTURES / f"{name}.json", encoding="utf-8") as f:
+		return json.load(f)
 
 
 def _ensure(doctype: str, filters, values: dict | None = None) -> str:
@@ -122,6 +133,16 @@ def make_test_shop(**overrides) -> ModifiedShop:
 			}
 		).insert(ignore_permissions=True)
 
+	group = _ensure(
+		"Customer Group",
+		{"customer_group_name": "MC Test Customers"},
+		{"parent_customer_group": "All Customer Groups", "is_group": 0},
+	)
+	territory = _ensure(
+		"Territory",
+		{"territory_name": "MC Test Territory"},
+		{"parent_territory": "All Territories", "is_group": 0},
+	)
 	_ensure("Supplier", {"supplier_name": SUPPLIER}, {"supplier_group": "All Supplier Groups"})
 	_item("SKU-19", t19)
 	_item("SKU-7", t7)
@@ -131,7 +152,13 @@ def make_test_shop(**overrides) -> ModifiedShop:
 		delivered_by_supplier=1,
 		item_defaults=[{"company": COMPANY, "default_supplier": SUPPLIER}],
 	)
-	_item("SHIPPING", t19, stock=False)
+	# Shipping is split over several rates, so the shipping item must not pin one Item Tax Template
+	# (ERPNext would replace the row's template by the item's own one on validate).
+	_item("SHIPPING", stock=False)
+	if frappe.db.exists("Item Tax", {"parenttype": "Item", "parent": "SHIPPING"}):
+		shipping = frappe.get_doc("Item", "SHIPPING")
+		shipping.taxes = []
+		shipping.save(ignore_permissions=True)
 
 	cash = frappe.db.get_value("Account", {"company": COMPANY, "account_type": "Cash", "is_group": 0}, "name")
 	bank = frappe.db.get_value("Account", {"company": COMPANY, "account_type": "Bank", "is_group": 0}, "name")
@@ -148,8 +175,8 @@ def make_test_shop(**overrides) -> ModifiedShop:
 		"import_from": "2026-01-01 00:00:00",
 		"company": COMPANY,
 		"warehouse": f"Stores - {ABBR}",
-		"customer_group": "All Customer Groups",
-		"territory": "All Territories",
+		"customer_group": group,
+		"territory": territory,
 		"shipping_item": "SHIPPING",
 		"sales_taxes_template": f"MCT Inland - {ABBR}",
 		"tax_map": [
@@ -163,10 +190,19 @@ def make_test_shop(**overrides) -> ModifiedShop:
 	}
 	values.update(overrides)
 
-	if frappe.db.exists("Modified Shop", shop_name):
-		frappe.delete_doc("Modified Shop", shop_name, force=True, ignore_permissions=True)
-	doc = frappe.get_doc({"doctype": "Modified Shop", **values})
-	doc.insert(ignore_permissions=True)
+	# Reuse an existing shop (Customers/Invoices link to it) but reset every field to its default.
+	fresh = frappe.new_doc("Modified Shop")
+	fresh.update(values)
+	if not frappe.db.exists("Modified Shop", shop_name):
+		fresh.insert(ignore_permissions=True)
+		return fresh
+	doc = frappe.get_doc("Modified Shop", shop_name)
+	for df in doc.meta.fields:
+		if df.fieldtype in table_fields:
+			doc.set(df.fieldname, [row.as_dict(no_default_fields=True) for row in fresh.get(df.fieldname)])
+		elif df.fieldtype not in no_value_fields:
+			doc.set(df.fieldname, fresh.get(df.fieldname))
+	doc.save(ignore_permissions=True)
 	return doc
 
 
