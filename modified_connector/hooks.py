@@ -9,3 +9,7 @@ required_apps = ["frappe/erpnext"]
 
 after_install = "modified_connector.install.after_install"
 after_migrate = "modified_connector.install.after_install"
+
+scheduler_events = {"cron": {"*/5 * * * *": ["modified_connector.tasks.import_all_shops"]}}
+
+doc_events = {"Sales Invoice": {"on_submit": "modified_connector.sync.order_import.on_invoice_submit"}}
