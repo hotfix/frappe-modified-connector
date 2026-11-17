@@ -37,6 +37,13 @@ class TestModifiedShop(IntegrationTestCase):
 		self.assertEqual(self.shop.item_tax_template_for(Decimal("7.0")), "MCT 7 - MCT")
 		self.assertRaises(frappe.ValidationError, self.shop.item_tax_template_for, Decimal("5"))
 
+	def test_group_customer_group_and_territory_rejected(self):
+		self.shop.customer_group = "All Customer Groups"
+		self.assertRaises(frappe.ValidationError, self.shop.save)
+		self.shop.reload()
+		self.shop.territory = "All Territories"
+		self.assertRaises(frappe.ValidationError, self.shop.save)
+
 	def test_payment_for(self):
 		self.assertTrue(self.shop.payment_for("paypal").mark_paid)
 		self.assertFalse(self.shop.payment_for("moneyorder").mark_paid)

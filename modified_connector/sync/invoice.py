@@ -21,8 +21,20 @@ class UnknownItem(frappe.ValidationError):
 	pass
 
 
+class TaxTemplateMismatch(frappe.ValidationError):
+	pass
+
+
+EXPECTED_TEMPLATES_FLAG = "modified_tax_templates"
+
+
 def build_invoice(shop: ModifiedShop, order: ShopOrder):
-	"""Return an unsaved Sales Invoice whose grand total equals the shop order total."""
+	"""Return an unsaved Sales Invoice whose grand total equals the shop order total.
+
+	The intended Item Tax Template per row is kept in `invoice.flags.modified_tax_templates`
+	({row idx: template}); call `assert_tax_templates(invoice)` again after insert()/save(),
+	because ERPNext re-validates (and may silently replace) the templates in validate().
+	"""
 	customer, billing, shipping = ensure_customer(shop, order)
 
 	si = frappe.new_doc("Sales Invoice")
@@ -77,8 +89,10 @@ def build_invoice(shop: ModifiedShop, order: ShopOrder):
 	# ERPNext refuses update_stock on invoices with drop-shipped rows; those orders are delivered later.
 	si.update_stock = 0 if dropship else 1
 
+	si.flags[EXPECTED_TEMPLATES_FLAG] = {row.idx: row.item_tax_template for row in si.items}
 	si.set_missing_values()
 	si.calculate_taxes_and_totals()
+	assert_tax_templates(si)
 
 	grand_total = Decimal(str(si.grand_total)).quantize(TOLERANCE)
 	if abs(grand_total - order.total_gross) > TOLERANCE:
@@ -88,6 +102,28 @@ def build_invoice(shop: ModifiedShop, order: ShopOrder):
 			)
 		)
 	return si
+
+
+def assert_tax_templates(invoice, expected: dict[int, str] | None = None) -> None:
+	"""Raise TaxTemplateMismatch if a row's Item Tax Template differs from the intended one.
+
+	ERPNext (taxes_and_totals.validate_item_tax_template) replaces a row template that is not among
+	the templates of the item and its item groups. The grand total stays the same (gross prices),
+	only the VAT split would be wrong, so this has to be checked explicitly.
+	"""
+	if expected is None:
+		expected = invoice.flags.get(EXPECTED_TEMPLATES_FLAG) or {}
+	rows = {row.idx: row for row in invoice.items}
+	for idx, template in expected.items():
+		row = rows.get(idx)
+		actual = row.item_tax_template if row else None
+		if actual != template:
+			raise TaxTemplateMismatch(
+				_(
+					"Row {0} ({1}): Item Tax Template {2} expected but ERPNext set {3}. Add {2} to the "
+					"Item Tax Templates of the item."
+				).format(idx, row.item_code if row else "?", template, actual)
+			)
 
 
 def _append_item(si, shop: ModifiedShop, item_code: str, qty: Decimal, rate: Decimal, tax_rate: Decimal):
@@ -112,6 +148,12 @@ def _resolve_item(shop: ModifiedShop, line: OrderLine) -> str:
 			item_code = frappe.db.get_value("Item Barcode", {"barcode": value}, "parent")
 		else:
 			item_code = frappe.db.exists("Item", value)
+	if item_code and frappe.db.get_value("Item", item_code, "disabled"):
+		raise UnknownItem(
+			_("Item {0} for {1} {2} (shop product {3}) is disabled").format(
+				item_code, field, value, line.products_id
+			)
+		)
 	if not item_code:
 		raise UnknownItem(
 			_("No Item found for {0} {1} (shop product {2}, {3})").format(

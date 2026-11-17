@@ -45,35 +45,49 @@ def _company() -> str:
 	return COMPANY
 
 
-def _vat_account() -> str:
-	"""Output VAT account: first Tax account of the company, else a dedicated 'MCT VAT'."""
-	acc = frappe.db.get_value(
-		"Account", {"company": COMPANY, "account_type": "Tax", "is_group": 0}, "name", order_by="name"
+def _vat_accounts() -> tuple[str, str]:
+	"""Separate output VAT accounts for 19 % and 7 % (as in SKR03)."""
+	parent = frappe.db.get_value(
+		"Account", {"company": COMPANY, "account_name": "Duties and Taxes", "is_group": 1}, "name"
 	)
-	if acc:
-		return acc
-	parent = frappe.db.get_value("Account", {"company": COMPANY, "account_name": "Duties and Taxes"}, "name")
-	return _ensure(
-		"Account",
-		{"account_name": "MCT VAT", "company": COMPANY},
-		{"parent_account": parent, "account_type": "Tax", "is_group": 0},
+	return tuple(
+		_ensure(
+			"Account",
+			{"account_name": f"MCT VAT {rate}", "company": COMPANY},
+			{"parent_account": parent, "account_type": "Tax", "tax_rate": rate, "is_group": 0},
+		)
+		for rate in (19, 7)
 	)
 
 
-def _tax_template(title: str, rate: float, account: str) -> str:
-	name = f"{title} - {ABBR}"
-	if frappe.db.exists("Item Tax Template", name):
-		return name
-	doc = frappe.get_doc(
-		{
-			"doctype": "Item Tax Template",
-			"title": title,
-			"company": COMPANY,
-			"taxes": [{"tax_type": account, "tax_rate": rate}],
-		}
-	)
+def _upsert(doctype: str, name: str, values: dict, create: dict) -> str:
+	"""Insert, or bring an existing record (from older fixture versions) to `values`."""
+	if frappe.db.exists(doctype, name):
+		doc = frappe.get_doc(doctype, name)
+		doc.update(values)
+		doc.save(ignore_permissions=True)
+		return doc.name
+	doc = frappe.get_doc({"doctype": doctype, **create, **values})
 	doc.insert(ignore_permissions=True)
 	return doc.name
+
+
+def _tax_template(title: str, rates: dict[str, float]) -> str:
+	return _upsert(
+		"Item Tax Template",
+		f"{title} - {ABBR}",
+		{"taxes": [{"tax_type": acc, "tax_rate": rate} for acc, rate in rates.items()]},
+		{"title": title, "company": COMPANY},
+	)
+
+
+def _set_item_templates(code: str, templates: list[str]) -> None:
+	item = frappe.get_doc("Item", code)
+	if [t.item_tax_template for t in item.taxes] != templates:
+		item.taxes = []
+		for t in templates:
+			item.append("taxes", {"item_tax_template": t})
+		item.save(ignore_permissions=True)
 
 
 def _item(code: str, template: str | None = None, stock: bool = True, **extra) -> str:
@@ -112,26 +126,25 @@ def _mode_of_payment(name: str, account: str) -> str:
 def make_test_shop(**overrides) -> ModifiedShop:
 	"""Create (idempotently) a self-contained German test company, items and shop."""
 	_company()
-	vat = _vat_account()
-	t19 = _tax_template("MCT 19", 19.0, vat)
-	t7 = _tax_template("MCT 7", 7.0, vat)
-
-	if not frappe.db.exists("Sales Taxes and Charges Template", f"MCT Inland - {ABBR}"):
-		frappe.get_doc(
-			{
-				"doctype": "Sales Taxes and Charges Template",
-				"title": "MCT Inland",
-				"company": COMPANY,
-				"taxes": [
-					{
-						"charge_type": "On Net Total",
-						"account_head": vat,
-						"description": "MwSt",
-						"rate": 19.0,
-					}
-				],
-			}
-		).insert(ignore_permissions=True)
+	vat19, vat7 = _vat_accounts()
+	t19 = _tax_template("MCT 19", {vat19: 19.0, vat7: 0.0})
+	t7 = _tax_template("MCT 7", {vat19: 0.0, vat7: 7.0})
+	_upsert(
+		"Sales Taxes and Charges Template",
+		f"MCT Inland - {ABBR}",
+		{
+			"taxes": [
+				{
+					"charge_type": "On Net Total",
+					"account_head": vat19,
+					"description": "MwSt 19 %",
+					"rate": 19.0,
+				},
+				{"charge_type": "On Net Total", "account_head": vat7, "description": "MwSt 7 %", "rate": 7.0},
+			]
+		},
+		{"title": "MCT Inland", "company": COMPANY},
+	)
 
 	group = _ensure(
 		"Customer Group",
@@ -152,13 +165,10 @@ def make_test_shop(**overrides) -> ModifiedShop:
 		delivered_by_supplier=1,
 		item_defaults=[{"company": COMPANY, "default_supplier": SUPPLIER}],
 	)
-	# Shipping is split over several rates, so the shipping item must not pin one Item Tax Template
-	# (ERPNext would replace the row's template by the item's own one on validate).
+	# Shipping is split over several rates, so the shipping item must list the template of every rate:
+	# ERPNext replaces a row template that is not among the item's (and its item groups') templates.
 	_item("SHIPPING", stock=False)
-	if frappe.db.exists("Item Tax", {"parenttype": "Item", "parent": "SHIPPING"}):
-		shipping = frappe.get_doc("Item", "SHIPPING")
-		shipping.taxes = []
-		shipping.save(ignore_permissions=True)
+	_set_item_templates("SHIPPING", [t19, t7])
 
 	cash = frappe.db.get_value("Account", {"company": COMPANY, "account_type": "Cash", "is_group": 0}, "name")
 	bank = frappe.db.get_value("Account", {"company": COMPANY, "account_type": "Bank", "is_group": 0}, "name")

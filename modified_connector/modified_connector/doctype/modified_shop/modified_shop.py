@@ -15,6 +15,13 @@ class ModifiedShop(Document):
 		self._check_duplicates(
 			"payment_map", "payment_class", _("Payment Map"), lambda v: (v or "").strip().lower()
 		)
+		for doctype, fieldname in (("Customer Group", "customer_group"), ("Territory", "territory")):
+			if self.get(fieldname) and frappe.db.get_value(doctype, self.get(fieldname), "is_group"):
+				frappe.throw(
+					_("{0} {1} is a group. Please select a non-group {0}.").format(
+						_(doctype), self.get(fieldname)
+					)
+				)
 
 	@staticmethod
 	def _normalise_base_url(url: str | None) -> str:
