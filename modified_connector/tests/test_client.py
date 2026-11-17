@@ -172,9 +172,7 @@ class TestModifiedClient(UnitTestCase):
 			client.add_tracking("1000", 3, "XYZ")
 			client.add_status("1000", 4, "hi", True)
 		self.assertEqual(req.call_args_list[1].args[:2], ("POST", API + "/orders/1000/tracking"))
-		self.assertEqual(
-			req.call_args_list[1].kwargs["json"], {"carrier_id": 3, "parcel_id": "XYZ"}
-		)
+		self.assertEqual(req.call_args_list[1].kwargs["json"], {"carrier_id": 3, "parcel_id": "XYZ"})
 		self.assertEqual(req.call_args_list[2].args[:2], ("POST", API + "/orders/1000/status_history"))
 		self.assertEqual(
 			req.call_args_list[2].kwargs["json"],

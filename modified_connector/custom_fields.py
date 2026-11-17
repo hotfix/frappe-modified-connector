@@ -1,0 +1,58 @@
+CUSTOM_FIELDS = {
+	"Sales Invoice": [
+		{
+			"fieldname": "modified_shop",
+			"label": "Modified Shop",
+			"fieldtype": "Link",
+			"options": "Modified Shop",
+			"read_only": 1,
+			"insert_after": "naming_series",
+			"no_copy": 1,
+		},
+		{
+			"fieldname": "modified_order_id",
+			"label": "Modified Order ID",
+			"fieldtype": "Data",
+			"read_only": 1,
+			"in_standard_filter": 1,
+			"search_index": 1,
+			"insert_after": "modified_shop",
+			"no_copy": 1,
+		},
+		{
+			"fieldname": "modified_payment_class",
+			"label": "Modified Payment Class",
+			"fieldtype": "Data",
+			"read_only": 1,
+			"insert_after": "modified_order_id",
+			"no_copy": 1,
+		},
+		{
+			"fieldname": "modified_tracking_number",
+			"label": "Modified Tracking Number",
+			"fieldtype": "Data",
+			"insert_after": "modified_payment_class",
+			"no_copy": 1,
+		},
+	],
+	"Customer": [
+		{
+			"fieldname": "modified_shop",
+			"label": "Modified Shop",
+			"fieldtype": "Link",
+			"options": "Modified Shop",
+			"read_only": 1,
+			"insert_after": "customer_name",
+			"no_copy": 1,
+		},
+		{
+			"fieldname": "modified_customer_key",
+			"label": "Modified Customer Key",
+			"fieldtype": "Data",
+			"read_only": 1,
+			"search_index": 1,
+			"insert_after": "modified_shop",
+			"no_copy": 1,
+		},
+	],
+}

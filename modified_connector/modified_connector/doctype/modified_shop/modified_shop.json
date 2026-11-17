@@ -1,0 +1,251 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:shop_name",
+ "creation": "2026-11-17 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "shop_name",
+  "enabled",
+  "connection_section",
+  "base_url",
+  "api_username",
+  "api_password",
+  "import_from",
+  "last_import",
+  "erp_section",
+  "company",
+  "warehouse",
+  "erp_column",
+  "customer_group",
+  "territory",
+  "invoice_naming_series",
+  "matching_section",
+  "item_match_shop_field",
+  "item_match_erp_field",
+  "tax_section",
+  "shipping_item",
+  "sales_taxes_template",
+  "tax_map",
+  "payment_map",
+  "sync_section",
+  "import_status_ids",
+  "cancelled_status_id",
+  "shipped_status_id",
+  "dhl_carrier_id",
+  "submit_invoices",
+  "sync_stock"
+ ],
+ "fields": [
+  {
+   "fieldname": "shop_name",
+   "fieldtype": "Data",
+   "label": "Shop Name",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "connection_section",
+   "fieldtype": "Section Break",
+   "label": "Connection"
+  },
+  {
+   "fieldname": "base_url",
+   "fieldtype": "Data",
+   "label": "Base URL",
+   "reqd": 1,
+   "description": "Shop URL without /api/v1"
+  },
+  {
+   "fieldname": "api_username",
+   "fieldtype": "Data",
+   "label": "API Username",
+   "reqd": 1
+  },
+  {
+   "fieldname": "api_password",
+   "fieldtype": "Password",
+   "label": "API Password",
+   "reqd": 1
+  },
+  {
+   "fieldname": "import_from",
+   "fieldtype": "Datetime",
+   "label": "Import From",
+   "reqd": 1
+  },
+  {
+   "fieldname": "last_import",
+   "fieldtype": "Datetime",
+   "label": "Last Import",
+   "read_only": 1
+  },
+  {
+   "fieldname": "erp_section",
+   "fieldtype": "Section Break",
+   "label": "ERPNext Defaults"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "erp_column",
+   "fieldtype": "Column Break",
+   "label": "Erp Column"
+  },
+  {
+   "fieldname": "customer_group",
+   "fieldtype": "Link",
+   "label": "Customer Group",
+   "options": "Customer Group",
+   "reqd": 1
+  },
+  {
+   "fieldname": "territory",
+   "fieldtype": "Link",
+   "label": "Territory",
+   "options": "Territory",
+   "reqd": 1
+  },
+  {
+   "fieldname": "invoice_naming_series",
+   "fieldtype": "Data",
+   "label": "Invoice Naming Series"
+  },
+  {
+   "fieldname": "matching_section",
+   "fieldtype": "Section Break",
+   "label": "Item Matching"
+  },
+  {
+   "fieldname": "item_match_shop_field",
+   "fieldtype": "Select",
+   "label": "Item Match Shop Field",
+   "options": "products_model\nproducts_ean",
+   "default": "products_model"
+  },
+  {
+   "fieldname": "item_match_erp_field",
+   "fieldtype": "Select",
+   "label": "Item Match ERP Field",
+   "options": "Item Code\nBarcode",
+   "default": "Item Code"
+  },
+  {
+   "fieldname": "tax_section",
+   "fieldtype": "Section Break",
+   "label": "Taxes and Payments"
+  },
+  {
+   "fieldname": "shipping_item",
+   "fieldtype": "Link",
+   "label": "Shipping Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sales_taxes_template",
+   "fieldtype": "Link",
+   "label": "Sales Taxes Template",
+   "options": "Sales Taxes and Charges Template",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tax_map",
+   "fieldtype": "Table",
+   "label": "Tax Map",
+   "options": "Modified Shop Tax Map"
+  },
+  {
+   "fieldname": "payment_map",
+   "fieldtype": "Table",
+   "label": "Payment Map",
+   "options": "Modified Shop Payment Map"
+  },
+  {
+   "fieldname": "sync_section",
+   "fieldtype": "Section Break",
+   "label": "Sync Settings"
+  },
+  {
+   "fieldname": "import_status_ids",
+   "fieldtype": "Data",
+   "label": "Import Status IDs",
+   "default": "1,2"
+  },
+  {
+   "fieldname": "cancelled_status_id",
+   "fieldtype": "Int",
+   "label": "Cancelled Status ID",
+   "default": "4"
+  },
+  {
+   "fieldname": "shipped_status_id",
+   "fieldtype": "Int",
+   "label": "Shipped Status ID",
+   "default": "3"
+  },
+  {
+   "fieldname": "dhl_carrier_id",
+   "fieldtype": "Int",
+   "label": "DHL Carrier ID",
+   "default": "1"
+  },
+  {
+   "fieldname": "submit_invoices",
+   "fieldtype": "Check",
+   "label": "Submit Invoices",
+   "default": "0"
+  },
+  {
+   "fieldname": "sync_stock",
+   "fieldtype": "Check",
+   "label": "Sync Stock",
+   "default": "0"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-11-17 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Modified Connector",
+ "name": "Modified Shop",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
