@@ -1,5 +1,8 @@
 """Import shop orders as Sales Invoices; follow-up documents on invoice submit."""
 
+import hashlib
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 
 import frappe
@@ -7,7 +10,7 @@ from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_ent
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account, make_delivery_note
 from erpnext.accounts.utils import get_account_currency
 from frappe import _
-from frappe.utils import get_datetime
+from frappe.utils import cint, get_datetime
 
 from modified_connector.api.client import ModifiedAPIError
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
@@ -17,51 +20,53 @@ from modified_connector.utils import log
 
 OPERATION = "Import"
 IMPORTED, SKIPPED, ERROR = "imported", "skipped", "errors"
-OVERLAP = timedelta(days=1)
+DEFAULT_RETRY_WINDOW_DAYS = 14
+LOCK_TIMEOUT = 10  # seconds to wait for another process importing the same order
 # Expected failures of a single order; their message is shown as is. Anything else also only fails
 # that order, but is logged with its type and a traceback (Error Log).
 EXPECTED_ERRORS = (UnsupportedOrder, frappe.ValidationError)  # incl. TotalMismatch, UnknownItem, ...
 
 
 def import_order(shop: ModifiedShop, raw: dict) -> str | None:
-	"""Import one raw shop order. Return the Sales Invoice name, None if skipped or failed."""
-	return _import_order(shop, raw)[1]
+	"""Import one raw shop order. Return the Sales Invoice name, None if skipped or failed.
+
+	The per-order lock is released on return; the caller commits. `run_import` holds the lock until
+	after its commit, so a concurrent import of the same order always sees the committed invoice.
+	"""
+	with order_lock(shop.name, _raw_order_id(raw)) as locked:
+		return _import_order(shop, raw)[1] if locked else None
 
 
 def _import_order(shop: ModifiedShop, raw: dict) -> tuple[str, str | None]:
+	"""Import one order; the caller holds `order_lock` for it."""
 	order_id = _raw_order_id(raw)
+	status = _raw_status(raw)
 	existing = _existing_invoice(shop.name, order_id) if order_id else None
 	if existing:
-		if _raw_status(raw) == shop.cancelled_status_id:
+		if status == shop.cancelled_status_id:
 			_log_cancelled_after_import(shop, order_id, existing)
+		return SKIPPED, None
+	if _skip_raw(shop, raw, status):
 		return SKIPPED, None
 
 	save_point = f"modified_import_{frappe.generate_hash(length=10)}"
 	frappe.db.savepoint(save_point)
 	try:
-		order = parse_order(raw)
-		if (
-			order.status_id == shop.cancelled_status_id
-			or order.status_id not in shop.import_status_list()
-			or (shop.import_from and order.purchased_at < get_datetime(shop.import_from))
-		):
-			return SKIPPED, None
-
-		invoice = build_invoice(shop, order)
+		invoice = build_invoice(shop, parse_order(raw))
 		invoice.insert(ignore_permissions=True)
 		assert_tax_templates(invoice)
 		if shop.submit_invoices:
 			invoice.submit()
 			assert_tax_templates(invoice)
 	except Exception as exc:
-		frappe.db.rollback(save_point=save_point)
+		_rollback_order(save_point)
 		frappe.clear_messages()
 		if isinstance(exc, EXPECTED_ERRORS):
 			message = str(exc)
 		else:
 			message = f"{type(exc).__name__}: {exc}"
 			frappe.log_error(title=_("Modified order import failed: {0}").format(order_id))
-		log(shop.name, OPERATION, order_id, "Error", message)
+		_log_error_once(shop.name, order_id, message)
 		return ERROR, None
 
 	frappe.db.release_savepoint(save_point)
@@ -69,27 +74,52 @@ def _import_order(shop: ModifiedShop, raw: dict) -> tuple[str, str | None]:
 	return IMPORTED, invoice.name
 
 
+def _skip_raw(shop: ModifiedShop, raw: dict, status: int | None) -> bool:
+	"""Cancelled, not (yet) in an import status, or before import_from. Unreadable status or date
+	is not skipped here: parse_order reports it as an error."""
+	if status is not None and (status == shop.cancelled_status_id or status not in shop.import_status_list()):
+		return True
+	purchased = _raw_purchased(raw)
+	return bool(purchased and shop.import_from and purchased < get_datetime(shop.import_from))
+
+
+def _rollback_order(save_point: str) -> None:
+	try:
+		frappe.db.rollback(save_point=save_point)
+	except Exception:
+		# e.g. a deadlock already rolled back the whole transaction and with it the savepoint
+		frappe.db.rollback()
+
+
 def run_import(shop_name: str) -> dict:
-	"""Import all orders since the last run (with one day overlap); commit after every order."""
+	"""Import all orders of the retry window; commit after every order.
+
+	since = max(import_from, last_import - retry_window_days): orders that failed or were not yet in an
+	import status are fetched again on every run until they are older than the window.
+	"""
 	shop = frappe.get_doc("Modified Shop", shop_name)
 	since = get_datetime(shop.import_from) if shop.import_from else None
 	if shop.last_import:
-		overlap = get_datetime(shop.last_import) - OVERLAP
-		since = max(since, overlap) if since else overlap
+		days = cint(shop.retry_window_days) or DEFAULT_RETRY_WINDOW_DAYS
+		window_start = get_datetime(shop.last_import) - timedelta(days=days)
+		since = max(since, window_start) if since else window_start
 
 	counts = {IMPORTED: 0, SKIPPED: 0, ERROR: 0}
 	latest = get_datetime(shop.last_import) if shop.last_import else None
+	# End the transaction that read the shop, so the first order's checks read fresh data (REPEATABLE READ).
+	frappe.db.commit()
 	try:
 		for raw in shop.get_client().iter_orders(since):
-			result, _name = _import_order(shop, raw)
+			with order_lock(shop.name, _raw_order_id(raw)) as locked:
+				result = _import_order(shop, raw)[0] if locked else SKIPPED
+				frappe.db.commit()  # before the lock is released
 			counts[result] += 1
 			purchased = _raw_purchased(raw)
 			if purchased and (latest is None or purchased > latest):
 				latest = purchased
-			frappe.db.commit()
 	except ModifiedAPIError as exc:
 		# raised by the listing between orders: every processed order is already committed
-		log(shop.name, OPERATION, shop.name, "Error", _("Order import aborted: {0}").format(exc))
+		_log_error_once(shop.name, shop.name, _("Order import aborted: {0}").format(exc))
 		frappe.db.commit()
 		counts[ERROR] += 1
 		return counts
@@ -98,6 +128,35 @@ def run_import(shop_name: str) -> dict:
 		frappe.db.set_value("Modified Shop", shop.name, "last_import", latest)
 		frappe.db.commit()
 	return counts
+
+
+@contextmanager
+def order_lock(shop: str, order_id: str) -> Iterator[bool]:
+	"""MariaDB named lock per shop order (session level, survives commits). Yields False if another
+	process holds it for LOCK_TIMEOUT seconds; that order is then left to the next run."""
+	key = f"modified_import:{shop}:{order_id}"
+	if len(key) > 64:  # MariaDB lock name limit
+		key = "modified_import:" + hashlib.sha1(key.encode()).hexdigest()
+	locked = bool(frappe.db.sql("SELECT GET_LOCK(%s, %s)", (key, LOCK_TIMEOUT))[0][0])
+	try:
+		yield locked
+	finally:
+		if locked:
+			frappe.db.sql("SELECT RELEASE_LOCK(%s)", key)
+
+
+def _log_error_once(shop: str, reference: str, message: str) -> None:
+	"""Error log, unless the latest log for this reference is the same error (avoids a log per run)."""
+	last = frappe.get_all(
+		"Modified Sync Log",
+		filters={"shop": shop, "operation": OPERATION, "reference": reference},
+		fields=["status", "message"],
+		order_by="creation desc",
+		limit=1,
+	)
+	if last and last[0].status == "Error" and (last[0].message or "") == (message or ""):
+		return
+	log(shop, OPERATION, reference, "Error", message)
 
 
 def on_invoice_submit(doc, method=None):
@@ -174,12 +233,12 @@ def _raw_order_id(raw) -> str:
 def _raw_status(raw) -> int | None:
 	try:
 		return int(_raw_orders(raw).get("orders_status"))
-	except TypeError, ValueError:
+	except (TypeError, ValueError):  # fmt: skip
 		return None
 
 
 def _raw_purchased(raw) -> datetime | None:
 	try:
 		return datetime.strptime(_raw_orders(raw).get("date_purchased"), "%Y-%m-%d %H:%M:%S")
-	except TypeError, ValueError:
+	except (TypeError, ValueError):  # fmt: skip
 		return None

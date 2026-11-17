@@ -78,8 +78,11 @@ class FakeClient:
 		self.since = []
 
 	def iter_orders(self, since, with_="products,total,history,tracking"):
+		"""Like the shop: only orders purchased at or after `since`."""
 		self.since.append(since)
-		yield from self.orders
+		for raw in self.orders:
+			if since is None or datetime.strptime(raw["orders"]["date_purchased"], FMT) >= since:
+				yield raw
 		if self.error:
 			raise self.error
 
@@ -182,16 +185,7 @@ class TestOrderImport(IntegrationTestCase):
 		# the savepoint rollback also removes the customer created for the failed order
 		self.assertFalse(frappe.db.exists("Customer", {"modified_customer_key": customer_key}))
 
-		frappe.get_doc(
-			{
-				"doctype": "Item",
-				"item_code": sku,
-				"item_name": sku,
-				"item_group": "All Item Groups",
-				"stock_uom": "Nos",
-				"taxes": [{"item_tax_template": "MCT 19 - MCT"}],
-			}
-		).insert(ignore_permissions=True)
+		make_item(sku)
 		self.assertEqual(run_import(self.shop.name), {"imported": 1, "skipped": 0, "errors": 0})
 		self.assertEqual(len(invoices(self.shop.name, order_id)), 1)
 		self.assertTrue(frappe.db.exists("Customer", {"modified_customer_key": customer_key}))
@@ -216,7 +210,7 @@ class TestOrderImport(IntegrationTestCase):
 		self.assertIn("boom", logs(self.shop.name, bad["orders"]["orders_id"], "Error")[0].message)
 		self.assertIn("currency", logs(self.shop.name, broken["orders"]["orders_id"], "Error")[0].message)
 		self.assertEqual(len(invoices(self.shop.name, good["orders"]["orders_id"])), 1)
-		self.assertEqual(self.commit.call_count, 4)  # one per order + last_import
+		self.assertEqual(self.commit.call_count, 5)  # fresh snapshot + one per order + last_import
 
 	def test_unexpected_error_rolls_back_order(self):
 		raw = raw_order()
@@ -239,10 +233,10 @@ class TestOrderImport(IntegrationTestCase):
 		self.assertEqual(client.since, [datetime(2026, 10, 1)])
 		self.assertEqual(get_datetime(self.reload().last_import), datetime(2026, 10, 30, 13, 7, 5))
 
-		# second run: overlap of one day; an older order does not move last_import back
+		# second run: retry window of 14 days; an older order does not move last_import back
 		client.orders = [raw_order(purchased="2026-10-29 20:00:00")]
 		run_import(self.shop.name)
-		self.assertEqual(client.since[-1], datetime(2026, 10, 29, 13, 7, 5))
+		self.assertEqual(client.since[-1], datetime(2026, 10, 16, 13, 7, 5))
 		self.assertEqual(get_datetime(self.reload().last_import), datetime(2026, 10, 30, 13, 7, 5))
 
 		# never before import_from
@@ -251,6 +245,123 @@ class TestOrderImport(IntegrationTestCase):
 		run_import(self.shop.name)
 		self.assertEqual(client.since[-1], datetime(2026, 10, 1))
 		self.assertEqual(get_datetime(self.reload().last_import), datetime(2026, 10, 1, 12))
+
+	def test_retry_window(self):
+		"""An order failing 3 days before last_import is retried; one older than the window is not fetched."""
+		self.shop = make_test_shop(import_from="2026-09-01 00:00:00", retry_window_days=7)
+		frappe.db.set_value("Modified Shop", self.shop.name, "last_import", "2026-10-30 12:00:00")
+		sku = f"SKU-NEW-{new_id()}"
+		recent = raw_order(skus=(sku, "SKU-7"), purchased="2026-10-27 12:00:00")
+		old = raw_order(skus=(sku, "SKU-7"), purchased="2026-10-22 12:00:00")
+		client = self.use_client(FakeClient([old, recent]))
+
+		self.assertEqual(run_import(self.shop.name), {"imported": 0, "skipped": 0, "errors": 1})
+		self.assertEqual(client.since, [datetime(2026, 10, 23, 12)])
+		make_item(sku)
+		self.assertEqual(run_import(self.shop.name), {"imported": 1, "skipped": 0, "errors": 0})
+		self.assertEqual(len(invoices(self.shop.name, recent["orders"]["orders_id"])), 1)
+		self.assertEqual(invoices(self.shop.name, old["orders"]["orders_id"]), [])
+		self.assertEqual(get_datetime(self.reload().last_import), datetime(2026, 10, 30, 12))
+
+	def test_skips_are_decided_on_the_raw_order(self):
+		"""Cancelled, status-filtered and too old orders are skipped before parsing, without savepoint."""
+		self.shop = make_test_shop(import_from="2026-10-01 00:00:00")
+		skipped = [
+			raw_order(status=self.shop.cancelled_status_id),
+			raw_order(status="3"),
+			raw_order(purchased="2026-09-30 23:59:59"),
+		]
+		for raw in skipped:
+			del raw["orders"]["currency"]  # would be an UnsupportedOrder error if parsed
+		with (
+			patch.object(order_import, "parse_order") as parse,
+			patch.object(frappe.db, "savepoint") as savepoint,
+		):
+			for raw in skipped:
+				self.assertIsNone(import_order(self.shop, raw))
+		parse.assert_not_called()
+		savepoint.assert_not_called()
+		for raw in skipped:
+			self.assertEqual(logs(self.shop.name, raw["orders"]["orders_id"]), [])
+
+	def test_repeated_error_is_logged_once(self):
+		raw = raw_order(skus=("SKU-DOES-NOT-EXIST", "SKU-7"))
+		order_id = raw["orders"]["orders_id"]
+		self.use_client(FakeClient([raw]))
+		for _run in range(3):
+			run_import(self.shop.name)
+		self.assertEqual(len(logs(self.shop.name, order_id, "Error")), 1)
+
+		# a different error is logged, and then the first error again
+		raw["orders_products"][0]["products_model"] = "SKU-ALSO-MISSING"
+		run_import(self.shop.name)
+		raw["orders_products"][0]["products_model"] = "SKU-DOES-NOT-EXIST"
+		run_import(self.shop.name)
+		self.assertEqual(len(logs(self.shop.name, order_id, "Error")), 3)
+
+	def test_order_lock(self):
+		raw = raw_order()
+		order_id = raw["orders"]["orders_id"]
+		key = f"modified_import:{self.shop.name}:{order_id}"
+		real_build = order_import.build_invoice
+
+		def build(shop, order):  # the lock is held while the order is imported
+			self.assertTrue(frappe.db.sql("SELECT IS_USED_LOCK(%s)", key)[0][0])
+			return real_build(shop, order)
+
+		with patch.object(order_import, "build_invoice", side_effect=build):
+			name = import_order(self.shop, raw)
+		self.assertTrue(name)
+		self.assertIsNone(frappe.db.sql("SELECT IS_USED_LOCK(%s)", key)[0][0])  # released
+
+		# another session holds the lock of a second (new) order: no import, no duplicate, no log
+		second = raw_order()
+		second_key = f"modified_import:{self.shop.name}:{second['orders']['orders_id']}"
+		other = second_connection()
+		try:
+			self.assertEqual(other.sql("SELECT GET_LOCK(%s, 0)", second_key)[0][0], 1)
+			with patch.object(order_import, "LOCK_TIMEOUT", 0):
+				self.assertIsNone(import_order(self.shop, second))
+				self.use_client(FakeClient([raw, second]))
+				self.assertEqual(run_import(self.shop.name), {"imported": 0, "skipped": 2, "errors": 0})
+		finally:
+			other.sql("SELECT RELEASE_LOCK(%s)", second_key)
+			other.close()
+		self.assertEqual(invoices(self.shop.name, second["orders"]["orders_id"]), [])
+		self.assertEqual(logs(self.shop.name, second["orders"]["orders_id"]), [])
+		# once the lock is free only the second order is new; the first is not imported twice
+		self.assertEqual(run_import(self.shop.name), {"imported": 1, "skipped": 1, "errors": 0})
+		self.assertEqual(invoices(self.shop.name, order_id), [name])
+
+	def test_failed_savepoint_rollback_falls_back_to_full_rollback(self):
+		raw = raw_order(skus=("SKU-DOES-NOT-EXIST", "SKU-7"))
+		good = raw_order()
+		self.use_client(FakeClient([raw, good]))
+		full = []
+
+		def rollback(save_point=None, chain=False):
+			if save_point:
+				raise frappe.db.InternalError("SAVEPOINT does not exist")
+			full.append(True)  # recorded only: a real rollback would discard the test data
+
+		with patch.object(frappe.db, "rollback", side_effect=rollback):
+			self.assertEqual(run_import(self.shop.name), {"imported": 1, "skipped": 0, "errors": 1})
+		self.assertEqual(full, [True])
+		self.assertEqual(len(logs(self.shop.name, raw["orders"]["orders_id"], "Error")), 1)
+
+	def test_payment_entry_failure_rolls_back_order(self):
+		self.shop = make_test_shop(submit_invoices=1)
+		stock_in("SKU-19", 10)
+		stock_in("SKU-7", 10)
+		raw = raw_order(purchased=soon())
+		order_id = raw["orders"]["orders_id"]
+		customer_key = "C" + raw["orders"]["customers_id"]
+		with patch.object(order_import, "get_payment_entry", side_effect=frappe.ValidationError("no bank")):
+			self.assertIsNone(import_order(self.shop, raw))
+		self.assertEqual(invoices(self.shop.name, order_id), [])
+		self.assertFalse(frappe.db.exists("Customer", {"modified_customer_key": customer_key}))
+		self.assertFalse(frappe.db.exists("Payment Entry", {"reference_no": order_id}))
+		self.assertIn("no bank", logs(self.shop.name, order_id, "Error")[0].message)
 
 	def test_api_error_keeps_last_import(self):
 		frappe.db.set_value("Modified Shop", self.shop.name, "last_import", "2026-10-15 10:00:00")
@@ -334,6 +445,35 @@ class TestOrderImport(IntegrationTestCase):
 			"modified_connector.sync.order_import.on_invoice_submit",
 			hooks["doc_events"]["Sales Invoice"]["on_submit"],
 		)
+
+
+def make_item(code: str) -> None:
+	frappe.get_doc(
+		{
+			"doctype": "Item",
+			"item_code": code,
+			"item_name": code,
+			"item_group": "All Item Groups",
+			"stock_uom": "Nos",
+			"taxes": [{"item_tax_template": "MCT 19 - MCT"}],
+		}
+	).insert(ignore_permissions=True)
+
+
+def second_connection():
+	"""An independent DB session (named locks belong to a session)."""
+	from frappe.database import get_db
+
+	conf = frappe.conf
+	db = get_db(
+		host=conf.db_host,
+		port=conf.db_port,
+		user=conf.db_user or conf.db_name,
+		password=conf.db_password,
+		cur_db_name=conf.db_name,
+	)
+	db.connect()
+	return db
 
 
 def payment_entries(invoice: str) -> list[str]:

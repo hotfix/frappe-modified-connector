@@ -3,6 +3,7 @@ from decimal import Decimal
 import frappe
 from frappe import _
 from frappe.model.document import Document
+from frappe.utils import cint
 
 from modified_connector.api.client import ModifiedClient
 
@@ -11,6 +12,8 @@ class ModifiedShop(Document):
 	def validate(self):
 		self.base_url = self._normalise_base_url(self.base_url)
 		self.import_status_list()
+		if cint(self.retry_window_days) < 1:
+			frappe.throw(_("Retry Window (Days) must be at least 1."))
 		self._check_duplicates("tax_map", "tax_rate", _("Tax Map"), lambda v: Decimal(str(v)).normalize())
 		self._check_duplicates(
 			"payment_map", "payment_class", _("Payment Map"), lambda v: (v or "").strip().lower()

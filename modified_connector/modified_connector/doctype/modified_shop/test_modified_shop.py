@@ -22,6 +22,16 @@ class TestModifiedShop(IntegrationTestCase):
 	def setUp(self):
 		self.shop = make_test_shop()
 
+	def test_retry_window_days(self):
+		self.assertEqual(self.shop.retry_window_days, 14)
+		for days in (0, -1, None, 1):
+			shop = frappe.get_doc("Modified Shop", self.shop.name)
+			shop.retry_window_days = days
+			if days == 1:
+				shop.save()
+			else:
+				self.assertRaises(frappe.ValidationError, shop.save)
+
 	def test_duplicate_tax_rate_rejected(self):
 		self.shop.append("tax_map", {"tax_rate": 19.0, "item_tax_template": "MCT 19 - MCT"})
 		self.assertRaises(frappe.ValidationError, self.shop.save)
