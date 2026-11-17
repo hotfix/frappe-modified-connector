@@ -97,3 +97,31 @@ class TestMapping(UnitTestCase):
 		parts = split_by_rate(D("0.01"), [line("1", "10", "19"), line("1", "10", "7")])
 		self.assertEqual(sum(parts.values()), D("0.01"))
 		self.assertEqual(split_by_rate(D("1"), []), {})
+
+	def test_unit_price_from_line_total(self):
+		raw = load("order_basic")
+		self.assertEqual(raw["orders_products"][0]["final_price"], "20.0000")
+		self.assertEqual(parse_order(raw).lines[0].unit_price_gross, D("10.0000"))
+		raw["orders_products"][0]["products_quantity"] = "0"
+		with self.assertRaises(UnsupportedOrder):
+			parse_order(raw)
+
+	def test_guest_without_email(self):
+		raw = load("order_guest")
+		raw["orders"]["customers_email_address"] = "  "
+		with self.assertRaises(UnsupportedOrder) as cm:
+			parse_order(raw)
+		self.assertIn("without email", str(cm.exception))
+
+	def test_null_name_parts(self):
+		raw = load("order_basic")
+		raw["orders"]["billing_name"] = None
+		raw["orders"]["billing_firstname"] = None
+		self.assertEqual(parse_order(raw).billing.name, "Musterfrau")
+
+	def test_malformed_order(self):
+		raw = load("order_basic")
+		raw["orders"]["date_purchased"] = "gestern"
+		with self.assertRaises(UnsupportedOrder) as cm:
+			parse_order(raw)
+		self.assertIn("malformed order", str(cm.exception))

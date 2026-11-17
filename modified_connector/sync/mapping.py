@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 CENT = Decimal("0.01")
 PRICE = Decimal("0.0001")
@@ -62,7 +62,7 @@ def _dec(value, quantum=CENT) -> Decimal:
 def _address(o: dict, prefix: str) -> ShopAddress:
 	name = (
 		o.get(f"{prefix}_name")
-		or f"{o.get(f'{prefix}_firstname', '')} {o.get(f'{prefix}_lastname', '')}".strip()
+		or f"{o.get(f'{prefix}_firstname') or ''} {o.get(f'{prefix}_lastname') or ''}".strip()
 	)
 	return ShopAddress(
 		name=name,
@@ -76,6 +76,13 @@ def _address(o: dict, prefix: str) -> ShopAddress:
 
 
 def parse_order(raw: dict) -> ShopOrder:
+	try:
+		return _parse_order(raw)
+	except (ValueError, KeyError, TypeError, InvalidOperation) as exc:
+		raise UnsupportedOrder(f"malformed order: {exc!r}") from exc
+
+
+def _parse_order(raw: dict) -> ShopOrder:
 	o = raw["orders"]
 	if o.get("currency") != "EUR":
 		raise UnsupportedOrder(f"unsupported currency {o.get('currency')}")
@@ -86,14 +93,19 @@ def parse_order(raw: dict) -> ShopOrder:
 			raise UnsupportedOrder("unsupported allow_tax (net prices)")
 		if p.get("attributes"):
 			raise UnsupportedOrder(f"unsupported attributes on product {p.get('products_id')}")
+		qty = Decimal(str(p["products_quantity"]))
+		if qty <= 0:
+			raise UnsupportedOrder(f"invalid quantity on product {p.get('products_id')}")
 		lines.append(
 			OrderLine(
 				products_id=str(p["products_id"]),
 				model=p.get("products_model") or "",
 				ean=p.get("products_ean") or "",
 				name=p.get("products_name") or "",
-				qty=Decimal(str(p["products_quantity"])),
-				unit_price_gross=_dec(p["final_price"], PRICE),
+				qty=qty,
+				unit_price_gross=(_dec(p["final_price"], PRICE) / qty).quantize(
+					PRICE, ROUND_HALF_UP
+				),  # line total
 				tax_rate=_dec(p["products_tax"]),
 			)
 		)
@@ -116,10 +128,12 @@ def parse_order(raw: dict) -> ShopOrder:
 	if total is None:
 		raise UnsupportedOrder("ot_total missing")
 
-	email = o.get("customers_email_address") or ""
+	email = (o.get("customers_email_address") or "").strip()
 	if o.get("account_type") == "0":
 		customer_key = "C" + str(o["customers_id"])
 	else:
+		if not email:
+			raise UnsupportedOrder("guest order without email")
 		customer_key = "G" + email.lower()
 
 	return ShopOrder(
