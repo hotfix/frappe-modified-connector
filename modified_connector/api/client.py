@@ -146,8 +146,9 @@ class ModifiedClient:
 			params["from"] = int(since.timestamp())
 		yield from self._iter_pages("/orders", params)
 
-	def get_order(self, order_id: str) -> dict:
-		return self.request("GET", f"/orders/{order_id}")
+	def get_order(self, order_id: str, with_: str = "products,total,history,tracking") -> dict:
+		"""One order in the shape `iter_orders` yields (the plain endpoint omits products and totals)."""
+		return self.request("GET", f"/orders/{order_id}", params={"with": with_})
 
 	def iter_products(self) -> Iterator[dict]:
 		for item in self._iter_pages("/products", None):

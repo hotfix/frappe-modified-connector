@@ -1,0 +1,502 @@
+# Translations template for Modified Connector.
+# Copyright (C) 2026 hotfix
+# This file is distributed under the same license as the Modified Connector project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Modified Connector VERSION\n"
+"Report-Msgid-Bugs-To: info@hotfix.example\n"
+"POT-Creation-Date: 2026-11-18 06:50+0000\n"
+"PO-Revision-Date: 2026-11-18 06:50+0000\n"
+"Last-Translator: info@hotfix.example\n"
+"Language-Team: info@hotfix.example\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#. Label of the api_password (Password) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:77
+msgid "API Password"
+msgstr ""
+
+#. Label of the api_username (Data) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:71
+msgid "API Username"
+msgstr ""
+
+#. Option for the 'Item Match ERP Field' (Select) field in DocType 'Modified
+#. Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:161
+msgid "Barcode"
+msgstr ""
+
+#. Label of the base_url (Data) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:64
+msgid "Base URL"
+msgstr ""
+
+#. Label of the cancelled_status_id (Int) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:209
+msgid "Cancelled Status ID"
+msgstr ""
+
+#: modified_connector/sync/shipping.py:44
+#, python-brace-format
+msgid "Carrier {0} is not supported."
+msgstr ""
+
+#. Label of the company (Link) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:108
+msgid "Company"
+msgstr ""
+
+#. Label of the connection_section (Section Break) field in DocType 'Modified
+#. Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:59
+msgid "Connection"
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.js:11
+msgid "Connection OK"
+msgstr ""
+
+#. Label of the customer_group (Link) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:127
+msgid "Customer Group"
+msgstr ""
+
+#. Label of the dhl_carrier_id (Int) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:221
+msgid "DHL Carrier ID"
+msgstr ""
+
+#. Label of the erp_section (Section Break) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:103
+msgid "ERPNext Defaults"
+msgstr ""
+
+#. Description of the 'Retry Window (Days)' (Int) field in DocType 'Modified
+#. Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:98
+msgid "Each import fetches the orders of this many days before the last import again, so orders that failed or were not yet in an import status are retried."
+msgstr ""
+
+#. Label of the enabled (Check) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:53
+msgid "Enabled"
+msgstr ""
+
+#. Label of the erp_column (Column Break) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:122
+msgid "Erp Column"
+msgstr ""
+
+#. Option for the 'Status' (Select) field in DocType 'Modified Sync Log'
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:44
+msgid "Error"
+msgstr ""
+
+#: modified_connector/sync/stock.py:125
+#, python-brace-format
+msgid "Full stock sync aborted: {0}"
+msgstr ""
+
+#. Option for the 'Operation' (Select) field in DocType 'Modified Sync Log'
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:29
+msgid "Import"
+msgstr ""
+
+#. Label of the import_from (Datetime) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:83
+msgid "Import From"
+msgstr ""
+
+#. Label of the import_status_ids (Data) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:203
+msgid "Import Status IDs"
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:51
+msgid "Import Status IDs must be a comma separated list of integers."
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.js:12
+#, python-brace-format
+msgid "Imported as {0}"
+msgstr ""
+
+#. Label of the invoice_naming_series (Data) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:143
+msgid "Invoice Naming Series"
+msgstr ""
+
+#. Option for the 'Item Match ERP Field' (Select) field in DocType 'Modified
+#. Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:161
+msgid "Item Code"
+msgstr ""
+
+#. Label of the item_match_erp_field (Select) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:160
+msgid "Item Match ERP Field"
+msgstr ""
+
+#. Label of the item_match_shop_field (Select) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:153
+msgid "Item Match Shop Field"
+msgstr ""
+
+#. Label of the matching_section (Section Break) field in DocType 'Modified
+#. Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:148
+msgid "Item Matching"
+msgstr ""
+
+#. Label of the item_tax_template (Link) field in DocType 'Modified Shop Tax
+#. Map'
+#: modified_connector/modified_connector/doctype/modified_shop_tax_map/modified_shop_tax_map.json:22
+msgid "Item Tax Template"
+msgstr ""
+
+#: modified_connector/sync/stock.py:84
+msgid "Item has no value to match the shop product"
+msgstr ""
+
+#: modified_connector/sync/stock.py:93
+msgid "Item is not in the shop"
+msgstr ""
+
+#: modified_connector/sync/invoice.py:153
+#, python-brace-format
+msgid "Item {0} for {1} {2} (shop product {3}) is disabled"
+msgstr ""
+
+#. Label of the last_import (Datetime) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:89
+msgid "Last Import"
+msgstr ""
+
+#. Label of the message (Long Text) field in DocType 'Modified Sync Log'
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:51
+msgid "Message"
+msgstr ""
+
+#. Label of the mode_of_payment (Link) field in DocType 'Modified Shop Payment
+#. Map'
+#: modified_connector/modified_connector/doctype/modified_shop_payment_map/modified_shop_payment_map.json:23
+msgid "Mode of Payment"
+msgstr ""
+
+#: modified_connector/public/js/sales_invoice.js:24
+msgid "Modified"
+msgstr ""
+
+#. Name of a DocType
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:242
+msgid "Modified Shop"
+msgstr ""
+
+#. Name of a DocType
+#: modified_connector/modified_connector/doctype/modified_shop_payment_map/modified_shop_payment_map.json:42
+msgid "Modified Shop Payment Map"
+msgstr ""
+
+#. Name of a DocType
+#: modified_connector/modified_connector/doctype/modified_shop_tax_map/modified_shop_tax_map.json:34
+msgid "Modified Shop Tax Map"
+msgstr ""
+
+#. Name of a DocType
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:72
+msgid "Modified Sync Log"
+msgstr ""
+
+#: modified_connector/sync/order_import.py:69
+#, python-brace-format
+msgid "Modified order import failed: {0}"
+msgstr ""
+
+#: modified_connector/sync/stock.py:76 modified_connector/sync/stock.py:137
+#, python-brace-format
+msgid "Modified stock push failed: {0}"
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:58
+#, python-brace-format, python-format
+msgid "No Item Tax Template mapped for tax rate {0} % in shop {1}"
+msgstr ""
+
+#: modified_connector/sync/invoice.py:159
+#, python-brace-format
+msgid "No Item found for {0} {1} (shop product {2}, {3})"
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.js:14
+msgid "Not imported, see the log for the reason"
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:21
+msgid "Only failed order imports can be retried."
+msgstr ""
+
+#. Label of the operation (Select) field in DocType 'Modified Sync Log'
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:28
+msgid "Operation"
+msgstr ""
+
+#: modified_connector/sync/order_import.py:122
+#, python-brace-format
+msgid "Order import aborted: {0}"
+msgstr ""
+
+#: modified_connector/sync/order_import.py:208
+#, python-brace-format
+msgid "Order {0} was cancelled in shop after import; check invoice {1}"
+msgstr ""
+
+#: modified_connector/sync/invoice.py:100
+#, python-brace-format
+msgid "Order {0}: invoice grand total {1} does not match shop total {2}"
+msgstr ""
+
+#. Label of the mark_paid (Check) field in DocType 'Modified Shop Payment Map'
+#: modified_connector/modified_connector/doctype/modified_shop_payment_map/modified_shop_payment_map.json:31
+msgid "Paid at Checkout"
+msgstr ""
+
+#. Label of the payment_class (Data) field in DocType 'Modified Shop Payment
+#. Map'
+#: modified_connector/modified_connector/doctype/modified_shop_payment_map/modified_shop_payment_map.json:16
+msgid "Payment Class"
+msgstr ""
+
+#. Label of the payment_map (Table) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:192
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:19
+msgid "Payment Map"
+msgstr ""
+
+#. Description of the 'Paid at Checkout' (Check) field in DocType 'Modified
+#. Shop Payment Map'
+#: modified_connector/modified_connector/doctype/modified_shop_payment_map/modified_shop_payment_map.json:33
+msgid "Payment collected by the shop at checkout (e.g. PayPal). A Payment Entry dated on the order date is created when the invoice is submitted. Leave unchecked for methods paid later (e.g. prepayment by bank transfer)."
+msgstr ""
+
+#. Label of the reference (Data) field in DocType 'Modified Sync Log'
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:36
+msgid "Reference"
+msgstr ""
+
+#. Label of the ref_doctype (Link) field in DocType 'Modified Sync Log'
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:56
+msgid "Reference DocType"
+msgstr ""
+
+#. Label of the ref_name (Dynamic Link) field in DocType 'Modified Sync Log'
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:62
+msgid "Reference Name"
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.js:5
+msgid "Retry"
+msgstr ""
+
+#. Label of the retry_window_days (Int) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:95
+msgid "Retry Window (Days)"
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:16
+msgid "Retry Window (Days) must be at least 1."
+msgstr ""
+
+#: modified_connector/sync/invoice.py:123
+#, python-brace-format
+msgid "Row {0} ({1}): Item Tax Template {2} expected but ERPNext set {3}. Add {2} to the Item Tax Templates of the item."
+msgstr ""
+
+#. Label of the sales_taxes_template (Link) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:179
+msgid "Sales Taxes Template"
+msgstr ""
+
+#: modified_connector/public/js/sales_invoice.js:21
+msgid "Send"
+msgstr ""
+
+#: modified_connector/public/js/sales_invoice.js:5
+#: modified_connector/public/js/sales_invoice.js:20
+msgid "Send Tracking Number"
+msgstr ""
+
+#. Label of the shipped_status_id (Int) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:215
+msgid "Shipped Status ID"
+msgstr ""
+
+#. Label of the shipping_item (Link) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:172
+msgid "Shipping Item"
+msgstr ""
+
+#. Label of the shop (Link) field in DocType 'Modified Sync Log'
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:20
+msgid "Shop"
+msgstr ""
+
+#. Label of the shop_name (Data) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:45
+msgid "Shop Name"
+msgstr ""
+
+#. Description of the 'Base URL' (Data) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:66
+msgid "Shop URL without /api/v1"
+msgstr ""
+
+#. Option for the 'Status' (Select) field in DocType 'Modified Sync Log'
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:44
+msgid "Skipped"
+msgstr ""
+
+#. Label of the status (Select) field in DocType 'Modified Sync Log'
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:43
+msgid "Status"
+msgstr ""
+
+#. Option for the 'Operation' (Select) field in DocType 'Modified Sync Log'
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:29
+msgid "Stock"
+msgstr ""
+
+#. Label of the submit_invoices (Check) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:227
+msgid "Submit Invoices"
+msgstr ""
+
+#. Option for the 'Status' (Select) field in DocType 'Modified Sync Log'
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:44
+msgid "Success"
+msgstr ""
+
+#. Label of the sync_section (Section Break) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:198
+msgid "Sync Settings"
+msgstr ""
+
+#. Label of the sync_stock (Check) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:233
+msgid "Sync Stock"
+msgstr ""
+
+#. Name of a role
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:254
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:84
+msgid "System Manager"
+msgstr ""
+
+#. Label of the tax_map (Table) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:186
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:17
+msgid "Tax Map"
+msgstr ""
+
+#. Label of the tax_rate (Float) field in DocType 'Modified Shop Tax Map'
+#: modified_connector/modified_connector/doctype/modified_shop_tax_map/modified_shop_tax_map.json:15
+msgid "Tax Rate (%)"
+msgstr ""
+
+#. Label of the tax_section (Section Break) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:167
+msgid "Taxes and Payments"
+msgstr ""
+
+#. Label of the territory (Link) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:135
+msgid "Territory"
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.js:4
+msgid "Test Connection"
+msgstr ""
+
+#: modified_connector/sync/shipping.py:59
+#, python-brace-format
+msgid "The shop rejected the tracking number: {0}"
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:23
+#, python-brace-format
+msgid "This order is already imported as {0}."
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:32
+msgid "This order is being imported right now. Please try again in a moment."
+msgstr ""
+
+#. Option for the 'Operation' (Select) field in DocType 'Modified Sync Log'
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:29
+msgid "Tracking"
+msgstr ""
+
+#: modified_connector/public/js/sales_invoice.js:8
+msgid "Tracking Number"
+msgstr ""
+
+#: modified_connector/sync/shipping.py:38
+msgid "Tracking number is required."
+msgstr ""
+
+#: modified_connector/public/js/sales_invoice.js:15
+msgid "Tracking number sent"
+msgstr ""
+
+#: modified_connector/sync/customer.py:115
+#, python-brace-format
+msgid "Unknown country code {0}"
+msgstr ""
+
+#. Label of the warehouse (Link) field in DocType 'Modified Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:115
+msgid "Warehouse"
+msgstr ""
+
+#. Option for the 'Item Match Shop Field' (Select) field in DocType 'Modified
+#. Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:154
+msgid "products_ean"
+msgstr ""
+
+#. Option for the 'Item Match Shop Field' (Select) field in DocType 'Modified
+#. Shop'
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:154
+msgid "products_model"
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:51
+#, python-brace-format
+msgid "retried → {0}"
+msgstr ""
+
+#: modified_connector/sync/invoice.py:83
+#, python-brace-format
+msgid "{0} ({1} % VAT)"
+msgstr ""
+
+#: modified_connector/sync/shipping.py:40
+#, python-brace-format
+msgid "{0} is not a submitted invoice of a shop order."
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:24
+#, python-brace-format
+msgid "{0} {1} is a group. Please select a non-group {0}."
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:41
+#, python-brace-format
+msgid "{0}: duplicate entry for {1}"
+msgstr ""
+

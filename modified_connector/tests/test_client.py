@@ -119,6 +119,14 @@ class TestModifiedClient(UnitTestCase):
 			with self.assertRaises(ModifiedAPIError):
 				make_client().get_tracking("1000")
 
+	def test_get_order_requests_products_and_totals(self):
+		with patch("requests.Session.request") as req:
+			req.side_effect = [token(), resp(200, {"orders": {"orders_id": "7"}})]
+			self.assertEqual(make_client().get_order("7"), {"orders": {"orders_id": "7"}})
+		call = req.call_args_list[1]
+		self.assertEqual(call.args[:2], ("GET", API + "/orders/7"))
+		self.assertEqual(call.kwargs["params"], {"with": "products,total,history,tracking"})
+
 	def test_iter_orders_follows_next(self):
 		page1 = resp(
 			200,
