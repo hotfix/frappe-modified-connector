@@ -26,8 +26,13 @@ def log(
 	return doc.name
 
 
-def log_error_once(shop: str, operation: str, reference: str, message: str) -> None:
-	"""Error log, unless the latest log for this reference is the same error (avoids a log per run)."""
+def log_error_once(shop: str, operation: str, reference: str, message: str) -> bool:
+	return log_once(shop, operation, reference, "Error", message)
+
+
+def log_once(shop: str, operation: str, reference: str, status: str, message: str) -> bool:
+	"""Log, unless the latest log for this reference has the same status and message (avoids a log per
+	run). Return True if a log was written."""
 	last = frappe.get_all(
 		"Modified Sync Log",
 		filters={"shop": shop, "operation": operation, "reference": reference},
@@ -35,6 +40,7 @@ def log_error_once(shop: str, operation: str, reference: str, message: str) -> N
 		order_by="creation desc",
 		limit=1,
 	)
-	if last and last[0].status == "Error" and (last[0].message or "") == (message or ""):
-		return
-	log(shop, operation, reference, "Error", message)
+	if last and last[0].status == status and (last[0].message or "") == (message or ""):
+		return False
+	log(shop, operation, reference, status, message)
+	return True

@@ -18,6 +18,7 @@ class TestStock(IntegrationTestCase):
 	def setUp(self):
 		self.shop = make_test_shop(enabled=1, sync_stock=1)
 		frappe.cache.delete_value(f"modified_connector:products:{self.shop.name}")
+		frappe.cache.delete_value(f"modified_connector:products_refreshed:{self.shop.name}")
 		frappe.db.delete("Modified Sync Log", {"shop": self.shop.name, "operation": "Stock"})
 		self.client = MagicMock()
 		self.client.iter_products.side_effect = lambda: iter(products(("SKU-19", "101"), ("SKU-7", "102")))
@@ -55,14 +56,45 @@ class TestStock(IntegrationTestCase):
 	def test_unknown_product_refreshes_cache_once_then_skips(self):
 		self.client.iter_products.side_effect = lambda: iter(products(("OTHER", "9")))
 		push_item(self.shop.name, "SKU-19")
-		self.assertEqual(self.client.iter_products.call_count, 2)  # cold cache build + one refresh
+		# cold cache: the single crawl counts as the refresh
+		self.assertEqual(self.client.iter_products.call_count, 1)
 		self.client.set_stock.assert_not_called()
-		self.assertTrue(
-			frappe.db.exists(
-				"Modified Sync Log",
-				{"shop": self.shop.name, "operation": "Stock", "reference": "SKU-19", "status": "Skipped"},
-			)
+		self.assertEqual(self._skipped_logs("SKU-19"), 1)
+		push_item(self.shop.name, "SKU-19")
+		self.assertEqual(self.client.iter_products.call_count, 1)  # throttled
+		self.assertEqual(self._skipped_logs("SKU-19"), 1)  # deduped
+
+	def _skipped_logs(self, item):
+		return frappe.db.count(
+			"Modified Sync Log",
+			{"shop": self.shop.name, "operation": "Stock", "reference": item, "status": "Skipped"},
 		)
+
+	def test_stale_cache_refreshed_once_and_finds_new_product(self):
+		key = f"modified_connector:products:{self.shop.name}"
+		frappe.cache.set_value(key, {"OTHER": "9"})
+		self._set_bin("SKU-19", 5)
+		push_item(self.shop.name, "SKU-19")
+		self.assertEqual(self.client.iter_products.call_count, 1)
+		self.client.set_stock.assert_called_once()
+		frappe.cache.set_value(key, {"OTHER": "9"})
+		push_item(self.shop.name, "SKU-7")  # unknown again, but the refresh is throttled
+		self.assertEqual(self.client.iter_products.call_count, 1)
+
+	def test_item_without_barcode_skips_without_refresh(self):
+		shop = make_test_shop(enabled=1, sync_stock=1, item_match_erp_field="Barcode")
+		push_item(shop.name, "SKU-19")
+		self.client.iter_products.assert_not_called()
+		self.client.set_stock.assert_not_called()
+		self.assertEqual(self._skipped_logs("SKU-19"), 1)
+
+	def test_shop_quantity_fractions(self):
+		bin_filter = {"item_code": "SKU-19", "warehouse": WAREHOUSE}
+		self._set_bin("SKU-19", 1)
+		frappe.db.set_value("Bin", bin_filter, {"actual_qty": 2, "reserved_qty": 2.5})
+		self.assertEqual(shop_quantity(self.shop, "SKU-19"), 0)
+		frappe.db.set_value("Bin", bin_filter, {"actual_qty": 3.7, "reserved_qty": 0})
+		self.assertEqual(shop_quantity(self.shop, "SKU-19"), 3)
 
 	def test_product_ids_cached(self):
 		self.assertEqual(product_ids(self.shop), {"SKU-19": "101", "SKU-7": "102"})
@@ -87,7 +119,11 @@ class TestStock(IntegrationTestCase):
 			stock_in("SKU-19", 4)
 		jobs = [c.kwargs.get("job_id") for c in enqueue.call_args_list]
 		self.assertIn(f"modified_stock::{self.shop.name}::SKU-19", jobs)
-		call = next(c for c in enqueue.call_args_list if c.kwargs.get("job_id") == jobs[0])
+		call = next(
+			c
+			for c in enqueue.call_args_list
+			if c.kwargs.get("job_id") == f"modified_stock::{self.shop.name}::SKU-19"
+		)
 		self.assertTrue(call.kwargs["deduplicate"])
 		self.assertTrue(call.kwargs["enqueue_after_commit"])
 

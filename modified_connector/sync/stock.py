@@ -6,10 +6,11 @@ import frappe
 from frappe import _
 
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
-from modified_connector.utils import log, log_error_once
+from modified_connector.utils import log_error_once, log_once
 
 OPERATION = "Stock"
 CACHE_SECONDS = 3600
+REFRESH_THROTTLE_SECONDS = 600
 PUSHED, SKIPPED, ERROR = "pushed", "skipped", "errors"
 
 
@@ -28,6 +29,10 @@ def _cache_key(shop_name: str) -> str:
 	return f"modified_connector:products:{shop_name}"
 
 
+def _refreshed_key(shop_name: str) -> str:
+	return f"modified_connector:products_refreshed:{shop_name}"
+
+
 def product_ids(shop: ModifiedShop, refresh: bool = False) -> dict[str, str]:
 	"""Shop match value (products_model or products_ean) -> products_id, cached for one hour."""
 	key = _cache_key(shop.name)
@@ -42,6 +47,7 @@ def product_ids(shop: ModifiedShop, refresh: bool = False) -> dict[str, str]:
 		if value and product.get("products_id"):
 			mapping[value] = str(product["products_id"])
 	frappe.cache.set_value(key, mapping, expires_in_sec=CACHE_SECONDS)
+	frappe.cache.set_value(_refreshed_key(shop.name), 1, expires_in_sec=REFRESH_THROTTLE_SECONDS)
 	return mapping
 
 
@@ -66,21 +72,25 @@ def push_item(shop_name: str, item_code: str) -> None:
 		_push(frappe.get_doc("Modified Shop", shop_name), item_code)
 	except Exception as exc:
 		frappe.clear_messages()
-		frappe.log_error(title=_("Modified stock push failed: {0}").format(item_code))
-		log_error_once(shop_name, OPERATION, item_code, f"{type(exc).__name__}: {exc}")
+		if log_error_once(shop_name, OPERATION, item_code, f"{type(exc).__name__}: {exc}"):
+			frappe.log_error(title=_("Modified stock push failed: {0}").format(item_code))
 
 
 def _push(shop: ModifiedShop, item_code: str, ids: dict[str, str] | None = None) -> str:
 	if not _pushable(item_code):
 		return SKIPPED
 	value = _match_value(shop, item_code)
+	if not value:
+		log_once(shop.name, OPERATION, item_code, "Skipped", _("Item has no value to match the shop product"))
+		return SKIPPED
 	if ids is None:
 		ids = product_ids(shop)
-		if value not in ids:
+		# Refresh at most once per throttle window; a map built just now counts as refreshed.
+		if value not in ids and frappe.cache.get_value(_refreshed_key(shop.name)) is None:
 			ids = product_ids(shop, refresh=True)
-	product_id = ids.get(value) if value else None
+	product_id = ids.get(value)
 	if not product_id:
-		log(shop.name, OPERATION, item_code, "Skipped", _("Item is not in the shop"))
+		log_once(shop.name, OPERATION, item_code, "Skipped", _("Item is not in the shop"))
 		return SKIPPED
 	shop.get_client().set_stock(product_id, shop_quantity(shop, item_code))
 	return PUSHED
@@ -123,8 +133,8 @@ def full_sync(shop_name: str) -> dict:
 			counts[_push(shop, item_code, ids)] += 1
 		except Exception as exc:
 			frappe.clear_messages()
-			frappe.log_error(title=_("Modified stock push failed: {0}").format(item_code))
-			log_error_once(shop_name, OPERATION, item_code, f"{type(exc).__name__}: {exc}")
+			if log_error_once(shop_name, OPERATION, item_code, f"{type(exc).__name__}: {exc}"):
+				frappe.log_error(title=_("Modified stock push failed: {0}").format(item_code))
 			counts[ERROR] += 1
 		frappe.db.commit()
 	return counts

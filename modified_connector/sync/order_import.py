@@ -65,8 +65,8 @@ def _import_order(shop: ModifiedShop, raw: dict) -> tuple[str, str | None]:
 			message = str(exc)
 		else:
 			message = f"{type(exc).__name__}: {exc}"
+		if _log_error_once(shop.name, order_id, message) and not isinstance(exc, EXPECTED_ERRORS):
 			frappe.log_error(title=_("Modified order import failed: {0}").format(order_id))
-		_log_error_once(shop.name, order_id, message)
 		return ERROR, None
 
 	frappe.db.release_savepoint(save_point)
@@ -145,8 +145,8 @@ def order_lock(shop: str, order_id: str) -> Iterator[bool]:
 			frappe.db.sql("SELECT RELEASE_LOCK(%s)", key)
 
 
-def _log_error_once(shop: str, reference: str, message: str) -> None:
-	log_error_once(shop, OPERATION, reference, message)
+def _log_error_once(shop: str, reference: str, message: str) -> bool:
+	return log_error_once(shop, OPERATION, reference, message)
 
 
 def on_invoice_submit(doc, method=None):
