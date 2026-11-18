@@ -97,20 +97,20 @@ class TestInvoice(IntegrationTestCase):
 		# 4.90 split 20:5 -> 3.92 (19 %) / 0.98 (7 %)
 		self.assertEqual(shipping, [(3.92, "MCT 19 - MCT"), (0.98, "MCT 7 - MCT")])
 		self.assertEqual(si.apply_discount_on, "Grand Total")
-		self.assertAlmostEqual(si.discount_amount, 4.00, places=2)
-		self.assertAlmostEqual(si.grand_total, 25.90, places=2)
+		self.assertAlmostEqual(si.discount_amount, 3.50, places=2)
+		self.assertAlmostEqual(si.grand_total, 26.40, places=2)
 		# the coupon reduces both rates proportionally; VAT stays per rate on its own account
 		gross19, gross7 = D("23.92"), D("5.98")
-		factor = D("25.90") / (gross19 + gross7)
+		factor = D("26.40") / (gross19 + gross7)
 		taxes = tax_by_account(si)
 		self.assertEqual(set(taxes), {VAT19, VAT7})
 		self.assertAlmostEqual(taxes[VAT19], float(vat_included(gross19 * factor, D("19"))), delta=0.01)
 		self.assertAlmostEqual(taxes[VAT7], float(vat_included(gross7 * factor, D("7"))), delta=0.01)
-		self.assertEqual(taxes, {VAT19: 3.31, VAT7: 0.34})
+		self.assertEqual(taxes, {VAT19: 3.37, VAT7: 0.35})
 		si.update_stock = 0  # no stock needed to prove the document validates
 		si.insert()
 		assert_tax_templates(si)
-		self.assertAlmostEqual(si.grand_total, 25.90, places=2)
+		self.assertAlmostEqual(si.grand_total, 26.40, places=2)
 		self.assertEqual(tax_by_account(si), taxes)
 
 	def test_total_mismatch_raises(self):

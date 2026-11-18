@@ -67,9 +67,24 @@ class TestMapping(UnitTestCase):
 
 	def test_discount_and_shipping(self):
 		o = parse_order(load("order_mixed_coupon"))
-		self.assertEqual(o.discount_gross, D("4.00"))
+		self.assertEqual(o.discount_gross, D("3.50"))
 		self.assertEqual(o.shipping_gross, D("4.90"))
-		self.assertEqual(o.total_gross, D("25.90"))
+		self.assertEqual(o.total_gross, D("26.40"))
+
+	def test_gift_voucher_rejected(self):
+		"""A redeemed gift voucher is a payment (multi-purpose voucher), not a discount."""
+		raw = load("order_mixed_coupon")
+		raw["orders_total"].insert(
+			-1, {"class": "ot_gv", "title": "Gutschein", "value": "-0.5000", "text": "-0.50"}
+		)
+		raw["orders_total"][-1]["value"] = "25.9000"
+		with self.assertRaises(UnsupportedOrder) as cm:
+			parse_order(raw)
+		self.assertIn("gift voucher redemption (ot_gv) is not supported", str(cm.exception))
+		# a zero gift voucher total (shown by some shops) is harmless
+		raw["orders_total"][-2]["value"] = "0.0000"
+		raw["orders_total"][-1]["value"] = "26.4000"
+		self.assertEqual(parse_order(raw).discount_gross, D("3.50"))
 
 	def test_unsupported_orders(self):
 		for name, reason in (

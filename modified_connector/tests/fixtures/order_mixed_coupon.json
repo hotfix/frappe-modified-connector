@@ -166,15 +166,6 @@
    "sort_order": "40"
   },
   {
-   "orders_total_id": "5",
-   "orders_id": "1001",
-   "title": "ot_gv",
-   "text": "-0.5000",
-   "value": "-0.5000",
-   "class": "ot_gv",
-   "sort_order": "50"
-  },
-  {
    "orders_total_id": "6",
    "orders_id": "1001",
    "title": "ot_tax",
@@ -187,8 +178,8 @@
    "orders_total_id": "7",
    "orders_id": "1001",
    "title": "ot_total",
-   "text": "25.9000",
-   "value": "25.9000",
+   "text": "26.4000",
+   "value": "26.4000",
    "class": "ot_total",
    "sort_order": "70"
   }

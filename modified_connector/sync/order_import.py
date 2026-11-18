@@ -157,11 +157,57 @@ def on_invoice_submit(doc, method=None):
 	shop = frappe.get_doc("Modified Shop", doc.modified_shop)
 	payment = shop.payment_for(doc.modified_payment_class)
 	if payment and payment.mark_paid and payment.mode_of_payment:
-		_make_payment_entry(doc, payment.mode_of_payment)
+		if doc.get("amended_from") or _payment_exists(doc):
+			# cancel + amend keeps the order id: the payment of the original must be reused
+			_log_follow_up_skipped(
+				doc,
+				_(
+					"No Payment Entry created for {0}: order {1} already has a payment. "
+					"Allocate it to this invoice with Payment Reconciliation."
+				).format(doc.name, doc.modified_order_id),
+			)
+		else:
+			_make_payment_entry(doc, payment.mode_of_payment)
 	if not doc.update_stock and any(_delivered_from_stock(row) for row in doc.items):
-		dn = make_delivery_note(doc.name)
-		dn.insert(ignore_permissions=True)
-		dn.submit()
+		if doc.get("amended_from"):
+			_log_follow_up_skipped(
+				doc,
+				_(
+					"No Delivery Note created for amended invoice {0}: check the deliveries of {1} "
+					"and create one by hand if needed."
+				).format(doc.name, doc.amended_from),
+			)
+		else:
+			dn = make_delivery_note(doc.name)
+			dn.insert(ignore_permissions=True)
+			dn.submit()
+
+
+def _payment_exists(doc) -> bool:
+	return bool(
+		frappe.db.exists(
+			"Payment Entry",
+			{
+				"docstatus": 1,
+				"reference_no": doc.modified_order_id,
+				"party_type": "Customer",
+				"party": doc.customer,
+			},
+		)
+	)
+
+
+def _log_follow_up_skipped(doc, message: str) -> None:
+	frappe.msgprint(message, indicator="orange")
+	log(
+		doc.modified_shop,
+		OPERATION,
+		doc.modified_order_id,
+		"Skipped",
+		message,
+		ref_doctype="Sales Invoice",
+		ref_name=doc.name,
+	)
 
 
 def _make_payment_entry(doc, mode_of_payment: str) -> None:

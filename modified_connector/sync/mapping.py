@@ -8,7 +8,9 @@ from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 CENT = Decimal("0.01")
 PRICE = Decimal("0.0001")
 IGNORED_TOTALS = {"ot_subtotal", "ot_subtotal_no_tax", "ot_tax"}
-DISCOUNT_TOTALS = {"ot_coupon", "ot_discount", "ot_gv"}
+DISCOUNT_TOTALS = {"ot_coupon", "ot_discount"}
+# A redeemed gift voucher is a payment (multi-purpose voucher), not a price reduction.
+GIFT_VOUCHER_TOTAL = "ot_gv"
 
 
 class UnsupportedOrder(Exception):
@@ -119,6 +121,9 @@ def _parse_order(raw: dict) -> ShopOrder:
 			continue
 		if cls == "ot_shipping":
 			shipping += value
+		elif cls == GIFT_VOUCHER_TOTAL:
+			if value != 0:
+				raise UnsupportedOrder("gift voucher redemption (ot_gv) is not supported")
 		elif cls in DISCOUNT_TOTALS:
 			discount += abs(value)
 		elif cls == "ot_total":

@@ -416,6 +416,66 @@ class TestOrderImport(IntegrationTestCase):
 		self.assertEqual({d.item_code for d in dns}, {"SKU-19", "SHIPPING"})
 		self.assertEqual(frappe.db.get_value("Delivery Note", dns[0].parent, "docstatus"), 1)
 
+	def test_amended_invoice_creates_no_second_payment(self):
+		"""Cancel + amend keeps the order id; the existing payment must be reconciled, not duplicated."""
+		frappe.db.set_single_value("Accounts Settings", "unlink_payment_on_cancellation_of_invoice", 1)
+		self.shop = make_test_shop(submit_invoices=1)
+		stock_in("SKU-19", 10)
+		stock_in("SKU-7", 10)
+		raw = raw_order(purchased=soon())
+		order_id = raw["orders"]["orders_id"]
+		original = frappe.get_doc("Sales Invoice", import_order(self.shop, raw))
+		self.assertEqual(len(payment_entries(original.name)), 1)
+		original.cancel()
+
+		amended = frappe.copy_doc(original, ignore_no_copy=True)
+		amended.amended_from = original.name
+		amended.docstatus = 0
+		for row in amended.get_all_children():
+			row.docstatus = 0
+		amended.insert()
+		amended.submit()
+
+		self.assertEqual(amended.modified_order_id, order_id)
+		self.assertEqual(payment_entries(amended.name), [])
+		self.assertEqual(frappe.db.count("Payment Entry", {"reference_no": order_id, "docstatus": 1}), 1)
+		skipped = [
+			entry for entry in logs(self.shop.name, order_id, "Skipped") if entry.ref_name == amended.name
+		]
+		self.assertEqual(len(skipped), 1)
+		self.assertIn("Payment Reconciliation", skipped[0].message)
+
+	def test_existing_payment_blocks_second_payment(self):
+		self.shop = make_test_shop(submit_invoices=1)
+		stock_in("SKU-19", 10)
+		stock_in("SKU-7", 10)
+		raw = raw_order(purchased=soon())
+		order_id = raw["orders"]["orders_id"]
+		first = frappe.get_doc("Sales Invoice", import_order(self.shop, raw))
+		self.assertFalse(first.amended_from)
+		with patch.object(order_import, "_make_payment_entry") as make_pe:
+			on_invoice_submit(first)  # e.g. a second invoice of the same order: the payment exists
+		make_pe.assert_not_called()
+		skipped = logs(self.shop.name, order_id, "Skipped")
+		self.assertEqual([entry.ref_name for entry in skipped], [first.name])
+
+	def test_amended_invoice_creates_no_second_delivery_note(self):
+		self.shop = make_test_shop(submit_invoices=1)
+		stock_in("SKU-19", 10)
+		raw = raw_order(skus=("SKU-19", "SKU-DS"), purchased=soon(), payment_class="moneyorder")
+		raw["orders_products"][1]["products_tax"] = "19.0000"
+		order_id = raw["orders"]["orders_id"]
+		original = import_order(self.shop, raw)
+		self.assertTrue(original)
+		amended = frappe.get_doc("Sales Invoice", original)
+		amended.amended_from = original  # stands in for the amendment of a cancelled original
+		with patch.object(order_import, "make_delivery_note") as make_dn:
+			on_invoice_submit(amended)
+		make_dn.assert_not_called()
+		skipped = logs(self.shop.name, order_id, "Skipped")
+		self.assertEqual(len(skipped), 1)
+		self.assertIn("Delivery Note", skipped[0].message)
+
 	def test_submit_hook_ignores_other_invoices(self):
 		doc = frappe._dict(modified_order_id=None, modified_shop=None)
 		with patch.object(order_import.frappe, "get_doc") as get_doc:
