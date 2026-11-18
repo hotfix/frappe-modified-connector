@@ -16,7 +16,7 @@ from modified_connector.api.client import ModifiedAPIError
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
 from modified_connector.sync.invoice import assert_tax_templates, build_invoice
 from modified_connector.sync.mapping import UnsupportedOrder, parse_order
-from modified_connector.utils import log
+from modified_connector.utils import log, log_error_once
 
 OPERATION = "Import"
 IMPORTED, SKIPPED, ERROR = "imported", "skipped", "errors"
@@ -146,17 +146,7 @@ def order_lock(shop: str, order_id: str) -> Iterator[bool]:
 
 
 def _log_error_once(shop: str, reference: str, message: str) -> None:
-	"""Error log, unless the latest log for this reference is the same error (avoids a log per run)."""
-	last = frappe.get_all(
-		"Modified Sync Log",
-		filters={"shop": shop, "operation": OPERATION, "reference": reference},
-		fields=["status", "message"],
-		order_by="creation desc",
-		limit=1,
-	)
-	if last and last[0].status == "Error" and (last[0].message or "") == (message or ""):
-		return
-	log(shop, OPERATION, reference, "Error", message)
+	log_error_once(shop, OPERATION, reference, message)
 
 
 def on_invoice_submit(doc, method=None):

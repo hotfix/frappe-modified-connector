@@ -24,3 +24,17 @@ def log(
 	)
 	doc.insert(ignore_permissions=True)
 	return doc.name
+
+
+def log_error_once(shop: str, operation: str, reference: str, message: str) -> None:
+	"""Error log, unless the latest log for this reference is the same error (avoids a log per run)."""
+	last = frappe.get_all(
+		"Modified Sync Log",
+		filters={"shop": shop, "operation": operation, "reference": reference},
+		fields=["status", "message"],
+		order_by="creation desc",
+		limit=1,
+	)
+	if last and last[0].status == "Error" and (last[0].message or "") == (message or ""):
+		return
+	log(shop, operation, reference, "Error", message)
