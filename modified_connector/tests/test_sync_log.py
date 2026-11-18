@@ -85,3 +85,29 @@ class TestSyncLogRetry(IntegrationTestCase):
 
 		with patch.object(order_import, "order_lock", busy), self.assertRaises(frappe.ValidationError):
 			retry(log_name)
+
+	def test_retry_already_imported_closes_log(self):
+		order_id, log_name = self.failed_import()
+		import_order(self.shop, raw_order(skus=("SKU-19", "SKU-7"), order_id=order_id))
+		[existing] = invoices(self.shop.name, order_id)
+
+		self.assertEqual(retry(log_name), existing)
+
+		old = frappe.get_doc("Modified Sync Log", log_name)
+		self.assertEqual((old.status, old.ref_doctype, old.ref_name), ("Skipped", "Sales Invoice", existing))
+		self.assertIn("already imported", old.message)
+		self.assertEqual(invoices(self.shop.name, order_id), [existing])
+
+	def test_retry_cancelled_order_closes_log(self):
+		order_id, log_name = self.failed_import()
+		cancelled = raw_order(
+			skus=("SKU-19", "SKU-7"), order_id=order_id, status=self.shop.cancelled_status_id
+		)
+		patch.object(ModifiedShop, "get_client", return_value=FakeClient([cancelled])).start()
+
+		self.assertIsNone(retry(log_name))
+
+		old = frappe.get_doc("Modified Sync Log", log_name)
+		self.assertEqual(old.status, "Skipped")
+		self.assertIn("cancelled", old.message)
+		self.assertEqual(invoices(self.shop.name, order_id), [])

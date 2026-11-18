@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Modified Connector VERSION\n"
 "Report-Msgid-Bugs-To: info@hotfix.example\n"
-"POT-Creation-Date: 2026-11-18 06:50+0000\n"
-"PO-Revision-Date: 2026-11-18 06:50+0000\n"
+"POT-Creation-Date: 2026-11-18 06:55+0000\n"
+"PO-Revision-Date: 2026-11-18 06:55+0000\n"
 "Last-Translator: info@hotfix.example\n"
 "Language-Team: info@hotfix.example\n"
 "MIME-Version: 1.0\n"
@@ -122,11 +122,6 @@ msgstr ""
 msgid "Import Status IDs must be a comma separated list of integers."
 msgstr ""
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.js:12
-#, python-brace-format
-msgid "Imported as {0}"
-msgstr ""
-
 #. Label of the invoice_naming_series (Data) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:143
 msgid "Invoice Naming Series"
@@ -233,10 +228,6 @@ msgstr ""
 msgid "No Item found for {0} {1} (shop product {2}, {3})"
 msgstr ""
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.js:14
-msgid "Not imported, see the log for the reason"
-msgstr ""
-
 #: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:21
 msgid "Only failed order imports can be retried."
 msgstr ""
@@ -249,6 +240,28 @@ msgstr ""
 #: modified_connector/sync/order_import.py:122
 #, python-brace-format
 msgid "Order import aborted: {0}"
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.js:12
+#, python-brace-format
+msgid "Order is imported as {0}"
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:86
+msgid "Order is not in an import status."
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:84
+msgid "Order was cancelled in the shop."
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:87
+msgid "Order was purchased before the import start of the shop."
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:39
+#, python-brace-format
+msgid "Order {0} is already imported as {1}."
 msgstr ""
 
 #: modified_connector/sync/order_import.py:208
@@ -422,6 +435,10 @@ msgstr ""
 msgid "Test Connection"
 msgstr ""
 
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:49
+msgid "The order could not be imported yet, see the new log entry for the reason."
+msgstr ""
+
 #: modified_connector/sync/shipping.py:59
 #, python-brace-format
 msgid "The shop rejected the tracking number: {0}"
@@ -463,6 +480,11 @@ msgstr ""
 msgid "Warehouse"
 msgstr ""
 
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:38
+#, python-brace-format
+msgid "already imported as {0}"
+msgstr ""
+
 #. Option for the 'Item Match Shop Field' (Select) field in DocType 'Modified
 #. Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:154
@@ -475,7 +497,11 @@ msgstr ""
 msgid "products_model"
 msgstr ""
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:51
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:64
+msgid "retried"
+msgstr ""
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:64
 #, python-brace-format
 msgid "retried → {0}"
 msgstr ""

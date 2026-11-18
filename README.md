@@ -100,7 +100,9 @@ order is committed on its own, so concurrent runs and restarts are safe.
 **Errors and retry.** Failed orders are written to the *Modified Sync Log* (once per distinct message) and
 fetched again by later runs within the retry window. After fixing the cause (for example creating the missing
 item) open the log entry and click **Retry** to import the order immediately. The old log entry is then marked
-"Skipped" with a pointer to the new one. Retry requires permission to create Sales Invoices.
+"Skipped" with a pointer to the new one. If the order meanwhile was imported by the scheduler, was cancelled in
+the shop, is no longer in an import status or lies before *Import From*, the entry is closed as "Skipped" with
+that reason and you are told so. Retry requires permission to create Sales Invoices.
 
 ## Integration hooks
 

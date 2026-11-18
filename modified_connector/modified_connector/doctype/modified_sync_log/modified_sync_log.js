@@ -9,9 +9,7 @@ frappe.ui.form.on("Modified Sync Log", {
 				freeze: true,
 				callback: (r) => {
 					if (r.message) {
-						frappe.show_alert({ message: __("Imported as {0}", [r.message]), indicator: "green" });
-					} else {
-						frappe.show_alert({ message: __("Not imported, see the log for the reason"), indicator: "orange" });
+						frappe.show_alert({ message: __("Order is imported as {0}", [r.message]), indicator: "green" });
 					}
 					frm.reload_doc();
 				},

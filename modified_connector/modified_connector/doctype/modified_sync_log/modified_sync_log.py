@@ -31,24 +31,57 @@ def retry(log: str) -> str | None:
 		if not acquired:
 			frappe.throw(_("This order is being imported right now. Please try again in a moment."))
 		invoice = order_import.import_order(shop, raw)
+		skip_reason = None
+		if not invoice:
+			invoice = order_import._existing_invoice(shop.name, doc.reference)
+			if invoice:
+				_close(doc, _("already imported as {0}").format(invoice), invoice)
+				frappe.msgprint(_("Order {0} is already imported as {1}.").format(doc.reference, invoice))
+			else:
+				skip_reason = _skip_reason(shop, raw)
+				if skip_reason:
+					_close(doc, skip_reason)
 		frappe.db.commit()
 
-	if invoice:
+	if skip_reason:
+		frappe.msgprint(skip_reason)
+	elif not invoice:
+		frappe.msgprint(_("The order could not be imported yet, see the new log entry for the reason."))
+	elif doc.status == "Error":  # imported by this retry
 		new_log = frappe.db.get_value(
 			"Modified Sync Log",
 			{
 				"shop": shop.name,
 				"operation": order_import.OPERATION,
+				"reference": doc.reference,
 				"status": "Success",
+				"ref_doctype": "Sales Invoice",
 				"ref_name": invoice,
 			},
 			"name",
 			order_by="creation desc",
 		)
-		frappe.db.set_value(
-			"Modified Sync Log",
-			doc.name,
-			{"status": "Skipped", "message": _("retried → {0}").format(new_log)},
-		)
+		message = _("retried → {0}").format(new_log) if new_log else _("retried")
+		_close(doc, message)
 		frappe.db.commit()
 	return invoice
+
+
+def _close(doc, message: str, invoice: str | None = None) -> None:
+	values = {"status": "Skipped", "message": message}
+	if invoice:
+		values.update({"ref_doctype": "Sales Invoice", "ref_name": invoice})
+	frappe.db.set_value("Modified Sync Log", doc.name, values)
+	doc.status = "Skipped"
+
+
+def _skip_reason(shop, raw: dict) -> str | None:
+	"""Why import_order skipped an order silently, None if it did not."""
+	status = order_import._raw_status(raw)
+	if not order_import._skip_raw(shop, raw, status):
+		return None
+	if status == shop.cancelled_status_id:
+		return _("Order was cancelled in the shop.")
+	if status is not None and status not in shop.import_status_list():
+		return _("Order is not in an import status.")
+	return _("Order was purchased before the import start of the shop.")
