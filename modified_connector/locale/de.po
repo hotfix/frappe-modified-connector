@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Modified Connector VERSION\n"
 "Report-Msgid-Bugs-To: info@hotfix.example\n"
-"POT-Creation-Date: 2026-11-18 06:55+0000\n"
+"POT-Creation-Date: 2026-11-18 07:17+0000\n"
 "PO-Revision-Date: 2026-11-18 06:47+0000\n"
 "Last-Translator: info@hotfix.example\n"
 "Language: de\n"
@@ -39,12 +39,16 @@ msgstr "Barcode"
 msgid "Base URL"
 msgstr "Basis-URL"
 
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:45
+msgid "Base URL must start with https:// (http:// is only allowed for localhost)."
+msgstr "Die Basis-URL muss mit https:// beginnen (http:// ist nur für localhost erlaubt)."
+
 #. Label of the cancelled_status_id (Int) field in DocType 'Modified Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:209
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:210
 msgid "Cancelled Status ID"
 msgstr "Status-ID Storniert"
 
-#: modified_connector/sync/shipping.py:44
+#: modified_connector/sync/shipping.py:62
 #, python-brace-format
 msgid "Carrier {0} is not supported."
 msgstr "Der Versanddienstleister {0} wird nicht unterstützt."
@@ -70,7 +74,7 @@ msgid "Customer Group"
 msgstr "Kundengruppe"
 
 #. Label of the dhl_carrier_id (Int) field in DocType 'Modified Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:221
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:222
 msgid "DHL Carrier ID"
 msgstr "DHL-Versanddienstleister-ID"
 
@@ -82,13 +86,8 @@ msgstr "ERPNext-Standardwerte"
 #. Description of the 'Retry Window (Days)' (Int) field in DocType 'Modified
 #. Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:98
-msgid ""
-"Each import fetches the orders of this many days before the last import again, so orders that "
-"failed or were not yet in an import status are retried."
-msgstr ""
-"Jeder Import ruft die Bestellungen der letzten Tage vor dem letzten Import erneut ab. So werden "
-"fehlgeschlagene Bestellungen und Bestellungen, die noch nicht in einem Import-Status waren, "
-"erneut versucht."
+msgid "Each import fetches the orders of this many days before the last import again, so orders that failed or were not yet in an import status are retried."
+msgstr "Jeder Import ruft die Bestellungen der letzten Tage vor dem letzten Import erneut ab. So werden fehlgeschlagene Bestellungen und Bestellungen, die noch nicht in einem Import-Status waren, erneut versucht."
 
 #. Label of the enabled (Check) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:53
@@ -105,7 +104,7 @@ msgstr "ERP-Spalte"
 msgid "Error"
 msgstr "Fehler"
 
-#: modified_connector/sync/stock.py:125
+#: modified_connector/sync/stock.py:158
 #, python-brace-format
 msgid "Full stock sync aborted: {0}"
 msgstr "Vollständiger Bestandsabgleich abgebrochen: {0}"
@@ -125,9 +124,13 @@ msgstr "Import ab"
 msgid "Import Status IDs"
 msgstr "Status-IDs für den Import"
 
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:51
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:62
 msgid "Import Status IDs must be a comma separated list of integers."
 msgstr "Die Status-IDs für den Import müssen eine durch Komma getrennte Liste ganzer Zahlen sein."
+
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:17
+msgid "Import Status IDs must list at least one order status id."
+msgstr "Die Status-IDs für den Import müssen mindestens eine Bestellstatus-ID enthalten."
 
 #. Label of the invoice_naming_series (Data) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:143
@@ -162,11 +165,11 @@ msgstr "Artikelabgleich"
 msgid "Item Tax Template"
 msgstr "Artikelsteuervorlage"
 
-#: modified_connector/sync/stock.py:84
+#: modified_connector/sync/stock.py:107
 msgid "Item has no value to match the shop product"
 msgstr "Der Artikel hat keinen Wert, um ihn dem Shop-Produkt zuzuordnen"
 
-#: modified_connector/sync/stock.py:93
+#: modified_connector/sync/stock.py:116
 msgid "Item is not in the shop"
 msgstr "Der Artikel ist nicht im Shop"
 
@@ -196,7 +199,7 @@ msgid "Modified"
 msgstr "Modified"
 
 #. Name of a DocType
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:242
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:243
 msgid "Modified Shop"
 msgstr "Modified-Shop"
 
@@ -215,17 +218,22 @@ msgstr "Modified-Shop-Steuerzuordnung"
 msgid "Modified Sync Log"
 msgstr "Modified-Synchronisationsprotokoll"
 
-#: modified_connector/sync/order_import.py:69
+#: modified_connector/sync/order_import.py:75
 #, python-brace-format
 msgid "Modified order import failed: {0}"
 msgstr "Import der Modified-Bestellung fehlgeschlagen: {0}"
 
-#: modified_connector/sync/stock.py:76 modified_connector/sync/stock.py:137
+#: modified_connector/sync/stock.py:99 modified_connector/sync/stock.py:170
 #, python-brace-format
 msgid "Modified stock push failed: {0}"
 msgstr "Bestandsübertragung an Modified fehlgeschlagen: {0}"
 
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:58
+#: modified_connector/sync/order_import.py:221
+#, python-brace-format
+msgid "No Delivery Note created for amended invoice {0}: check the deliveries of {1} and create one by hand if needed."
+msgstr "Für die berichtigte Rechnung {0} wurde kein Lieferschein erstellt: Prüfen Sie die Lieferungen zu {1} und legen Sie bei Bedarf manuell einen an."
+
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:69
 #, python-brace-format, python-format
 msgid "No Item Tax Template mapped for tax rate {0} % in shop {1}"
 msgstr "Für den Steuersatz {0} % ist im Shop {1} keine Artikelsteuervorlage zugeordnet"
@@ -235,7 +243,12 @@ msgstr "Für den Steuersatz {0} % ist im Shop {1} keine Artikelsteuervorlage zug
 msgid "No Item found for {0} {1} (shop product {2}, {3})"
 msgstr "Kein Artikel gefunden für {0} {1} (Shop-Produkt {2}, {3})"
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:21
+#: modified_connector/sync/order_import.py:210
+#, python-brace-format
+msgid "No Payment Entry created for {0}: order {1} already has a payment. Allocate it to this invoice with Payment Reconciliation."
+msgstr "Für {0} wurde keine Zahlung erstellt: Zur Bestellung {1} gibt es bereits eine Zahlung. Ordnen Sie sie dieser Rechnung über den Zahlungsabgleich zu."
+
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:35
 msgid "Only failed order imports can be retried."
 msgstr "Nur fehlgeschlagene Bestellimporte können erneut versucht werden."
 
@@ -244,7 +257,7 @@ msgstr "Nur fehlgeschlagene Bestellimporte können erneut versucht werden."
 msgid "Operation"
 msgstr "Vorgang"
 
-#: modified_connector/sync/order_import.py:122
+#: modified_connector/sync/order_import.py:167
 #, python-brace-format
 msgid "Order import aborted: {0}"
 msgstr "Bestellimport abgebrochen: {0}"
@@ -254,24 +267,24 @@ msgstr "Bestellimport abgebrochen: {0}"
 msgid "Order is imported as {0}"
 msgstr "Bestellung importiert als {0}"
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:86
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:103
 msgid "Order is not in an import status."
 msgstr "Die Bestellung hat keinen Import-Status."
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:84
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:101
 msgid "Order was cancelled in the shop."
 msgstr "Die Bestellung wurde im Shop storniert."
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:87
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:104
 msgid "Order was purchased before the import start of the shop."
 msgstr "Die Bestellung wurde vor dem Importstart des Shops aufgegeben."
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:39
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:54
 #, python-brace-format
 msgid "Order {0} is already imported as {1}."
 msgstr "Bestellung {0} ist bereits als {1} importiert."
 
-#: modified_connector/sync/order_import.py:208
+#: modified_connector/sync/order_import.py:299
 #, python-brace-format
 msgid "Order {0} was cancelled in shop after import; check invoice {1}"
 msgstr "Bestellung {0} wurde nach dem Import im Shop storniert; bitte Rechnung {1} prüfen"
@@ -294,21 +307,15 @@ msgstr "Zahlungsklasse"
 
 #. Label of the payment_map (Table) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:192
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:19
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:22
 msgid "Payment Map"
 msgstr "Zahlungszuordnung"
 
 #. Description of the 'Paid at Checkout' (Check) field in DocType 'Modified
 #. Shop Payment Map'
 #: modified_connector/modified_connector/doctype/modified_shop_payment_map/modified_shop_payment_map.json:33
-msgid ""
-"Payment collected by the shop at checkout (e.g. PayPal). A Payment Entry dated on the order date "
-"is created when the invoice is submitted. Leave unchecked for methods paid later (e.g. prepayment"
-" by bank transfer)."
-msgstr ""
-"Die Zahlung wird vom Shop beim Bestellabschluss eingezogen (z. B. PayPal). Beim Buchen der "
-"Rechnung wird eine Zahlung mit dem Bestelldatum erstellt. Nicht aktivieren für Zahlarten, die "
-"später bezahlt werden (z. B. Vorkasse per Überweisung)."
+msgid "Payment collected by the shop at checkout (e.g. PayPal). A Payment Entry dated on the order date is created when the invoice is submitted. Leave unchecked for methods paid later (e.g. prepayment by bank transfer)."
+msgstr "Die Zahlung wird vom Shop beim Bestellabschluss eingezogen (z. B. PayPal). Beim Buchen der Rechnung wird eine Zahlung mit dem Bestelldatum erstellt. Nicht aktivieren für Zahlarten, die später bezahlt werden (z. B. Vorkasse per Überweisung)."
 
 #. Label of the reference (Data) field in DocType 'Modified Sync Log'
 #: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:36
@@ -334,18 +341,14 @@ msgstr "Erneut versuchen"
 msgid "Retry Window (Days)"
 msgstr "Wiederholungszeitraum (Tage)"
 
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:16
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:19
 msgid "Retry Window (Days) must be at least 1."
 msgstr "Der Wiederholungszeitraum (Tage) muss mindestens 1 betragen."
 
 #: modified_connector/sync/invoice.py:123
 #, python-brace-format
-msgid ""
-"Row {0} ({1}): Item Tax Template {2} expected but ERPNext set {3}. Add {2} to the Item Tax "
-"Templates of the item."
-msgstr ""
-"Zeile {0} ({1}): Erwartet wurde die Artikelsteuervorlage {2}, ERPNext hat {3} gesetzt. Fügen Sie "
-"{2} zu den Artikelsteuervorlagen des Artikels hinzu."
+msgid "Row {0} ({1}): Item Tax Template {2} expected but ERPNext set {3}. Add {2} to the Item Tax Templates of the item."
+msgstr "Zeile {0} ({1}): Erwartet wurde die Artikelsteuervorlage {2}, ERPNext hat {3} gesetzt. Fügen Sie {2} zu den Artikelsteuervorlagen des Artikels hinzu."
 
 #. Label of the sales_taxes_template (Link) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:179
@@ -356,12 +359,13 @@ msgstr "Umsatzsteuervorlage"
 msgid "Send"
 msgstr "Senden"
 
-#: modified_connector/public/js/sales_invoice.js:5 modified_connector/public/js/sales_invoice.js:20
+#: modified_connector/public/js/sales_invoice.js:5
+#: modified_connector/public/js/sales_invoice.js:20
 msgid "Send Tracking Number"
 msgstr "Sendungsnummer senden"
 
 #. Label of the shipped_status_id (Int) field in DocType 'Modified Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:215
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:216
 msgid "Shipped Status ID"
 msgstr "Status-ID Versendet"
 
@@ -401,7 +405,7 @@ msgid "Stock"
 msgstr "Bestand"
 
 #. Label of the submit_invoices (Check) field in DocType 'Modified Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:227
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:228
 msgid "Submit Invoices"
 msgstr "Rechnungen buchen"
 
@@ -416,19 +420,19 @@ msgid "Sync Settings"
 msgstr "Synchronisierungseinstellungen"
 
 #. Label of the sync_stock (Check) field in DocType 'Modified Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:233
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:234
 msgid "Sync Stock"
 msgstr "Bestand synchronisieren"
 
 #. Name of a role
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:254
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:255
 #: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:84
 msgid "System Manager"
 msgstr "Systemmanager"
 
 #. Label of the tax_map (Table) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:186
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:17
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:20
 msgid "Tax Map"
 msgstr "Steuerzuordnung"
 
@@ -451,21 +455,21 @@ msgstr "Gebiet"
 msgid "Test Connection"
 msgstr "Verbindung testen"
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:49
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:66
 msgid "The order could not be imported yet, see the new log entry for the reason."
 msgstr "Die Bestellung konnte noch nicht importiert werden, den Grund zeigt der neue Protokolleintrag."
 
-#: modified_connector/sync/shipping.py:59
+#: modified_connector/sync/shipping.py:77
 #, python-brace-format
 msgid "The shop rejected the tracking number: {0}"
 msgstr "Der Shop hat die Sendungsnummer abgelehnt: {0}"
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:23
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:33
 #, python-brace-format
 msgid "This order is already imported as {0}."
 msgstr "Diese Bestellung wurde bereits als {0} importiert."
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:32
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:46
 msgid "This order is being imported right now. Please try again in a moment."
 msgstr "Diese Bestellung wird gerade importiert. Bitte versuchen Sie es in einem Moment erneut."
 
@@ -478,7 +482,7 @@ msgstr "Sendungsverfolgung"
 msgid "Tracking Number"
 msgstr "Sendungsnummer"
 
-#: modified_connector/sync/shipping.py:38
+#: modified_connector/sync/shipping.py:56
 msgid "Tracking number is required."
 msgstr "Eine Sendungsnummer ist erforderlich."
 
@@ -486,17 +490,27 @@ msgstr "Eine Sendungsnummer ist erforderlich."
 msgid "Tracking number sent"
 msgstr "Sendungsnummer gesendet"
 
-#: modified_connector/sync/customer.py:115
+#: modified_connector/sync/customer.py:128
 #, python-brace-format
 msgid "Unknown country code {0}"
 msgstr "Unbekannter Ländercode {0}"
+
+#: modified_connector/sync/shipping.py:44
+#, python-brace-format
+msgid "User {0} may not send tracking number {1} of {2}; send it with the button on the invoice."
+msgstr "Benutzer {0} darf die Sendungsnummer {1} zu {2} nicht übermitteln; senden Sie sie über die Schaltfläche in der Rechnung."
+
+#: modified_connector/sync/order_import.py:54
+#, python-brace-format
+msgid "Waiting for import status (current status {0})"
+msgstr "Warte auf Importstatus (aktueller Status {0})"
 
 #. Label of the warehouse (Link) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:115
 msgid "Warehouse"
 msgstr "Lager"
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:38
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:52
 #, python-brace-format
 msgid "already imported as {0}"
 msgstr "bereits importiert als {0}"
@@ -513,11 +527,11 @@ msgstr "products_ean"
 msgid "products_model"
 msgstr "products_model"
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:64
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:81
 msgid "retried"
 msgstr "erneut versucht"
 
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:64
+#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:81
 #, python-brace-format
 msgid "retried → {0}"
 msgstr "erneut versucht → {0}"
@@ -527,17 +541,17 @@ msgstr "erneut versucht → {0}"
 msgid "{0} ({1} % VAT)"
 msgstr "{0} ({1} % MwSt.)"
 
-#: modified_connector/sync/shipping.py:40
+#: modified_connector/sync/shipping.py:58
 #, python-brace-format
 msgid "{0} is not a submitted invoice of a shop order."
 msgstr "{0} ist keine gebuchte Rechnung einer Shop-Bestellung."
 
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:24
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:27
 #, python-brace-format
 msgid "{0} {1} is a group. Please select a non-group {0}."
 msgstr "{0} {1} ist eine Gruppe. Bitte wählen Sie eine {0} ohne Untergruppen."
 
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:41
+#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:52
 #, python-brace-format
 msgid "{0}: duplicate entry for {1}"
 msgstr "{0}: doppelter Eintrag für {1}"
