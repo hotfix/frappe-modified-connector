@@ -156,10 +156,38 @@ class TestOrderImport(ShopTestCase):
 		self.shop = make_test_shop(import_status_ids="2")
 		pending = raw_order(status="1")
 		paid = raw_order(status="2")
+		pending_id = pending["orders"]["orders_id"]
 		self.assertIsNone(import_order(self.shop, pending))
-		self.assertEqual(invoices(self.shop.name, pending["orders"]["orders_id"]), [])
-		self.assertEqual(logs(self.shop.name, pending["orders"]["orders_id"]), [])
+		self.assertIsNone(import_order(self.shop, pending))
+		self.assertEqual(invoices(self.shop.name, pending_id), [])
+		# logged once, so an order that never reaches an import status does not disappear silently
+		self.assertEqual(
+			logs(self.shop.name, pending_id),
+			[
+				{
+					"status": "Skipped",
+					"message": "Waiting for import status (current status 1)",
+					"ref_doctype": None,
+					"ref_name": None,
+				}
+			],
+		)
 		self.assertTrue(import_order(self.shop, paid))
+
+		# once the order reaches an import status, the waiting log points to its invoice
+		pending["orders"]["orders_status"] = "2"
+		name = import_order(self.shop, pending)
+		self.assertTrue(name)
+		waiting = logs(self.shop.name, pending_id, "Skipped")
+		self.assertEqual([(w.ref_doctype, w.ref_name) for w in waiting], [("Sales Invoice", name)])
+
+	def test_no_waiting_log_for_cancelled_or_too_old_orders(self):
+		self.shop = make_test_shop(import_status_ids="2", import_from="2026-10-01 00:00:00")
+		cancelled = raw_order(status=self.shop.cancelled_status_id)
+		too_old = raw_order(status="1", purchased="2026-09-30 23:59:59")
+		for raw in (cancelled, too_old):
+			self.assertIsNone(import_order(self.shop, raw))
+			self.assertEqual(logs(self.shop.name, raw["orders"]["orders_id"]), [])
 
 	def test_before_import_from_skipped(self):
 		self.shop = make_test_shop(import_from="2026-10-30 13:07:06")
@@ -280,8 +308,10 @@ class TestOrderImport(ShopTestCase):
 				self.assertIsNone(import_order(self.shop, raw))
 		parse.assert_not_called()
 		savepoint.assert_not_called()
-		for raw in skipped:
-			self.assertEqual(logs(self.shop.name, raw["orders"]["orders_id"]), [])
+		cancelled, waiting, too_old = (raw["orders"]["orders_id"] for raw in skipped)
+		self.assertEqual(logs(self.shop.name, cancelled), [])
+		self.assertEqual([w.status for w in logs(self.shop.name, waiting)], ["Skipped"])
+		self.assertEqual(logs(self.shop.name, too_old), [])
 
 	def test_repeated_error_is_logged_once(self):
 		raw = raw_order(skus=("SKU-DOES-NOT-EXIST", "SKU-7"))
@@ -370,7 +400,7 @@ class TestOrderImport(ShopTestCase):
 		result = run_import(self.shop.name)
 		self.assertEqual(result["imported"], 1)
 		self.assertEqual(get_datetime(self.reload().last_import), datetime(2026, 10, 15, 10))
-		errors = logs(self.shop.name, self.shop.name, "Error")
+		errors = logs(self.shop.name, "(run)", "Error")
 		self.assertEqual(len(errors), 1)
 		self.assertIn("503", errors[0].message)
 

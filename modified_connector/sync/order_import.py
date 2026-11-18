@@ -16,11 +16,13 @@ from modified_connector.api.client import ModifiedAPIError
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
 from modified_connector.sync.invoice import assert_tax_templates, build_invoice
 from modified_connector.sync.mapping import UnsupportedOrder, parse_order
-from modified_connector.utils import log, log_error_once
+from modified_connector.utils import log, log_error_once, log_once
 
 OPERATION = "Import"
 IMPORTED, SKIPPED, ERROR = "imported", "skipped", "errors"
 DEFAULT_RETRY_WINDOW_DAYS = 14
+RUN_REFERENCE = "(run)"  # reference of logs about a whole import run (not retryable)
+WAITING_MESSAGE = "Waiting for import status (current status {0})"
 LOCK_TIMEOUT = 10  # seconds to wait for another process importing the same order
 # Expected failures of a single order; their message is shown as is. Anything else also only fails
 # that order, but is logged with its type and a traceback (Error Log).
@@ -47,6 +49,10 @@ def _import_order(shop: ModifiedShop, raw: dict) -> tuple[str, str | None]:
 			_log_cancelled_after_import(shop, order_id, existing)
 		return SKIPPED, None
 	if _skip_raw(shop, raw, status):
+		if order_id and _waiting_for_status(shop, raw, status):
+			# logged (once per status): the order is only fetched again within the retry window
+			message = _("Waiting for import status (current status {0})").format(status)  # = WAITING_MESSAGE
+			log_once(shop.name, OPERATION, order_id, "Skipped", message)
 		return SKIPPED, None
 
 	save_point = f"modified_import_{frappe.generate_hash(length=10)}"
@@ -70,6 +76,7 @@ def _import_order(shop: ModifiedShop, raw: dict) -> tuple[str, str | None]:
 		return ERROR, None
 
 	frappe.db.release_savepoint(save_point)
+	_link_waiting_logs(shop.name, order_id, invoice.name)
 	log(shop.name, OPERATION, order_id, "Success", ref_doctype="Sales Invoice", ref_name=invoice.name)
 	return IMPORTED, invoice.name
 
@@ -81,6 +88,43 @@ def _skip_raw(shop: ModifiedShop, raw: dict, status: int | None) -> bool:
 		return True
 	purchased = _raw_purchased(raw)
 	return bool(purchased and shop.import_from and purchased < get_datetime(shop.import_from))
+
+
+def _waiting_for_status(shop: ModifiedShop, raw: dict, status: int | None) -> bool:
+	"""Skipped only because the status is not (yet) an import status."""
+	if status is None or status == shop.cancelled_status_id or status in shop.import_status_list():
+		return False
+	purchased = _raw_purchased(raw)
+	return not (purchased and shop.import_from and purchased < get_datetime(shop.import_from))
+
+
+def is_waiting_message(message: str | None) -> bool:
+	"""A "waiting for import status" log message, in English or translated."""
+	message = message or ""
+	return any(
+		prefix and message.startswith(prefix)
+		for prefix in {WAITING_MESSAGE.split("{0}")[0], _(WAITING_MESSAGE).split("{0}")[0]}
+	)
+
+
+def _link_waiting_logs(shop: str, order_id: str, invoice: str) -> None:
+	"""Point the waiting logs of an order that is imported now to its invoice (ends their retry)."""
+	for name, message in frappe.get_all(
+		"Modified Sync Log",
+		filters={
+			"shop": shop,
+			"operation": OPERATION,
+			"reference": order_id,
+			"status": "Skipped",
+			"ref_name": ("is", "not set"),
+		},
+		fields=["name", "message"],
+		as_list=True,
+	):
+		if is_waiting_message(message):
+			frappe.db.set_value(
+				"Modified Sync Log", name, {"ref_doctype": "Sales Invoice", "ref_name": invoice}
+			)
 
 
 def _rollback_order(save_point: str) -> None:
@@ -95,7 +139,8 @@ def run_import(shop_name: str) -> dict:
 	"""Import all orders of the retry window; commit after every order.
 
 	since = max(import_from, last_import - retry_window_days): orders that failed or were not yet in an
-	import status are fetched again on every run until they are older than the window.
+	import status are fetched again on every run until they are older than the window. Both leave a log
+	(Error, or Skipped "waiting for import status") that can be retried by hand after that.
 	"""
 	shop = frappe.get_doc("Modified Shop", shop_name)
 	since = get_datetime(shop.import_from) if shop.import_from else None
@@ -119,7 +164,7 @@ def run_import(shop_name: str) -> dict:
 				latest = purchased
 	except ModifiedAPIError as exc:
 		# raised by the listing between orders: every processed order is already committed
-		_log_error_once(shop.name, shop.name, _("Order import aborted: {0}").format(exc))
+		_log_error_once(shop.name, RUN_REFERENCE, _("Order import aborted: {0}").format(exc))
 		frappe.db.commit()
 		counts[ERROR] += 1
 		return counts
