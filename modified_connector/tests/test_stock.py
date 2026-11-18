@@ -1,11 +1,14 @@
 from unittest.mock import MagicMock, patch
 
 import frappe
-from frappe.tests import IntegrationTestCase
 
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
+from modified_connector.sync import stock
+from modified_connector.sync.invoice import build_invoice
+from modified_connector.sync.mapping import parse_order
 from modified_connector.sync.stock import full_sync, on_stock_change, product_ids, push_item, shop_quantity
-from modified_connector.tests.utils import make_test_shop, stock_in
+from modified_connector.tests.test_order_import import raw_order
+from modified_connector.tests.utils import ShopTestCase, make_test_shop, stock_in
 
 WAREHOUSE = "Stores - MCT"
 
@@ -14,9 +17,11 @@ def products(*pairs):
 	return [{"products_id": pid, "products_model": model, "products_ean": ""} for model, pid in pairs]
 
 
-class TestStock(IntegrationTestCase):
+class TestStock(ShopTestCase):
 	def setUp(self):
 		self.shop = make_test_shop(enabled=1, sync_stock=1)
+		patch.object(frappe.db, "commit").start()  # push_item ends its snapshot before re-reading
+		self.addCleanup(patch.stopall)
 		frappe.cache.delete_value(f"modified_connector:products:{self.shop.name}")
 		frappe.cache.delete_value(f"modified_connector:products_refreshed:{self.shop.name}")
 		frappe.db.delete("Modified Sync Log", {"shop": self.shop.name, "operation": "Stock"})
@@ -40,6 +45,34 @@ class TestStock(IntegrationTestCase):
 		frappe.db.set_value("Bin", {"item_code": "SKU-19", "warehouse": WAREHOUSE}, "reserved_qty", 10**6)
 		self.assertEqual(shop_quantity(self.shop, "SKU-19"), 0)
 		self.assertEqual(shop_quantity(self.shop, "SKU-DS"), 0)  # no Bin
+
+	def test_draft_shop_invoices_are_subtracted(self):
+		"""Draft shop invoices (submit_invoices off) have no Stock Ledger Entry yet but are sold."""
+		self._set_bin("SKU-19", 10)
+		before = shop_quantity(self.shop, "SKU-19")
+		draft = build_invoice(self.shop, parse_order(raw_order()))  # 2 x SKU-19, update_stock
+		draft.insert()
+		self.assertEqual((draft.docstatus, draft.update_stock), (0, 1))
+		self.assertEqual(shop_quantity(self.shop, "SKU-19"), max(0, before - 2))
+
+		other = build_invoice(self.shop, parse_order(raw_order()))  # not from the shop: not counted
+		other.modified_shop = None
+		other.modified_order_id = None
+		other.insert()
+		self.assertEqual(shop_quantity(self.shop, "SKU-19"), max(0, before - 2))
+
+		frappe.db.set_value("Sales Invoice", draft.name, "update_stock", 0)  # e.g. turned into a dropship
+		self.assertEqual(shop_quantity(self.shop, "SKU-19"), before)
+
+	def test_push_repeats_while_quantity_changes(self):
+		with patch.object(stock, "shop_quantity", side_effect=[5, 3, 3]):
+			push_item(self.shop.name, "SKU-19")
+		self.assertEqual([c.args for c in self.client.set_stock.call_args_list], [("101", 5), ("101", 3)])
+
+		self.client.set_stock.reset_mock()
+		with patch.object(stock, "shop_quantity", side_effect=[1, 2, 3, 4, 5]):
+			push_item(self.shop.name, "SKU-19")
+		self.assertEqual([c.args[1] for c in self.client.set_stock.call_args_list], [1, 2, 3])
 
 	def test_push_item_sends_quantity(self):
 		self._set_bin("SKU-19", 5)
@@ -149,8 +182,7 @@ class TestStock(IntegrationTestCase):
 	def test_full_sync_pushes_all_mapped_items(self):
 		self._set_bin("SKU-19", 5)
 		self._set_bin("SKU-7", 6)
-		with patch.object(frappe.db, "commit"):
-			result = full_sync(self.shop.name)
+		result = full_sync(self.shop.name)
 		pushed = {c.args[0] for c in self.client.set_stock.call_args_list}
 		self.assertEqual(pushed, {"101", "102"})
 		self.assertEqual(result["pushed"], 2)

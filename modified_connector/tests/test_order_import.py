@@ -10,14 +10,13 @@ from datetime import datetime
 from unittest.mock import patch
 
 import frappe
-from frappe.tests import IntegrationTestCase
 from frappe.utils import add_to_date, get_datetime, now_datetime
 
 from modified_connector.api.client import ModifiedAPIError
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
 from modified_connector.sync import order_import
 from modified_connector.sync.order_import import import_order, on_invoice_submit, run_import
-from modified_connector.tests.utils import load_raw, make_test_shop, stock_in
+from modified_connector.tests.utils import ShopTestCase, load_raw, make_test_shop, stock_in
 
 FMT = "%Y-%m-%d %H:%M:%S"
 
@@ -90,7 +89,7 @@ class FakeClient:
 		return next(o for o in self.orders if o["orders"]["orders_id"] == order_id)
 
 
-class TestOrderImport(IntegrationTestCase):
+class TestOrderImport(ShopTestCase):
 	def setUp(self):
 		self.shop = make_test_shop()
 		self.commit = patch.object(frappe.db, "commit").start()

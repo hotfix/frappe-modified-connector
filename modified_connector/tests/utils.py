@@ -3,6 +3,7 @@ from pathlib import Path
 
 import frappe
 from frappe.model import no_value_fields, table_fields
+from frappe.tests import IntegrationTestCase
 from frappe.utils import nowdate
 
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
@@ -123,8 +124,33 @@ def _mode_of_payment(name: str, account: str) -> str:
 	return name
 
 
+TEST_SHOP_PREFIX = "MC Test Shop"
+
+
+def reset_test_shops() -> None:
+	"""Disable import and stock sync of every test shop, committed: a leftover enabled test shop would be
+	used by the scheduler of the test site."""
+	for name in frappe.get_all(
+		"Modified Shop", filters={"name": ["like", f"{TEST_SHOP_PREFIX}%"]}, pluck="name"
+	):
+		frappe.db.set_value("Modified Shop", name, {"enabled": 0, "sync_stock": 0}, update_modified=False)
+	frappe.db.commit()
+
+
+class ShopTestCase(IntegrationTestCase):
+	"""For tests that enable a test shop: the shops are reset after the class rollback."""
+
+	@classmethod
+	def setUpClass(cls) -> None:
+		cls.addClassCleanup(reset_test_shops)  # registered first, so it runs after the class rollback
+		super().setUpClass()
+
+
 def make_test_shop(**overrides) -> ModifiedShop:
-	"""Create (idempotently) a self-contained German test company, items and shop."""
+	"""Create (idempotently) a self-contained German test company, items and shop.
+
+	Every field not in `overrides` is reset to its default, so the shop is disabled and does not sync
+	stock unless a test asks for it (ShopTestCase resets it afterwards)."""
 	_company()
 	vat19, vat7 = _vat_accounts()
 	t19 = _tax_template("MCT 19", {vat19: 19.0, vat7: 0.0})
@@ -175,10 +201,11 @@ def make_test_shop(**overrides) -> ModifiedShop:
 	paypal = _mode_of_payment("PayPal", bank or cash)
 	vorkasse = _mode_of_payment("Vorkasse", bank or cash)
 
-	shop_name = overrides.get("shop_name", "MC Test Shop")
+	shop_name = overrides.get("shop_name", TEST_SHOP_PREFIX)
 	values = {
 		"shop_name": shop_name,
 		"enabled": 0,
+		"sync_stock": 0,
 		"base_url": "https://shop.example",
 		"api_username": "api",
 		"api_password": "secret",

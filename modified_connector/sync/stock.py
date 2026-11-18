@@ -1,9 +1,10 @@
-"""Push ERPNext stock quantities (actual - reserved of the shop warehouse) to the shop."""
+"""Push the sellable stock of the shop warehouse to the shop (see `shop_quantity`)."""
 
 from math import floor
 
 import frappe
 from frappe import _
+from frappe.query_builder.functions import IfNull, Sum
 
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
 from modified_connector.utils import log_error_once, log_once
@@ -12,17 +13,39 @@ OPERATION = "Stock"
 CACHE_SECONDS = 3600
 REFRESH_THROTTLE_SECONDS = 600
 PUSHED, SKIPPED, ERROR = "pushed", "skipped", "errors"
+MAX_PUSHES = 3  # per job: push again while the quantity changes during the push
 
 
 def shop_quantity(shop: ModifiedShop, item_code: str) -> int:
-	"""Sellable quantity: actual - reserved in the shop warehouse, never negative; 0 without Bin."""
+	"""Sellable quantity: actual - reserved - draft shop invoices in the shop warehouse, never negative;
+	0 without Bin. Draft shop invoices (Submit Invoices off) are sold but have no Stock Ledger Entry yet."""
 	bin_ = frappe.db.get_value(
 		"Bin", {"item_code": item_code, "warehouse": shop.warehouse}, ["actual_qty", "reserved_qty"]
 	)
 	if not bin_:
 		return 0
 	actual, reserved = bin_
-	return max(0, floor((actual or 0) - (reserved or 0)))
+	return max(0, floor((actual or 0) - (reserved or 0) - _draft_invoice_qty(shop, item_code)))
+
+
+def _draft_invoice_qty(shop: ModifiedShop, item_code: str) -> float:
+	"""Stock quantity of the item in draft shop invoices that will deduct stock from the warehouse."""
+	si = frappe.qb.DocType("Sales Invoice")
+	item = frappe.qb.DocType("Sales Invoice Item")
+	qty = (
+		frappe.qb.from_(item)
+		.join(si)
+		.on(si.name == item.parent)
+		.select(Sum(item.stock_qty))
+		.where(si.docstatus == 0)
+		.where(si.update_stock == 1)
+		.where(IfNull(si.modified_shop, "") != "")
+		.where(item.parenttype == "Sales Invoice")
+		.where(item.item_code == item_code)
+		.where(item.warehouse == shop.warehouse)
+		.run()
+	)[0][0]
+	return qty or 0
 
 
 def _cache_key(shop_name: str) -> str:
@@ -92,7 +115,17 @@ def _push(shop: ModifiedShop, item_code: str, ids: dict[str, str] | None = None)
 	if not product_id:
 		log_once(shop.name, OPERATION, item_code, "Skipped", _("Item is not in the shop"))
 		return SKIPPED
-	shop.get_client().set_stock(product_id, shop_quantity(shop, item_code))
+	client = shop.get_client()
+	qty = shop_quantity(shop, item_code)
+	for _push_no in range(MAX_PUSHES):
+		client.set_stock(product_id, qty)
+		# A stock change during the push enqueued no job (deduplicated against this running one): read
+		# again in a fresh snapshot (nothing is written before, so the commit only ends the transaction).
+		frappe.db.commit()
+		current = shop_quantity(shop, item_code)
+		if current == qty:
+			break
+		qty = current
 	return PUSHED
 
 
