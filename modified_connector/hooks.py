@@ -9,6 +9,7 @@ required_apps = ["frappe/erpnext"]
 
 after_install = "modified_connector.install.after_install"
 after_migrate = "modified_connector.install.after_install"
+before_uninstall = "modified_connector.install.before_uninstall"
 
 scheduler_events = {
 	"cron": {"*/5 * * * *": ["modified_connector.tasks.import_all_shops"]},

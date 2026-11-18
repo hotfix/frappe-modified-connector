@@ -1,4 +1,5 @@
 from decimal import Decimal
+from urllib.parse import urlsplit
 
 import frappe
 from frappe import _
@@ -11,7 +12,9 @@ from modified_connector.api.client import ModifiedClient
 class ModifiedShop(Document):
 	def validate(self):
 		self.base_url = self._normalise_base_url(self.base_url)
-		self.import_status_list()
+		self._check_base_url(self.base_url)
+		if not self.import_status_list():
+			frappe.throw(_("Import Status IDs must list at least one order status id."))
 		if cint(self.retry_window_days) < 1:
 			frappe.throw(_("Retry Window (Days) must be at least 1."))
 		self._check_duplicates("tax_map", "tax_rate", _("Tax Map"), lambda v: Decimal(str(v)).normalize())
@@ -32,6 +35,14 @@ class ModifiedShop(Document):
 		if url.endswith("/api/v1"):
 			url = url[: -len("/api/v1")]
 		return url.rstrip("/")
+
+	@staticmethod
+	def _check_base_url(url: str) -> None:
+		"""HTTPS only (the API password is sent with every request); plain HTTP only for a local shop."""
+		parts = urlsplit(url)
+		local = parts.scheme == "http" and parts.hostname in ("localhost", "127.0.0.1")
+		if not parts.hostname or not (parts.scheme == "https" or local):
+			frappe.throw(_("Base URL must start with https:// (http:// is only allowed for localhost)."))
 
 	def _check_duplicates(self, table: str, field: str, label: str, key) -> None:
 		seen = set()

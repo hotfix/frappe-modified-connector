@@ -6,7 +6,7 @@ from frappe.tests import IntegrationTestCase
 from modified_connector.api.client import ModifiedAPIError
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
 from modified_connector.sync.order_import import import_order
-from modified_connector.sync.shipping import on_label_created, send_tracking
+from modified_connector.sync.shipping import on_label_created, send_tracking, send_tracking_job
 from modified_connector.tests.test_order_import import raw_order, soon
 from modified_connector.tests.utils import make_test_shop, stock_in
 
@@ -111,11 +111,33 @@ class TestShipping(IntegrationTestCase):
 			send_tracking(self.invoice, "X1")
 		self.client.add_tracking.assert_not_called()
 
+	def test_job_without_permission_logs_error_once(self):
+		frappe.set_user("Guest")
+		self.addCleanup(frappe.set_user, "Administrator")
+		send_tracking_job(self.invoice, "X1")
+		send_tracking_job(self.invoice, "X1")
+		frappe.set_user("Administrator")
+		self.client.add_tracking.assert_not_called()
+		errors = frappe.get_all(
+			"Modified Sync Log",
+			filters={"operation": "Tracking", "status": "Error", "reference": self.order_id},
+			fields=["message"],
+		)
+		self.assertEqual(len(errors), 1)
+		self.assertIn("X1", errors[0].message)
+		self.assertIn("Guest", errors[0].message)
+		self.assertFalse(self.number())
+
+	def test_job_sends_tracking(self):
+		send_tracking_job(self.invoice, "X2")
+		self.client.add_tracking.assert_called_once_with(self.order_id, 1, "X2")
+
 	def test_hook_enqueues_for_shop_invoice_only(self):
 		with patch("frappe.enqueue") as enqueue:
 			on_label_created("Sales Invoice", self.invoice, "dhl", "T1")
 			enqueue.assert_called_once()
 			kwargs = enqueue.call_args.kwargs
+			self.assertEqual(enqueue.call_args.args, ("modified_connector.sync.shipping.send_tracking_job",))
 			self.assertEqual(kwargs["invoice"], self.invoice)
 			self.assertEqual(kwargs["tracking_number"], "T1")
 			self.assertTrue(kwargs["enqueue_after_commit"])

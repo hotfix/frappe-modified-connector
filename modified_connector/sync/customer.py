@@ -9,7 +9,10 @@ from modified_connector.sync.mapping import ShopAddress, ShopOrder
 
 
 def ensure_customer(shop: ModifiedShop, order: ShopOrder) -> tuple[str, str, str | None]:
-	"""Return (customer, billing_address, shipping_address or None if same as billing)."""
+	"""Return (customer, billing_address, shipping_address or None if same as billing).
+
+	Addresses are matched by recipient (company and name) and street, postcode and city: a parcel to
+	another person at the same street gets its own shipping address."""
 	customer = _find_customer(shop, order) or _create_customer(shop, order)
 	if order.email:
 		_ensure_contact(customer, order)
@@ -86,28 +89,38 @@ def _contact_emails(contact: str) -> list[str]:
 	return frappe.get_all("Contact Email", filters={"parent": contact}, pluck="email_id")
 
 
-def _key(street: str | None, postcode: str | None, city: str | None) -> tuple[str, ...]:
-	"""Street + postcode + city, whitespace- and case-insensitive."""
-	return tuple(" ".join((v or "").split()).lower() for v in (street, postcode, city))
+def _norm(value: str | None) -> str:
+	return " ".join((value or "").split()).lower()
+
+
+def _title(address: ShopAddress) -> str:
+	"""Company and name of the recipient, e.g. "Muster GmbH, Max Mustermann"."""
+	return ", ".join(part for part in (address.company.strip(), address.name.strip()) if part)
+
+
+def _key(title: str | None, street: str | None, postcode: str | None, city: str | None) -> tuple[str, ...]:
+	"""Recipient (company and name) + street + postcode + city, whitespace- and case-insensitive."""
+	return tuple(_norm(v) for v in (title, street, postcode, city))
 
 
 def _address_key(address: ShopAddress) -> tuple[str, ...]:
-	return _key(address.street, address.postcode, address.city)
+	return _key(_title(address), address.street, address.postcode, address.city)
 
 
 def _ensure_address(customer: str, address: ShopAddress, address_type: str) -> str:
-	key = _address_key(address)
+	title = _title(address) or customer
+	key = _key(title, address.street, address.postcode, address.city)
 	addr = DocType("Address")
 	candidates = (
 		frappe.qb.from_(addr)
-		.select(addr.name, addr.address_line1, addr.pincode, addr.city)
+		.select(addr.name, addr.address_title, addr.address_line1, addr.pincode, addr.city)
 		.where(addr.name.isin(_linked("Address", customer)))
 		.where(addr.disabled == 0)
 		.orderby(addr.creation)
 		.run(as_dict=True)
 	)
 	for row in candidates:
-		if _key(row.address_line1, row.pincode, row.city) == key:
+		if _key(row.address_title, row.address_line1, row.pincode, row.city) == key:
 			return row.name
 
 	country = frappe.db.get_value("Country", {"code": address.country_iso2.lower()}, "name")
@@ -116,7 +129,7 @@ def _ensure_address(customer: str, address: ShopAddress, address_type: str) -> s
 	doc = frappe.get_doc(
 		{
 			"doctype": "Address",
-			"address_title": address.company.strip() or address.name.strip() or customer,
+			"address_title": title,
 			"address_type": address_type,
 			"address_line1": address.street,
 			"address_line2": address.suburb,

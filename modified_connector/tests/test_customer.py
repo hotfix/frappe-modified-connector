@@ -21,7 +21,14 @@ class TestCustomer(IntegrationTestCase):
 	def test_customer_created_once(self):
 		order = parse_order(load_raw("order_basic"))
 		customer, billing, shipping = ensure_customer(self.shop, order)
-		self.assertIsNone(shipping)  # delivery has the same street/postcode/city
+		# same street/postcode/city, but delivered to another recipient (Muster GmbH, Max Mustermann)
+		self.assertIsNotNone(shipping)
+		self.assertNotEqual(shipping, billing)
+		ship = frappe.get_doc("Address", shipping)
+		self.assertEqual(
+			(ship.address_type, ship.address_title, ship.address_line1),
+			("Shipping", "Muster GmbH, Max Mustermann", "Musterstraße 1"),
+		)
 		doc = frappe.get_doc("Customer", customer)
 		self.assertEqual(doc.modified_shop, self.shop.name)
 		self.assertEqual(doc.modified_customer_key, "C5")
@@ -30,6 +37,7 @@ class TestCustomer(IntegrationTestCase):
 		self.assertEqual((doc.customer_group, doc.territory), (self.shop.customer_group, self.shop.territory))
 		addr = frappe.get_doc("Address", billing)
 		self.assertEqual(addr.address_type, "Billing")
+		self.assertEqual(addr.address_title, "Erika Musterfrau")
 		self.assertEqual(
 			(addr.address_line1, addr.pincode, addr.city), ("Musterstraße 1", "12345", "Musterstadt")
 		)
@@ -37,7 +45,7 @@ class TestCustomer(IntegrationTestCase):
 		count = len(linked("Address", customer))
 
 		again = ensure_customer(self.shop, order)
-		self.assertEqual(again, (customer, billing, None))
+		self.assertEqual(again, (customer, billing, shipping))
 		self.assertEqual(len(linked("Address", customer)), count)
 		self.assertEqual(frappe.db.count("Customer", {"modified_customer_key": "C5"}), 1)
 		self.assertEqual(len(linked("Contact", customer)), 1)
@@ -90,4 +98,29 @@ class TestCustomer(IntegrationTestCase):
 		)
 		self.assertEqual(len(linked("Address", customer)), 2)
 		self.assertEqual(ensure_customer(self.shop, order), (customer, billing, shipping))
+		self.assertEqual(len(linked("Address", customer)), 2)
+
+	def test_same_recipient_and_street_has_no_shipping_address(self):
+		raw = load_raw("order_basic")
+		raw["orders"]["customers_id"] = "99"
+		raw["orders"]["delivery_name"] = " erika  musterfrau "
+		raw["orders"]["delivery_company"] = ""
+		customer, billing, shipping = ensure_customer(self.shop, parse_order(raw))
+		self.assertIsNone(shipping)
+		self.assertEqual(len(linked("Address", customer)), 1)
+		self.assertEqual(ensure_customer(self.shop, parse_order(raw)), (customer, billing, None))
+
+	def test_other_company_at_same_street_gets_own_address(self):
+		raw = load_raw("order_basic")
+		raw["orders"]["customers_id"] = "98"
+		raw["orders"]["delivery_name"] = raw["orders"]["billing_name"]
+		raw["orders"]["delivery_company"] = "Nachbar KG"
+		customer, billing, shipping = ensure_customer(self.shop, parse_order(raw))
+		self.assertIsNotNone(shipping)
+		self.assertEqual(
+			frappe.db.get_value("Address", shipping, "address_title"), "Nachbar KG, Erika Musterfrau"
+		)
+		self.assertEqual(len(linked("Address", customer)), 2)
+		# matched again by recipient and street, not duplicated
+		self.assertEqual(ensure_customer(self.shop, parse_order(raw)), (customer, billing, shipping))
 		self.assertEqual(len(linked("Address", customer)), 2)

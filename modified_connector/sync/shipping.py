@@ -17,7 +17,7 @@ def on_label_created(doctype: str, name: str, carrier: str, tracking_number: str
 	if doctype != "Sales Invoice" or not frappe.db.get_value("Sales Invoice", name, "modified_order_id"):
 		return
 	frappe.enqueue(
-		"modified_connector.sync.shipping.send_tracking",
+		"modified_connector.sync.shipping.send_tracking_job",
 		queue="short",
 		enqueue_after_commit=True,
 		job_id=f"modified_tracking::{name}::{tracking_number}",
@@ -26,6 +26,24 @@ def on_label_created(doctype: str, name: str, carrier: str, tracking_number: str
 		tracking_number=tracking_number,
 		carrier=carrier,
 	)
+
+
+def send_tracking_job(invoice: str, tracking_number: str, carrier: str = "dhl") -> None:
+	"""Background job of the hook. It runs as the user who created the label: without write permission
+	on the invoice the number is logged as an error instead of failing unseen in the job queue."""
+	try:
+		send_tracking(invoice, tracking_number, carrier)
+	except frappe.PermissionError:
+		frappe.clear_messages()
+		shop, order_id = frappe.db.get_value("Sales Invoice", invoice, ["modified_shop", "modified_order_id"])
+		log_error_once(
+			shop,
+			OPERATION,
+			order_id,
+			_(
+				"User {0} may not send tracking number {1} of {2}; send it with the button on the invoice."
+			).format(frappe.session.user, tracking_number, invoice),
+		)
 
 
 @frappe.whitelist()

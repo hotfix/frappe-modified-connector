@@ -65,6 +65,22 @@ class TestModifiedShop(IntegrationTestCase):
 		self.shop.import_status_ids = "x"
 		self.assertRaises(frappe.ValidationError, self.shop.save)
 
+	def test_import_status_ids_required(self):
+		for value in ("", " , "):
+			self.shop.import_status_ids = value
+			self.assertRaises(frappe.ValidationError, self.shop.save)
+
+	def test_base_url_must_be_https(self):
+		for url in ("http://shop.example", "ftp://shop.example", "shop.example", "http://localhost.evil"):
+			shop = frappe.get_doc("Modified Shop", self.shop.name)
+			shop.base_url = url
+			self.assertRaises(frappe.ValidationError, shop.save)
+		for url in ("https://shop.example", "http://localhost:8080", "http://127.0.0.1"):
+			shop = frappe.get_doc("Modified Shop", self.shop.name)
+			shop.base_url = url
+			shop.save()
+			self.assertEqual(shop.base_url, url)
+
 	def test_base_url_normalised(self):
 		self.shop.base_url = "https://shop.example/api/v1/"
 		self.shop.save()

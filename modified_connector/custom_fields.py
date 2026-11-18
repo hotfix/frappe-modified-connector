@@ -30,7 +30,7 @@ CUSTOM_FIELDS = {
 		{
 			"fieldname": "modified_tracking_number",
 			"label": "Modified Tracking Number",
-			"fieldtype": "Data",
+			"fieldtype": "Small Text",  # comma separated parcels can exceed 140 characters
 			"insert_after": "modified_payment_class",
 			"no_copy": 1,
 		},
