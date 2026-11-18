@@ -20,6 +20,8 @@ def on_label_created(doctype: str, name: str, carrier: str, tracking_number: str
 		"modified_connector.sync.shipping.send_tracking",
 		queue="short",
 		enqueue_after_commit=True,
+		job_id=f"modified_tracking::{name}::{tracking_number}",
+		deduplicate=True,
 		invoice=name,
 		tracking_number=tracking_number,
 		carrier=carrier,
@@ -48,7 +50,9 @@ def send_tracking(invoice: str, tracking_number: str, carrier: str = "dhl") -> N
 	order_id = doc.modified_order_id
 	try:
 		client = shop.get_client()
-		client.add_tracking(order_id, shop.dhl_carrier_id, tracking_number)
+		# read first: a retry after a failed add_status must not add the parcel a second time
+		if not any(str(row.get("parcel_id")) == tracking_number for row in client.get_tracking(order_id)):
+			client.add_tracking(order_id, shop.dhl_carrier_id, tracking_number)
 		client.add_status(order_id, shop.shipped_status_id, notify=True)
 	except ModifiedAPIError as exc:
 		log_error_once(shop.name, OPERATION, order_id, str(exc))

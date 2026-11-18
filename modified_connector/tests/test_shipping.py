@@ -19,6 +19,7 @@ class TestShipping(IntegrationTestCase):
 		for sku in ("SKU-19", "SKU-7"):
 			stock_in(sku, 10)
 		self.client = MagicMock()
+		self.client.get_tracking.return_value = []
 		patch.object(ModifiedShop, "get_client", return_value=self.client).start()
 		raw = raw_order(purchased=soon())
 		self.order_id = raw["orders"]["orders_id"]
@@ -76,14 +77,32 @@ class TestShipping(IntegrationTestCase):
 
 	def test_api_error_logged_and_nothing_stored(self):
 		self.client.add_tracking.side_effect = ModifiedAPIError(500, "/x", "boom")
+		filters = {"operation": "Tracking", "status": "Error", "reference": self.order_id}
+		for _i in range(2):
+			with self.assertRaises(frappe.ValidationError):
+				send_tracking(self.invoice, "X1")
+		self.assertFalse(self.number())
+		logs = frappe.get_all("Modified Sync Log", filters=filters, fields=["message"])
+		self.assertEqual(len(logs), 1)
+		self.assertIn("boom", logs[0].message)
+
+	def test_retry_after_failed_status_does_not_duplicate_parcel(self):
+		self.client.add_status.side_effect = ModifiedAPIError(500, "/x", "boom")
 		with self.assertRaises(frappe.ValidationError):
 			send_tracking(self.invoice, "X1")
+		self.client.add_tracking.assert_called_once()
 		self.assertFalse(self.number())
-		self.assertTrue(
-			frappe.db.exists(
-				"Modified Sync Log", {"operation": "Tracking", "status": "Error", "reference": self.order_id}
-			)
-		)
+		self.client.add_status.side_effect = None
+		self.client.get_tracking.return_value = [{"tracking_id": "7", "parcel_id": "X1"}]
+		send_tracking(self.invoice, "X1")
+		self.client.add_tracking.assert_called_once()
+		self.assertEqual(self.client.add_status.call_count, 2)
+		self.assertEqual(self.number(), "X1")
+
+	def test_empty_tracking_number_rejected(self):
+		with self.assertRaises(frappe.ValidationError):
+			send_tracking(self.invoice, "  ")
+		self.client.add_tracking.assert_not_called()
 
 	def test_permission_required(self):
 		frappe.set_user("Guest")

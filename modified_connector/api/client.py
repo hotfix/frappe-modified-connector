@@ -156,6 +156,15 @@ class ModifiedClient:
 	def set_stock(self, products_id: str, quantity: int) -> None:
 		self.request("PUT", f"/products/{products_id}/products", json={"products_quantity": quantity})
 
+	def get_tracking(self, order_id: str) -> list[dict]:
+		"""Tracking rows stored for the order (the shop answers 404 if there are none)."""
+		try:
+			return self.request("GET", f"/orders/{order_id}/tracking") or []
+		except ModifiedAPIError as exc:
+			if exc.status == 404:
+				return []
+			raise
+
 	def add_tracking(self, order_id: str, carrier_id: int, parcel_id: str) -> None:
 		self.request(
 			"POST", f"/orders/{order_id}/tracking", json={"carrier_id": carrier_id, "parcel_id": parcel_id}

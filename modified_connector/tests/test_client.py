@@ -105,6 +105,20 @@ class TestModifiedClient(UnitTestCase):
 		self.assertEqual(calls[2].args[:2], ("POST", API + "/oauth/refresh"))
 		self.assertEqual(calls[3].kwargs["headers"]["Authorization"], "Bearer A2")
 
+	def test_get_tracking_returns_rows_and_empty_on_404(self):
+		rows = [{"tracking_id": "1", "parcel_id": "P1"}]
+		with patch("requests.Session.request") as req:
+			req.side_effect = [token(), resp(200, rows)]
+			self.assertEqual(make_client().get_tracking("1000"), rows)
+		self.assertEqual(req.call_args_list[1].args[:2], ("GET", API + "/orders/1000/tracking"))
+		with patch("requests.Session.request") as req:
+			req.side_effect = [token(), resp(404, None, "not found")]
+			self.assertEqual(make_client().get_tracking("1000"), [])
+		with patch("requests.Session.request") as req:
+			req.side_effect = [token(), resp(500, None, "boom")]
+			with self.assertRaises(ModifiedAPIError):
+				make_client().get_tracking("1000")
+
 	def test_iter_orders_follows_next(self):
 		page1 = resp(
 			200,
