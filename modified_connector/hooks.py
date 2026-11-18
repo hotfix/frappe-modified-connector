@@ -19,3 +19,8 @@ doc_events = {
 	"Sales Invoice": {"on_submit": "modified_connector.sync.order_import.on_invoice_submit"},
 	"Stock Ledger Entry": {"on_submit": "modified_connector.sync.stock.on_stock_change"},
 }
+
+doctype_js = {"Sales Invoice": "public/js/sales_invoice.js"}
+
+# Custom hook: label apps call these after storing a label (see README, "Integration hooks").
+on_shipping_label_created = ["modified_connector.sync.shipping.on_label_created"]
