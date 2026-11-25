@@ -71,9 +71,9 @@ Namen in die Suchleiste oben eingeben (in Klammern der englische Name, falls Ihr
 | Umsatzsteuerkonten | Kontenplan (Chart of Accounts) | Umsatzsteuer 19 %, Umsatzsteuer 7 % | Je Steuersatz ein eigenes Konto. |
 | Artikelsteuervorlagen | Artikelsteuervorlage (Item Tax Template) | „USt 19 %“ und „USt 7 %“ | Je Steuersatz eine Vorlage (siehe unten). |
 | Umsatzsteuervorlage | Vorlage für Verkaufssteuern und -abgaben (Sales Taxes and Charges Template) | „Inland - MF“ | Eine Zeile je Steuersatz (siehe unten). |
-| Artikel | Artikel (Item) | Artikelnummer `HOLZ-ZUG-01` | Die Artikelnummer (oder der Barcode) muss genau dem Wert im Shop entsprechen (siehe Reiter „Artikel, Steuern & Zahlungen“). |
-| Versandartikel | Artikel (Item) | Artikelnummer `VERSAND`, Name „Versand“ | **Ohne** Haken bei „Lager verwalten“. |
-| Zahlungsarten | Zahlungsart (Mode of Payment) | „PayPal“, „Überweisung“ | Jede Zeile der Zahlungszuordnung braucht eine Zahlungsart. Für Zahlungsarten mit *Bei Bestellung bezahlt* muss zusätzlich in der Kontentabelle der Zahlungsart für Ihr Unternehmen ein Standardkonto eingetragen sein (z. B. ein Bankkonto „PayPal“). |
+| Artikel | Artikel (Item) | Artikel-Code `HOLZ-ZUG-01` | Der Artikel-Code (oder der Barcode) muss genau dem Wert im Shop entsprechen (siehe Reiter „Artikel, Steuern & Zahlungen“). |
+| Versandartikel | Artikel (Item) | Artikel-Code `VERSAND`, Name „Versand“ | **Ohne** Haken bei „Lager verwalten“. |
+| Zahlungsweisen | Zahlungsweise (Mode of Payment) | „PayPal“, „Überweisung“ | Jede Zeile der Zahlungszuordnung braucht eine Zahlungsweise. Für Zahlungsweisen mit *Bei Bestellung bezahlt* muss zusätzlich in der Kontentabelle der Zahlungsweise für Ihr Unternehmen ein Standardkonto eingetragen sein (z. B. ein Bankkonto „PayPal“). |
 | Nummernkreis (optional) | Dokumentenbenennungseinstellungen (Document Naming Settings) | `SHOP-.YYYY.-` | Nur wenn Shop-Rechnungen einen eigenen Nummernkreis bekommen sollen: dort für „Ausgangsrechnung“ eintragen. |
 
 **Steuern richtig einrichten.** Shop-Preise sind Bruttopreise. So passt es zusammen:
@@ -142,7 +142,7 @@ Abschnitt *Artikelabgleich* – so findet der Import zu einer Shop-Position den 
 | Feld | Beispiel | Bedeutung |
 | --- | --- | --- |
 | Artikelabgleich: Shop-Feld | `products_model` | `products_model` ist die Artikelnummer (Modell) des Produkts im Shop, `products_ean` die EAN. |
-| Artikelabgleich: ERP-Feld | Item Code (Artikelnummer) | Womit der Shop-Wert in ERPNext verglichen wird: Artikelnummer oder Barcode (Tabelle „Strichcodes“ des Artikels). Übliche Paare: `products_model` mit Item Code, `products_ean` mit Barcode. |
+| Artikelabgleich: ERP-Feld | Item Code (Artikel-Code) | Womit der Shop-Wert in ERPNext verglichen wird: Artikel-Code oder Barcode (Tabelle „Strichcodes“ des Artikels). Übliche Paare: `products_model` mit Item Code, `products_ean` mit Barcode. |
 
 Eine Bestellposition ohne passenden (oder mit deaktiviertem) Artikel lässt die ganze Bestellung als Fehler
 scheitern.
@@ -154,17 +154,17 @@ Abschnitt *Steuern und Zahlungen*:
 | Versandartikel | VERSAND | Artikel ohne Lagerführung für die Versandkostenzeile(n). Muss alle Artikelsteuervorlagen der Steuerzuordnung aufführen. |
 | Umsatzsteuervorlage | Inland - MF | Vorlage mit einer Zeile je Steuersatz (Abschnitt 2). Die Steuern gelten als im Preis enthalten. |
 | Steuerzuordnung | 19 → USt 19 %, 7 → USt 7 % | Tabelle: *Steuersatz (%)* wie in den Bestellpositionen des Shops und die *Artikelsteuervorlage* dafür. Ein Steuersatz ohne Zeile lässt die Bestellung scheitern. |
-| Zahlungszuordnung | siehe unten | Tabelle: *Zahlungsklasse* (Code der Zahlungsart im Shop), *Zahlungsart* in ERPNext und *Bei Bestellung bezahlt*. Optional: Bestellungen mit einer Zahlungsklasse ohne Zeile werden trotzdem importiert, nur ohne Zahlung. |
+| Zahlungszuordnung | siehe unten | Tabelle: *Zahlungsklasse* (Code der Zahlungsart im Shop), *Zahlungsweise* in ERPNext und *Bei Bestellung bezahlt*. Optional: Bestellungen mit einer Zahlungsklasse ohne Zeile werden trotzdem importiert, nur ohne Zahlung. |
 
 Beispiel für die **Zahlungszuordnung**:
 
-| Zahlungsklasse | Zahlungsart | Bei Bestellung bezahlt |
+| Zahlungsklasse | Zahlungsweise | Bei Bestellung bezahlt |
 | --- | --- | --- |
 | `paypal` | PayPal | an – die Zahlung wird beim Buchen der Rechnung erstellt |
 | `moneyorder` | Überweisung | aus – Vorkasse; die Rechnung bleibt offen, bis der Bankeingang zugeordnet ist |
 | `invoice` | Überweisung | aus – Kauf auf Rechnung |
 
-Die Groß-/Kleinschreibung der Zahlungsklasse spielt keine Rolle. Die *Zahlungsart* ist in jeder Zeile
+Die Groß-/Kleinschreibung der Zahlungsklasse spielt keine Rolle. Die *Zahlungsweise* ist in jeder Zeile
 Pflicht, wird aber nur bei *Bei Bestellung bezahlt* verwendet.
 
 ### Reiter „Synchronisierung“
@@ -228,7 +228,7 @@ API-Benutzer (`POST /api/v1/oauth`) liefern diese Abfragen die Werte:
    Formular nach einer Weile neu.
 5. Ergebnis prüfen: In der **Statuszeile** oben im Formular steht dann z. B. „Letzter Import: vor 2 Minuten ·
    3 in den letzten 7 Tagen importiert · 1 warten auf den Importstatus · 0 Importfehler“, darunter Links zum
-   Synchronisierungsprotokoll, zu den Ausgangsrechnungen dieses Shops, zum Integrationsprotokoll (falls
+   Synchronisierungsprotokoll, zu den Ausgangsrechnungen dieses Shops, zum Integrations-Protokoll (falls
    installiert) und zu dieser Anleitung. Die Zeile ist grün, bei Importfehlern rot.
 6. Die **Ausgangsrechnungen** (Entwürfe) prüfen: Kunde, Adressen, Positionen, Steuern, Gesamtbetrag. Buchen
    Sie einige von Hand und prüfen Sie Zahlung und Lagerabgang bzw. Lieferschein.
@@ -248,24 +248,26 @@ Die Schaltflächen erscheinen erst, wenn der Shop gespeichert ist. „Bestellung
   steht als Referenz darin.
 - **Lieferscheine**: nur bei Bestellungen mit Streckengeschäfts-Artikeln (siehe Abschnitt 1).
 - **Kunden**: neu angelegte Shop-Kunden tragen den Shop-Namen im Feld *Modified Shop*.
-- **Modified-Synchronisationsprotokoll**: je Eintrag Shop, *Vorgang* (Import, Bestand, Sendungsverfolgung),
-  *Referenz* (Bestellnummer bzw. Artikelnummer), *Status* (Erfolg, Fehler, Übersprungen) und *Nachricht*.
+- **Modified-Synchronisationsprotokoll**: je Eintrag Shop, *Vorgang* (Importieren = Bestellimport, Lager =
+  Bestandsmeldung, Sendungsverfolgung), *Referenz* (Bestellnummer bzw. Artikel-Code), *Status* (Erfolgreich,
+  Fehler, Übersprungen) und der Meldungstext.
   Ein erfolgreicher Import verweist auf seine Rechnung. Erfolgreiche Bestandsmeldungen werden nicht
   protokolliert, nur Fehler und übersprungene Artikel. Derselbe Fehler wird nicht bei jedem Lauf erneut
   eingetragen.
-- **Integrationsprotokoll**: Ist zusätzlich die App *Integration Log* installiert, erscheinen dort die Fehler
+- **Integrations-Protokoll**: Ist zusätzlich die App *Integration Log* installiert, erscheinen dort die Fehler
   und die wartenden Bestellungen (als Warnung) aller Anbindungen an einer Stelle. Wird eine Bestellung später
   importiert, wird der Eintrag dort automatisch erledigt.
 
 ## 8. Probleme finden und beheben
 
-**Erneut versuchen.** Öffnen Sie einen Protokolleintrag mit Status *Fehler* (Vorgang Import) oder eine
+**Erneut versuchen.** Öffnen Sie einen Protokolleintrag mit Status *Fehler* (Vorgang Importieren) oder eine
 wartende Bestellung („Warte auf Importstatus …“) und klicken Sie nach dem Beheben der Ursache auf
-**Erneut versuchen**. Die Bestellung wird sofort neu aus dem Shop geholt und importiert, auch wenn sie älter
+**Erneut versuchen** (ohne die App *Integration Log* heißt die Schaltfläche „Wiederholen“). Die Bestellung
+wird sofort neu aus dem Shop geholt und importiert, auch wenn sie älter
 als der Wiederholungszeitraum ist. Klappt es, wird der alte Eintrag auf *Übersprungen* gesetzt und verweist
 auf den neuen. Ist die Bestellung inzwischen schon importiert, im Shop storniert, nicht mehr in einem
 Import-Status oder vor *Import ab* aufgegeben, wird der Eintrag mit diesem Grund geschlossen. Eine Bestellung,
-die immer noch auf ihren Status wartet, bleibt offen. Dieselbe Schaltfläche gibt es im Integrationsprotokoll.
+die immer noch auf ihren Status wartet, bleibt offen. Dieselbe Schaltfläche gibt es im Integrations-Protokoll.
 Dafür brauchen Sie das Recht, Ausgangsrechnungen anzulegen.
 
 Typische Meldungen im Synchronisationsprotokoll (die Texte erscheinen in der Systemsprache; einige technische
@@ -273,7 +275,7 @@ Meldungen sind immer englisch):
 
 | Meldung (Beispiel) | Ursache | Was tun |
 | --- | --- | --- |
-| Kein Artikel gefunden für products_model HOLZ-ZUG-01 (Shop-Produkt 12, Holzeisenbahn) | Kein ERPNext-Artikel mit dieser Artikelnummer bzw. diesem Barcode. | Artikel anlegen oder Artikelnummer korrigieren, dann **Erneut versuchen**. |
+| Kein Artikel gefunden für products_model HOLZ-ZUG-01 (Shop-Produkt 12, Holzeisenbahn) | Kein ERPNext-Artikel mit diesem Artikel-Code bzw. diesem Barcode. | Artikel anlegen oder Artikel-Code korrigieren, dann **Erneut versuchen**. |
 | Artikel … für products_model … ist deaktiviert | Der passende Artikel ist deaktiviert. | Artikel aktivieren, dann **Erneut versuchen**. |
 | Für den Steuersatz 7.00 % ist im Shop … keine Artikelsteuervorlage zugeordnet | In der Steuerzuordnung fehlt der Steuersatz. | Zeile in der *Steuerzuordnung* ergänzen, dann **Erneut versuchen**. |
 | Zeile 2 (…): Erwartet wurde die Artikelsteuervorlage USt 7 % …, ERPNext hat … gesetzt | Der Artikel (oder der Versandartikel) führt die Vorlage nicht auf. | Vorlage im Reiter „Steuer“ des Artikels oder seiner Artikelgruppe ergänzen, dann **Erneut versuchen**. |
@@ -283,17 +285,17 @@ Meldungen sind immer englisch):
 | unsupported currency …, unsupported allow_tax (net prices), unsupported attributes on product …, unsupported total class … | Bestellung außerhalb der Grenzen dieser Version (Abschnitt 1). | Bestellung von Hand buchen. |
 | guest order without email | Gastbestellung ohne E-Mail-Adresse. | Bestellung von Hand buchen. |
 | Unbekannter Ländercode … | Das Land der Adresse ist in ERPNext nicht zu finden. | Ländercode der Adresse im Shop prüfen. |
-| Bitte tragen Sie ein Bank- oder Kassenkonto in Zahlungsweise … ein | Der Zahlungsart fehlt das Standardkonto für Ihr Unternehmen (im Protokoll bei eingeschaltetem *Rechnungen buchen*; beim Buchen von Hand erscheint die Meldung direkt). | Konto in der Zahlungsart eintragen, dann **Erneut versuchen** bzw. erneut buchen. |
+| Bitte tragen Sie ein Bank- oder Kassenkonto in Zahlungsweise … ein | Der Zahlungsweise fehlt das Standardkonto für Ihr Unternehmen (im Protokoll bei eingeschaltetem *Rechnungen buchen*; beim Buchen von Hand erscheint die Meldung direkt). | Konto in der Zahlungsweise eintragen, dann **Erneut versuchen** bzw. erneut buchen. |
 | Bestellung … wurde nach dem Import im Shop storniert; bitte Rechnung … prüfen | Die Bestellung wurde nach dem Import storniert. | Einen Rechnungsentwurf löschen; eine gebuchte Rechnung stornieren oder eine Gutschrift erstellen. |
 | Bestellimport abgebrochen: Shop API error … (Referenz „(run)“) | Der Shop war nicht erreichbar oder hat die Anmeldung abgelehnt. | Basis-URL, Zugangsdaten und **Verbindung testen** prüfen. Der nächste Lauf holt alles nach; dieser Eintrag kann nicht wiederholt werden. |
-| Der Artikel ist nicht im Shop | (Bestand) Zu diesem ERPNext-Artikel gibt es kein Shop-Produkt mit gleicher Artikelnummer bzw. EAN. | Nur ein Hinweis; Artikel im Shop anlegen oder ignorieren. |
-| Der Artikel hat keinen Wert, um ihn dem Shop-Produkt zuzuordnen | (Bestand) Beim Abgleich über Barcode hat der Artikel keinen Barcode. | Barcode am Artikel eintragen. |
-| Vollständiger Bestandsabgleich abgebrochen: … | (Bestand) Die Produktliste des Shops konnte nicht abgerufen werden. | Verbindung prüfen; der nächste tägliche Abgleich oder **Bestand jetzt abgleichen** versucht es erneut. |
+| Der Artikel ist nicht im Shop | (Vorgang Lager) Zu diesem ERPNext-Artikel gibt es kein Shop-Produkt mit passendem Wert (Modell bzw. EAN). | Nur ein Hinweis; Artikel im Shop anlegen oder ignorieren. |
+| Der Artikel hat keinen Wert, um ihn dem Shop-Produkt zuzuordnen | (Vorgang Lager) Beim Abgleich über Barcode hat der Artikel keinen Barcode. | Barcode am Artikel eintragen. |
+| Vollständiger Bestandsabgleich abgebrochen: … | (Vorgang Lager) Die Produktliste des Shops konnte nicht abgerufen werden. | Verbindung prüfen; der nächste tägliche Abgleich oder **Bestand jetzt abgleichen** versucht es erneut. |
 
 Andere, unerwartete Fehler erscheinen als „Fehlertyp: Text“ (z. B. „TypeError: …“); die technischen Details
 stehen dann zusätzlich im **Fehlerprotokoll** (Error Log) unter „Import der Modified-Bestellung fehlgeschlagen“.
 
-**Eine Zahlungsart fehlt in der Zahlungszuordnung?** Das ist kein Fehler: Die Bestellung wird importiert,
+**Eine Zahlungsklasse fehlt in der Zahlungszuordnung?** Das ist kein Fehler: Die Bestellung wird importiert,
 nur ohne Zahlung. Ergänzen Sie die Zeile, wenn für diese Zahlungsart künftig eine Zahlung entstehen soll.
 
 **Rechnung storniert und berichtigt?** Eine berichtigte Shop-Rechnung behält die Bestellnummer. Beim Buchen

@@ -1,22 +1,18 @@
 from pathlib import Path
 
 import frappe
-from babel.messages.pofile import read_po
 from frappe.model import no_value_fields
 from frappe.tests import IntegrationTestCase
 from frappe.utils import set_request
 from frappe.website.serve import get_response
+
+from modified_connector.tests.test_translations import effective_german
 
 ROUTE = "modified-shop-guide"
 APP_PATH = Path(frappe.get_app_path("modified_connector"))
 GUIDE = APP_PATH / "docs" / "setup-guide-de.md"
 CHILD_TABLES = ("Modified Shop Tax Map", "Modified Shop Payment Map")
 BUTTONS = ("Test Connection", "Import Orders Now", "Sync Stock Now", "Retry")
-
-
-def german() -> dict[str, str]:
-	with open(APP_PATH / "locale" / "de.po", "rb") as f:
-		return {m.id: m.string for m in read_po(f) if isinstance(m.id, str) and m.id and m.string}
 
 
 def guide_context():
@@ -61,8 +57,9 @@ class TestGuide(IntegrationTestCase):
 		self.assertIn('href="/desk/shop-connector"', html)
 
 	def test_guide_mentions_all_field_labels(self):
-		"""Every input field of the shop and its tables, every tab and button, by its German label."""
-		de = german()
+		"""Every input field of the shop and its tables, every tab and button, by the German label the user
+		sees (translations of all installed apps merged)."""
+		de = effective_german()
 		text = GUIDE.read_text(encoding="utf-8")
 		labels = []
 		for doctype in ("Modified Shop", *CHILD_TABLES):

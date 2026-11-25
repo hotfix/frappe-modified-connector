@@ -4,6 +4,8 @@ from pathlib import Path
 import frappe
 from frappe.tests import IntegrationTestCase
 
+from modified_connector.tests.test_translations import effective_german
+
 OLD_FIELDS = [
 	"shop_name",
 	"enabled",
@@ -60,6 +62,8 @@ class TestShopForm(IntegrationTestCase):
 		po = Path(frappe.get_app_path("modified_connector", "locale", "de.po")).read_text(encoding="utf-8")
 		pattern = r'^msgid "(.*)"\nmsgstr "(.+)"$'
 		translated = {m.group(1).replace('\\"', '"') for m in re.finditer(pattern, po, re.M)}
+		# labels that frappe/erpnext already translate are not repeated here (see test_translations)
+		translated |= set(effective_german())
 		for doctype in ("Modified Shop", "Modified Shop Tax Map", "Modified Shop Payment Map"):
 			for f in frappe.get_meta(doctype).fields:
 				if f.fieldtype == "Column Break" or f.fieldname == "last_import":

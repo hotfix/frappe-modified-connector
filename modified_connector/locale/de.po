@@ -28,17 +28,6 @@ msgstr "API-Passwort"
 msgid "API Username"
 msgstr "API-Benutzername"
 
-#. Option for the 'Item Match ERP Field' (Select) field in DocType 'Modified
-#. Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:161
-msgid "Barcode"
-msgstr "Barcode"
-
-#. Label of the base_url (Data) field in DocType 'Modified Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:64
-msgid "Base URL"
-msgstr "Basis-URL"
-
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.py:45
 msgid "Base URL must start with https:// (http:// is only allowed for localhost)."
 msgstr "Die Basis-URL muss mit https:// beginnen (http:// ist nur für localhost erlaubt)."
@@ -53,25 +42,9 @@ msgstr "Status-ID Storniert"
 msgid "Carrier {0} is not supported."
 msgstr "Der Versanddienstleister {0} wird nicht unterstützt."
 
-#. Label of the company (Link) field in DocType 'Modified Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:108
-msgid "Company"
-msgstr "Unternehmen"
-
-#. Label of the connection_section (Section Break) field in DocType 'Modified
-#. Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:59
-msgid "Connection"
-msgstr "Verbindung"
-
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.js:11
 msgid "Connection OK"
 msgstr "Verbindung erfolgreich"
-
-#. Label of the customer_group (Link) field in DocType 'Modified Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:127
-msgid "Customer Group"
-msgstr "Kundengruppe"
 
 #. Label of the dhl_carrier_id (Int) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:222
@@ -89,30 +62,15 @@ msgstr "ERPNext-Standardwerte"
 msgid "Each import fetches the orders of this many days before the last import again, so orders that failed or were not yet in an import status are retried."
 msgstr "Jeder Import ruft die Bestellungen der letzten Tage vor dem letzten Import erneut ab. So werden fehlgeschlagene Bestellungen und Bestellungen, die noch nicht in einem Import-Status waren, erneut versucht."
 
-#. Label of the enabled (Check) field in DocType 'Modified Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:53
-msgid "Enabled"
-msgstr "Aktiviert"
-
 #. Label of the erp_column (Column Break) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:122
 msgid "Erp Column"
 msgstr "ERP-Spalte"
 
-#. Option for the 'Status' (Select) field in DocType 'Modified Sync Log'
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:44
-msgid "Error"
-msgstr "Fehler"
-
 #: modified_connector/sync/stock.py:158
 #, python-brace-format
 msgid "Full stock sync aborted: {0}"
 msgstr "Vollständiger Bestandsabgleich abgebrochen: {0}"
-
-#. Option for the 'Operation' (Select) field in DocType 'Modified Sync Log'
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:29
-msgid "Import"
-msgstr "Import"
 
 #. Label of the import_from (Datetime) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:83
@@ -137,12 +95,6 @@ msgstr "Die Status-IDs für den Import müssen mindestens eine Bestellstatus-ID 
 msgid "Invoice Naming Series"
 msgstr "Nummernkreis der Rechnungen"
 
-#. Option for the 'Item Match ERP Field' (Select) field in DocType 'Modified
-#. Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:161
-msgid "Item Code"
-msgstr "Artikelnummer"
-
 #. Label of the item_match_erp_field (Select) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:160
 msgid "Item Match ERP Field"
@@ -158,12 +110,6 @@ msgstr "Artikelabgleich: Shop-Feld"
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:148
 msgid "Item Matching"
 msgstr "Artikelabgleich"
-
-#. Label of the item_tax_template (Link) field in DocType 'Modified Shop Tax
-#. Map'
-#: modified_connector/modified_connector/doctype/modified_shop_tax_map/modified_shop_tax_map.json:22
-msgid "Item Tax Template"
-msgstr "Artikelsteuervorlage"
 
 #: modified_connector/sync/stock.py:107
 msgid "Item has no value to match the shop product"
@@ -182,21 +128,6 @@ msgstr "Artikel {0} für {1} {2} (Shop-Produkt {3}) ist deaktiviert"
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:89
 msgid "Last Import"
 msgstr "Letzter Import"
-
-#. Label of the message (Long Text) field in DocType 'Modified Sync Log'
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:51
-msgid "Message"
-msgstr "Nachricht"
-
-#. Label of the mode_of_payment (Link) field in DocType 'Modified Shop Payment
-#. Map'
-#: modified_connector/modified_connector/doctype/modified_shop_payment_map/modified_shop_payment_map.json:23
-msgid "Mode of Payment"
-msgstr "Zahlungsart"
-
-#: modified_connector/public/js/sales_invoice.js:24
-msgid "Modified"
-msgstr "Modified"
 
 #. Name of a DocType
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:243
@@ -251,11 +182,6 @@ msgstr "Für {0} wurde keine Zahlung erstellt: Zur Bestellung {1} gibt es bereit
 #: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:35
 msgid "Only failed order imports can be retried."
 msgstr "Nur fehlgeschlagene Bestellimporte können erneut versucht werden."
-
-#. Label of the operation (Select) field in DocType 'Modified Sync Log'
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:28
-msgid "Operation"
-msgstr "Vorgang"
 
 #: modified_connector/sync/order_import.py:167
 #, python-brace-format
@@ -317,25 +243,6 @@ msgstr "Zahlungszuordnung"
 msgid "Payment collected by the shop at checkout (e.g. PayPal). A Payment Entry dated on the order date is created when the invoice is submitted. Leave unchecked for methods paid later (e.g. prepayment by bank transfer)."
 msgstr "Die Zahlung wird vom Shop beim Bestellabschluss eingezogen (z. B. PayPal). Beim Buchen der Rechnung wird eine Zahlung mit dem Bestelldatum erstellt. Nicht aktivieren für Zahlarten, die später bezahlt werden (z. B. Vorkasse per Überweisung)."
 
-#. Label of the reference (Data) field in DocType 'Modified Sync Log'
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:36
-msgid "Reference"
-msgstr "Referenz"
-
-#. Label of the ref_doctype (Link) field in DocType 'Modified Sync Log'
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:56
-msgid "Reference DocType"
-msgstr "Referenz-DocType"
-
-#. Label of the ref_name (Dynamic Link) field in DocType 'Modified Sync Log'
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:62
-msgid "Reference Name"
-msgstr "Referenzname"
-
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.js:5
-msgid "Retry"
-msgstr "Erneut versuchen"
-
 #. Label of the retry_window_days (Int) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:95
 msgid "Retry Window (Days)"
@@ -355,10 +262,6 @@ msgstr "Zeile {0} ({1}): Erwartet wurde die Artikelsteuervorlage {2}, ERPNext ha
 msgid "Sales Taxes Template"
 msgstr "Umsatzsteuervorlage"
 
-#: modified_connector/public/js/sales_invoice.js:21
-msgid "Send"
-msgstr "Senden"
-
 #: modified_connector/public/js/sales_invoice.js:5
 #: modified_connector/public/js/sales_invoice.js:20
 msgid "Send Tracking Number"
@@ -374,40 +277,15 @@ msgstr "Status-ID Versendet"
 msgid "Shipping Item"
 msgstr "Versandartikel"
 
-#. Label of the shop (Link) field in DocType 'Modified Sync Log'
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:20
-msgid "Shop"
-msgstr "Shop"
-
 #. Label of the shop_name (Data) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:45
 msgid "Shop Name"
 msgstr "Shop-Name"
 
-#. Option for the 'Status' (Select) field in DocType 'Modified Sync Log'
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:44
-msgid "Skipped"
-msgstr "Übersprungen"
-
-#. Label of the status (Select) field in DocType 'Modified Sync Log'
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:43
-msgid "Status"
-msgstr "Status"
-
-#. Option for the 'Operation' (Select) field in DocType 'Modified Sync Log'
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:29
-msgid "Stock"
-msgstr "Bestand"
-
 #. Label of the submit_invoices (Check) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:228
 msgid "Submit Invoices"
 msgstr "Rechnungen buchen"
-
-#. Option for the 'Status' (Select) field in DocType 'Modified Sync Log'
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:44
-msgid "Success"
-msgstr "Erfolg"
 
 #. Label of the sync_section (Section Break) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:198
@@ -418,12 +296,6 @@ msgstr "Synchronisierungseinstellungen"
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:234
 msgid "Sync Stock"
 msgstr "Bestand synchronisieren"
-
-#. Name of a role
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:255
-#: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:84
-msgid "System Manager"
-msgstr "Systemmanager"
 
 #. Label of the tax_map (Table) field in DocType 'Modified Shop'
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:186
@@ -440,11 +312,6 @@ msgstr "Steuersatz (%)"
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:167
 msgid "Taxes and Payments"
 msgstr "Steuern und Zahlungen"
-
-#. Label of the territory (Link) field in DocType 'Modified Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:135
-msgid "Territory"
-msgstr "Gebiet"
 
 #: modified_connector/modified_connector/doctype/modified_shop/modified_shop.js:4
 msgid "Test Connection"
@@ -500,11 +367,6 @@ msgstr "Benutzer {0} darf die Sendungsnummer {1} zu {2} nicht übermitteln; send
 msgid "Waiting for import status (current status {0})"
 msgstr "Warte auf Importstatus (aktueller Status {0})"
 
-#. Label of the warehouse (Link) field in DocType 'Modified Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:115
-msgid "Warehouse"
-msgstr "Lager"
-
 #: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.py:52
 #, python-brace-format
 msgid "already imported as {0}"
@@ -559,9 +421,6 @@ msgstr "Shop-Anbindung"
 msgid "Results"
 msgstr "Ergebnisse"
 
-msgid "Help"
-msgstr "Hilfe"
-
 msgid "Setup Guide"
 msgstr "Einrichtungsanleitung"
 
@@ -590,7 +449,7 @@ msgid "Company that owns the invoices, e.g. 'My Company GmbH'. The sales taxes t
 msgstr "Unternehmen, dem die Rechnungen gehören, z. B. „Meine Firma GmbH“. Die Umsatzsteuervorlage muss dazu passen."
 
 msgid "Warehouse that stock is taken from for shop orders and whose stock levels are sent to the shop, e.g. 'Stores'."
-msgstr "Lager, aus dem Shop-Bestellungen bedient werden und dessen Bestand an den Shop gemeldet wird, z. B. „Lager“."
+msgstr "Lager, aus dem Shop-Bestellungen bedient werden und dessen Bestand an den Shop gemeldet wird, z. B. „Lagerräume“."
 
 msgid "Customer group for new customers created from shop orders, e.g. 'Individual' (German: Einzelperson). Must not be a group."
 msgstr "Kundengruppe für neue Kunden aus Shop-Bestellungen, z. B. „Einzelperson“. Darf keine Gruppe sein."
@@ -605,7 +464,7 @@ msgid "Shop product field that identifies the item: products_model (the shop's m
 msgstr "Shop-Produktfeld, über das der Artikel erkannt wird: products_model (Modell-/Artikelnummer im Shop) oder products_ean. Beispiel: products_model."
 
 msgid "ERPNext field compared with the shop value: Item Code or Barcode. Example: Item Code with products_model, Barcode with products_ean. An order line without a match is reported as an error."
-msgstr "ERPNext-Feld, mit dem der Shop-Wert verglichen wird: Item Code (Artikelnummer) oder Barcode. Beispiel: Item Code mit products_model, Barcode mit products_ean. Eine Bestellposition ohne Treffer wird als Fehler gemeldet."
+msgstr "ERPNext-Feld, mit dem der Shop-Wert verglichen wird: Item Code (Artikel-Code) oder Barcode. Beispiel: Item Code mit products_model, Barcode mit products_ean. Eine Bestellposition ohne Treffer wird als Fehler gemeldet."
 
 msgid "Non-stock service item used for the shipping charge line of each invoice, e.g. 'Shipping' (German: Versand)."
 msgstr "Dienstleistungsartikel ohne Lagerführung für die Versandkostenposition jeder Rechnung, z. B. „Versand“."
@@ -617,7 +476,7 @@ msgid "Maps the tax rate of each order line to an Item Tax Template, e.g. 19 →
 msgstr "Ordnet dem Steuersatz jeder Bestellposition eine Artikelsteuervorlage zu, z. B. 19 → „USt 19 %“ und 7 → „USt 7 %“. Ein Steuersatz ohne Zeile wird als Fehler gemeldet."
 
 msgid "Maps the shop payment method of an order to an ERPNext Mode of Payment. Optional: payment methods without a row are imported without a payment."
-msgstr "Ordnet die Zahlungsart einer Shop-Bestellung einer ERPNext-Zahlungsart zu. Optional: Zahlungsarten ohne Zeile werden ohne Zahlung importiert."
+msgstr "Ordnet die Zahlungsart einer Shop-Bestellung einer ERPNext-Zahlungsweise zu. Optional: Zahlungsarten ohne Zeile werden ohne Zahlung importiert."
 
 msgid "Comma-separated shop order status IDs that are ready for import, e.g. 1,2. Orders in other statuses wait and are retried within the retry window; the shop's status list shows the IDs."
 msgstr "Kommagetrennte Shop-Bestellstatus-IDs, die importiert werden sollen, z. B. 1,2. Bestellungen mit anderem Status warten und werden innerhalb des Wiederholungsfensters erneut versucht; die IDs stehen in der Statusliste des Shops."
@@ -647,7 +506,7 @@ msgid "Payment module code of the shop order (field payment_class), e.g. paypal,
 msgstr "Zahlungsmodul-Code der Shop-Bestellung (Feld payment_class), z. B. paypal, moneyorder (Vorkasse) oder invoice. Groß-/Kleinschreibung egal. Siehe Einrichtungsanleitung, wie Sie ihn finden."
 
 msgid "ERPNext Mode of Payment used for the Payment Entry, e.g. 'PayPal' or 'Bank Transfer'. Only used if 'Paid at Checkout' is checked, when the invoice is submitted."
-msgstr "ERPNext-Zahlungsart für die Zahlung, z. B. „PayPal“ oder „Überweisung“. Wird nur verwendet, wenn „Bei Bestellung bezahlt“ aktiviert ist, und zwar beim Buchen der Rechnung."
+msgstr "ERPNext-Zahlungsweise für die Zahlung, z. B. „PayPal“ oder „Überweisung“. Wird nur verwendet, wenn „Bei Bestellung bezahlt“ aktiviert ist, und zwar beim Buchen der Rechnung."
 
 msgid "Items, Taxes & Payments"
 msgstr "Artikel, Steuern & Zahlungen"
@@ -660,9 +519,6 @@ msgstr "Bestellungen jetzt importieren"
 
 msgid "Sync Stock Now"
 msgstr "Bestand jetzt abgleichen"
-
-msgid "Actions"
-msgstr "Aktionen"
 
 msgid "Sync Log"
 msgstr "Synchronisierungsprotokoll"
@@ -709,5 +565,17 @@ msgstr "{0} warten auf den Importstatus"
 msgid "{0} import errors"
 msgstr "{0} Importfehler"
 
-msgid "Integration Log"
-msgstr "Integrationsprotokoll"
+#. Label of the operation (Select) field in DocType 'Modified Sync Log'
+msgctxt "Modified Sync Log"
+msgid "Operation"
+msgstr "Vorgang"
+
+#. Label of the shop (Link) field in DocType 'Modified Sync Log'
+msgctxt "Modified Sync Log"
+msgid "Shop"
+msgstr "Shop"
+
+#. Menu group of the shop actions on the Sales Invoice
+msgctxt "Sales Invoice"
+msgid "Modified"
+msgstr "Modified"

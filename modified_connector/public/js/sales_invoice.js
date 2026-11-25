@@ -21,7 +21,7 @@ frappe.ui.form.on("Sales Invoice", {
 					__("Send")
 				);
 			},
-			__("Modified")
+			__("Modified", null, "Sales Invoice")
 		);
 	},
 });
