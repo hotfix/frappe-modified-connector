@@ -698,3 +698,9 @@ msgstr "Bestellungen im Status der „Status-ID Versendet“ werden immer zusät
 
 msgid "Choose at least one status."
 msgstr "Wählen Sie mindestens einen Status."
+msgid "The shop returned no values."
+msgstr "Der Shop hat keine Werte geliefert."
+
+msgid "Not available in this shop ({0})"
+msgstr "In diesem Shop nicht verfügbar ({0})"
+

@@ -30,7 +30,7 @@ class ModifiedShop(Document):
 			frappe.throw(_("Import Status IDs must list at least one order status id."))
 		for fieldname in ID_FIELDS:
 			value = cstr(self.get(fieldname)).strip()
-			if value and not value.isdigit():
+			if value and not value.isdecimal():
 				frappe.throw(
 					_("{0} must be a shop ID (a number), e.g. 4. Got: {1}").format(
 						_(self.meta.get_label(fieldname)), value
@@ -88,7 +88,7 @@ class ModifiedShop(Document):
 
 		The fields are Autocomplete (text) so they can show the shop's names; they store the ID."""
 		value = cstr(self.get(fieldname)).strip()
-		return (int(value) or None) if value.isdigit() else None
+		return (int(value) or None) if value.isdecimal() else None
 
 	def importable_status_list(self) -> list[int]:
 		"""Import statuses plus the shipped status: an order that is shipped before its first import
@@ -143,11 +143,14 @@ def load_shop_data(shop: str) -> dict:
 		load = getattr(client, method)
 		try:
 			rows = load(lang=lang) if method in LANGUAGE_AWARE else load()
+			if not rows:
+				failed[kind] = _("The shop returned no values.")
+				continue
 			fetched[kind] = [
 				{"option_id": str(r["id"]), "option_label": str(r.get("name") or r["id"])} for r in rows
 			]
 		except ModifiedAPIError as e:
-			failed[kind] = str(e)
+			failed[kind] = _("Not available in this shop ({0})").format(e) if e.status == 404 else str(e)
 			if e.status is None or str(e.path).startswith("/oauth"):
 				no_connection = failed[kind]
 		except (KeyError, TypeError, ValueError, AttributeError) as e:
@@ -163,7 +166,12 @@ def load_shop_data(shop: str) -> dict:
 		order = list(SHOP_DATA)
 		doc.set("shop_options", sorted(kept + new, key=lambda r: order.index(r["kind"])))
 		doc.shop_data_loaded_on = now_datetime()
+		# Only the loaded lists change: skip the shop's own validation and mandatory checks, so an
+		# unrelated invalid or missing setting does not lose the data after all requests succeeded.
+		# save() still checks the write permission.
 		doc.flags.ignore_version = True
+		doc.flags.ignore_validate = True
+		doc.flags.ignore_mandatory = True
 		doc.save()
 	return {"loaded": {kind: len(rows) for kind, rows in fetched.items()}, "failed": failed}
 

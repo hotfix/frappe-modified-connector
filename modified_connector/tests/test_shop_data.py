@@ -81,6 +81,46 @@ class TestLoadShopData(ShopTestCase):
 		self.assertEqual(options(self.shop.name, "Tax Rate"), [("19", "MwSt. 19%"), ("7", "MwSt. 7%")])
 		self.assertEqual(options(self.shop.name, "Order Status"), [("9", "Neu")])
 
+	def test_missing_endpoint_keeps_previous_rows(self):
+		"""An older shop without an option endpoint answers 404: reported, previous rows kept."""
+		self.load(fake_client())
+
+		def http(method, url, **kwargs):
+			if url.endswith("/oauth"):
+				return token()
+			if url == API + "/configurations/6":
+				return resp(
+					200, [{"configuration_key": "MODULE_PAYMENT_INSTALLED", "configuration_value": "cod.php"}]
+				)
+			if url == API + "/orders":
+				return resp(404, None, "no Order found")
+			return resp(404, None, "not found")
+
+		with patch("requests.Session.request", side_effect=http):
+			result = ms.load_shop_data(self.shop.name)
+		self.assertEqual(result["loaded"], {"Payment Class": 1})
+		self.assertEqual(set(result["failed"]), {"Order Status", "Carrier", "Tax Rate"})
+		self.assertIn("404", result["failed"]["Carrier"])
+		self.assertEqual(options(self.shop.name, "Order Status"), [("1", "Offen"), ("4", "Storniert")])
+		self.assertEqual(options(self.shop.name, "Carrier"), [("1", "DHL"), ("2", "DPD")])
+		self.assertEqual(options(self.shop.name, "Tax Rate"), [("19", "MwSt. 19%"), ("7", "MwSt. 7%")])
+		self.assertEqual(options(self.shop.name, "Payment Class"), [("cod", "cod")])
+
+	def test_empty_list_counts_as_failed(self):
+		self.load(fake_client())
+		client = fake_client()
+		client.carriers.return_value = []
+		result = self.load(client)
+		self.assertIn("Carrier", result["failed"])
+		self.assertNotIn("Carrier", result["loaded"])
+		self.assertEqual(options(self.shop.name, "Carrier"), [("1", "DHL"), ("2", "DPD")])
+
+	def test_load_despite_unrelated_invalid_setting(self):
+		frappe.db.set_value("Modified Shop", self.shop.name, "import_status_ids", "x")
+		result = self.load(fake_client())
+		self.assertEqual(result["failed"], {})
+		self.assertEqual(len(options(self.shop.name, "Carrier")), 2)
+
 	def test_login_failure_reported_for_every_kind(self):
 		error = ModifiedAPIError(401, "/oauth", "bad credentials")
 		client = fake_client(order_statuses=error)
@@ -121,12 +161,13 @@ class TestLoadShopData(ShopTestCase):
 	def test_ids_must_be_numbers(self):
 		for fieldname in ("cancelled_status_id", "shipped_status_id", "dhl_carrier_id"):
 			shop = frappe.get_doc("Modified Shop", self.shop.name)
-			shop.set(fieldname, "Storniert")
-			self.assertRaises(frappe.ValidationError, shop.save)
+			for value in ("Storniert", "²"):  # superscript two: isdigit() but not a number
+				shop.set(fieldname, value)
+				self.assertRaises(frappe.ValidationError, shop.save)
 
 	def test_empty_id_is_none(self):
 		shop = frappe.get_doc("Modified Shop", self.shop.name)
-		for value in ("", None, "0", 0):
+		for value in ("", None, "0", 0, "²"):
 			shop.shipped_status_id = value
 			self.assertIsNone(shop.id_value("shipped_status_id"))
 

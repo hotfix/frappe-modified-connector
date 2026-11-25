@@ -34,12 +34,17 @@ function shop_options(frm, kind) {
 	return (frm.doc.shop_options || [])
 		.filter((row) => row.kind === kind && row.option_id)
 		.map((row) => {
-			const id = row.option_id;
-			const name = row.option_label || id;
+			// labels are shown as HTML (suggestion list, checkboxes, descriptions): escape shop texts
+			const id = esc(row.option_id);
+			const name = row.option_label ? esc(row.option_label) : id;
 			let label = name === id ? id : `${name} (${id})`;
 			if (kind === "Tax Rate") label = name === id ? `${id} %` : `${id} % – ${name}`;
-			return { value: id, label: label };
+			return { value: row.option_id, label: label };
 		});
+}
+
+function esc(text) {
+	return frappe.utils.escape_html(String(text));
 }
 
 function split_ids(value) {
@@ -80,7 +85,7 @@ function apply_shop_options(frm) {
 			frm,
 			fieldname,
 			options.length && value && !label_of(options, value)
-				? frappe.utils.escape_html(__("ID {0} is not in the loaded shop data.", [value]))
+				? __("ID {0} is not in the loaded shop data.", [esc(value)])
 				: ""
 		);
 	}
@@ -90,13 +95,11 @@ function apply_shop_options(frm) {
 		frm,
 		"import_status_ids",
 		statuses.length && chosen.length
-			? frappe.utils.escape_html(
-					__("Selected: {0}", [
-						chosen
-							.map((id) => label_of(statuses, id) || __("ID {0} (not in the shop)", [id]))
-							.join(", "),
-					])
-			  )
+			? __("Selected: {0}", [
+					chosen
+						.map((id) => label_of(statuses, id) || __("ID {0} (not in the shop)", [esc(id)]))
+						.join(", "),
+			  ])
 			: ""
 	);
 	frm.toggle_display("choose_import_statuses", statuses.length > 0);
@@ -128,22 +131,18 @@ function apply_shop_options(frm) {
 		frm,
 		"tax_map",
 		rates.length
-			? frappe.utils.escape_html(
-					__("Tax rates in the shop: {0}", [rates.map((r) => r.label).join(", ")])
-			  )
+			? __("Tax rates in the shop: {0}", [rates.map((r) => r.label).join(", ")])
 			: ""
 	);
 	set_extra_description(
 		frm,
 		"payment_map",
 		loaded && shop_options(frm, "Payment Class").length
-			? frappe.utils.escape_html(
-					__("Payment classes in the shop: {0}", [
-						shop_options(frm, "Payment Class")
-							.map((p) => p.value)
-							.join(", "),
-					])
-			  )
+			? __("Payment classes in the shop: {0}", [
+					shop_options(frm, "Payment Class")
+						.map((p) => p.label)
+						.join(", "),
+			  ])
 			: ""
 	);
 	const tax_grid = frm.get_field("tax_map").grid;
@@ -233,7 +232,7 @@ function choose_import_statuses(frm) {
 	const current = split_ids(frm.doc.import_status_ids);
 	const unknown = current
 		.filter((id) => !label_of(statuses, id))
-		.map((id) => ({ value: id, label: __("ID {0} (not in the shop)", [id]) }));
+		.map((id) => ({ value: id, label: __("ID {0} (not in the shop)", [esc(id)]) }));
 	const dialog = new frappe.ui.Dialog({
 		title: __("Choose Import Statuses"),
 		fields: [

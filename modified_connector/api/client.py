@@ -135,14 +135,16 @@ class ModifiedClient:
 	def me(self) -> dict:
 		return self.request("GET", "/me")
 
-	def _iter_pages(self, path: str, params: dict | None) -> Iterator[dict]:
+	def _iter_pages(self, path: str, params: dict | None, *, missing_ok: bool = True) -> Iterator[dict]:
+		"""Rows of all pages. A 404 on the first page is an empty result (the shop's answer for "no
+		order found"); with missing_ok=False it is raised, e.g. for an endpoint an older shop lacks."""
 		next_url: str | None = path
 		while next_url:
 			try:
 				page = self.request("GET", next_url, params=params if next_url == path else None)
 			except ModifiedAPIError as e:
 				# The shop answers 404 "no Order found" for an empty result set.
-				if e.status == 404 and next_url == path:
+				if missing_ok and e.status == 404 and next_url == path:
 					return
 				raise
 			if not isinstance(page, dict):
@@ -213,7 +215,7 @@ class ModifiedClient:
 	def order_statuses(self, lang: str = "de") -> list[dict]:
 		"""Order statuses as [{id, name}]; the shop returns every language, `lang` is preferred."""
 		result = []
-		for row in self._iter_pages("/orders/status", None):
+		for row in self._iter_pages("/orders/status", None, missing_ok=False):
 			if "orders_status_id" not in row:  # {"de": {...}, "en": {...}}
 				row = _pick_language(row, lang) or {}
 			if row.get("orders_status_id") is not None:
@@ -226,7 +228,7 @@ class ModifiedClient:
 		"""Shipping carriers as [{id, name}]."""
 		return [
 			{"id": str(row["carrier_id"]), "name": row.get("carrier_name") or ""}
-			for row in self._iter_pages("/shipping/carriers", None)
+			for row in self._iter_pages("/shipping/carriers", None, missing_ok=False)
 			if row.get("carrier_id") is not None
 		]
 
@@ -259,7 +261,7 @@ class ModifiedClient:
 	def tax_rates(self, lang: str = "de") -> list[dict]:
 		"""Distinct tax rates as [{id, name, rate}]; id is the rate as written in the Tax Map (19, 5.5)."""
 		by_rate: dict[Decimal, list[str]] = {}
-		for row in self._iter_pages("/countries/tax_rates", None):
+		for row in self._iter_pages("/countries/tax_rates", None, missing_ok=False):
 			try:
 				rate = Decimal(str(row.get("tax_rate"))).normalize()
 			except InvalidOperation:
