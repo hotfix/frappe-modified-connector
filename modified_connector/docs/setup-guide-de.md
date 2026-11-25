@@ -181,6 +181,16 @@ Pflicht, wird aber nur bei *Bei Bestellung bezahlt* verwendet.
 
 ## 5. Status-IDs, Zahlungsklassen und DHL-ID herausfinden
 
+**Am einfachsten: „Shop-Daten laden“.** Speichern Sie die Verbindung und klicken Sie im Reiter
+„Synchronisierung“ auf **Shop-Daten laden** (auch unter *Aktionen*). ERPNext holt Bestellstatus,
+Versanddienstleister, Zahlungsklassen und Steuersätze aus dem Shop. Danach wählen Sie *Status-ID Storniert*,
+*Status-ID Versendet* und die DHL-ID nach Namen aus (z. B. „Storniert (4)“), die Import-Status per
+**Import-Status auswählen** mit Häkchen, und in der Zahlungs- und Steuerzuordnung werden die Werte des Shops
+vorgeschlagen. Gespeichert wird weiterhin die ID. Die geladenen Werte stehen im eingeklappten Abschnitt
+„Geladene Shop-Daten“ (*Shop-Werte*, *Shop-Daten geladen am*). Eine Liste, die der Shop nicht liefert (z. B.
+bei einer älteren Shop-Version), wird gemeldet; die Felder lassen sich dann wie unten beschrieben von Hand
+mit IDs füllen.
+
 Die Werte hängen von Ihrem Shop ab. In einer Standardinstallation von modified sind es typischerweise (so auch im Testshop, mit dem diese
 Anbindung entwickelt wurde):
 

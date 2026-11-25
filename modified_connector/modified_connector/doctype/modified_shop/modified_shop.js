@@ -22,12 +22,286 @@ function set_autocomplete(frm, fieldname, value) {
 	if (field && field.$input) field.$input.attr("autocomplete", value);
 }
 
+// -- shop data: pick shop IDs by name ------------------------------------------------------------
+// The fields keep storing the shop ID; the loaded names (shop_options) only label and suggest values.
+const ID_FIELDS = {
+	cancelled_status_id: "Order Status",
+	shipped_status_id: "Order Status",
+	dhl_carrier_id: "Carrier",
+};
+
+function shop_options(frm, kind) {
+	return (frm.doc.shop_options || [])
+		.filter((row) => row.kind === kind && row.option_id)
+		.map((row) => {
+			const id = row.option_id;
+			const name = row.option_label || id;
+			let label = name === id ? id : `${name} (${id})`;
+			if (kind === "Tax Rate") label = name === id ? `${id} %` : `${id} % – ${name}`;
+			return { value: id, label: label };
+		});
+}
+
+function split_ids(value) {
+	return (value || "")
+		.split(",")
+		.map((v) => v.trim())
+		.filter(Boolean);
+}
+
+// Field description = its own (translated) description plus a line about the loaded shop data.
+function set_extra_description(frm, fieldname, extra) {
+	const field = frm.get_field(fieldname);
+	if (!field) return;
+	if (field.df.base_description === undefined) field.df.base_description = field.df.description || "";
+	const base = __(field.df.base_description);
+	frm.set_df_property(fieldname, "description", extra ? `${base}<br><b>${extra}</b>` : base);
+}
+
+function label_of(options, id) {
+	const option = options.find((o) => o.value === String(id));
+	return option ? option.label : null;
+}
+
+function apply_shop_options(frm) {
+	const loaded = (frm.doc.shop_options || []).length > 0;
+	const statuses = shop_options(frm, "Order Status");
+
+	for (const [fieldname, kind] of Object.entries(ID_FIELDS)) {
+		const field = frm.get_field(fieldname);
+		if (!field) continue;
+		const options = shop_options(frm, kind);
+		field.df.ignore_validation = 1; // an ID that is not in the list can still be typed
+		field.df.options = options;
+		if (field.set_data) field.set_data(shop_options(frm, kind));
+		frm.refresh_field(fieldname);
+		const value = frm.doc[fieldname];
+		set_extra_description(
+			frm,
+			fieldname,
+			options.length && value && !label_of(options, value)
+				? frappe.utils.escape_html(__("ID {0} is not in the loaded shop data.", [value]))
+				: ""
+		);
+	}
+
+	const chosen = split_ids(frm.doc.import_status_ids);
+	set_extra_description(
+		frm,
+		"import_status_ids",
+		statuses.length && chosen.length
+			? frappe.utils.escape_html(
+					__("Selected: {0}", [
+						chosen
+							.map((id) => label_of(statuses, id) || __("ID {0} (not in the shop)", [id]))
+							.join(", "),
+					])
+			  )
+			: ""
+	);
+	frm.toggle_display("choose_import_statuses", statuses.length > 0);
+
+	// Payment Map: suggest the shop's payment classes, any other code can still be typed.
+	const payment_grid = frm.get_field("payment_map").grid;
+	const payment_df = frappe.meta.get_docfield(
+		"Modified Shop Payment Map",
+		"payment_class",
+		frm.doc.name
+	);
+	if (payment_df) {
+		payment_df.options = shop_options(frm, "Payment Class");
+		payment_df.ignore_validation = 1;
+	}
+	// rows already rendered have their own copy of the docfield
+	if (payment_grid.grid_rows && payment_grid.grid_rows.length) {
+		payment_grid.update_docfield_property(
+			"payment_class",
+			"options",
+			shop_options(frm, "Payment Class")
+		);
+		payment_grid.update_docfield_property("payment_class", "ignore_validation", 1);
+	}
+
+	// Tax Map: list the shop's rates and offer to add the missing ones.
+	const rates = shop_options(frm, "Tax Rate");
+	set_extra_description(
+		frm,
+		"tax_map",
+		rates.length
+			? frappe.utils.escape_html(
+					__("Tax rates in the shop: {0}", [rates.map((r) => r.label).join(", ")])
+			  )
+			: ""
+	);
+	set_extra_description(
+		frm,
+		"payment_map",
+		loaded && shop_options(frm, "Payment Class").length
+			? frappe.utils.escape_html(
+					__("Payment classes in the shop: {0}", [
+						shop_options(frm, "Payment Class")
+							.map((p) => p.value)
+							.join(", "),
+					])
+			  )
+			: ""
+	);
+	const tax_grid = frm.get_field("tax_map").grid;
+	const button = "Add Shop Tax Rates";
+	if (rates.length && frm.has_perm("write")) {
+		tax_grid.add_custom_button(button, () => add_missing_tax_rates(frm));
+	} else if (tax_grid.custom_buttons && tax_grid.custom_buttons[button]) {
+		tax_grid.custom_buttons[button].addClass("hidden");
+	}
+}
+
+function add_missing_tax_rates(frm) {
+	const present = (frm.doc.tax_map || []).map((row) => flt(row.tax_rate));
+	const missing = shop_options(frm, "Tax Rate").filter((r) => !present.includes(flt(r.value)));
+	if (!missing.length) {
+		frappe.show_alert({ message: __("All tax rates of the shop are in the Tax Map."), indicator: "green" });
+		return;
+	}
+	for (const rate of missing) frm.add_child("tax_map", { tax_rate: flt(rate.value) });
+	frm.refresh_field("tax_map");
+	frappe.show_alert(
+		{
+			message: __("{0} rows added. Choose the Item Tax Template in each new row.", [missing.length]),
+			indicator: "blue",
+		},
+		7
+	);
+}
+
+function show_load_result(result) {
+	const labels = {
+		"Order Status": __("Order statuses"),
+		Carrier: __("Carriers"),
+		"Payment Class": __("Payment classes"),
+		"Tax Rate": __("Tax rates"),
+	};
+	const loaded = result.loaded || {};
+	const failed = result.failed || {};
+	const lines = Object.entries(loaded).map(
+		([kind, count]) => `<li>${labels[kind] || kind}: ${__("{0} loaded", [count])}</li>`
+	);
+	const errors = Object.entries(failed).map(
+		([kind, message]) =>
+			`<li>${labels[kind] || kind}: ${__("not loaded")} – <span class="text-muted">${frappe.utils.escape_html(
+				message
+			)}</span></li>`
+	);
+	let message = `<ul>${lines.join("")}${errors.join("")}</ul>`;
+	if (Object.keys(loaded).length) {
+		message += `<p>${__(
+			"Now pick the statuses and the carrier by name in the Synchronisation tab. The shop IDs are stored as before."
+		)}</p>`;
+	}
+	if (errors.length) {
+		message += `<p>${__(
+			"Lists that could not be loaded keep their previous values; you can still type the IDs by hand."
+		)}</p>`;
+	}
+	frappe.msgprint({
+		title: __("Shop Data"),
+		message: message,
+		indicator: !errors.length ? "green" : lines.length ? "orange" : "red",
+	});
+}
+
+function load_shop_data(frm) {
+	const run = () => {
+		if (frm.is_new()) return;
+		frappe.call({
+			method: API + "load_shop_data",
+			type: "POST",
+			args: { shop: frm.doc.name },
+			freeze: true,
+			freeze_message: __("Loading shop data …"),
+			callback: (r) => frm.reload_doc().then(() => show_load_result(r.message || {})),
+		});
+	};
+	if (frm.is_new() || frm.is_dirty()) {
+		frm.save().then(run);
+	} else {
+		run();
+	}
+}
+
+function choose_import_statuses(frm) {
+	const statuses = shop_options(frm, "Order Status");
+	const current = split_ids(frm.doc.import_status_ids);
+	const unknown = current
+		.filter((id) => !label_of(statuses, id))
+		.map((id) => ({ value: id, label: __("ID {0} (not in the shop)", [id]) }));
+	const dialog = new frappe.ui.Dialog({
+		title: __("Choose Import Statuses"),
+		fields: [
+			{
+				fieldtype: "MultiCheck",
+				fieldname: "statuses",
+				label: __("Orders in these statuses are imported"),
+				columns: 1,
+				options: [...statuses, ...unknown].map((o) => ({
+					label: o.label,
+					value: o.value,
+					checked: current.includes(o.value),
+				})),
+			},
+			{
+				fieldtype: "HTML",
+				fieldname: "shipped_note",
+				options: `<p class="text-muted small">${__(
+					"Orders in the shipped status are always imported as well."
+				)}</p>`,
+			},
+		],
+		primary_action_label: __("Apply"),
+		primary_action(values) {
+			const chosen = (values.statuses || []).slice().sort((a, b) => Number(a) - Number(b));
+			if (!chosen.length) {
+				frappe.msgprint(__("Choose at least one status."));
+				return;
+			}
+			frm.set_value("import_status_ids", chosen.join(","));
+			dialog.hide();
+		},
+	});
+	dialog.show();
+}
+
 frappe.ui.form.on("Modified Shop", {
+	load_shop_data_button(frm) {
+		load_shop_data(frm);
+	},
+
+	choose_import_statuses(frm) {
+		choose_import_statuses(frm);
+	},
+
+	import_status_ids(frm) {
+		apply_shop_options(frm);
+	},
+
+	cancelled_status_id(frm) {
+		apply_shop_options(frm);
+	},
+
+	shipped_status_id(frm) {
+		apply_shop_options(frm);
+	},
+
+	dhl_carrier_id(frm) {
+		apply_shop_options(frm);
+	},
+
 	refresh(frm) {
 		set_autocomplete(frm, "api_password", "new-password");
 		frm.trigger("set_status_intro");
+		apply_shop_options(frm);
 		if (frm.is_new()) return;
 		const group = __("Actions");
+		frm.add_custom_button(__("Load Shop Data"), () => load_shop_data(frm), group);
 		frm.add_custom_button(
 			__("Test Connection"),
 			() => {

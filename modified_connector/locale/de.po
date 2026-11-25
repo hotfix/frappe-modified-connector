@@ -583,3 +583,118 @@ msgstr "Shop"
 msgctxt "Sales Invoice"
 msgid "Modified"
 msgstr "Modified"
+
+#. Load Shop Data: field labels and descriptions, messages of modified_shop.py/.js
+msgid "Load Shop Data"
+msgstr "Shop-Daten laden"
+
+msgid "Loads order statuses, carriers, payment classes and tax rates from the shop (the connection is saved first). Afterwards you pick the values below, in the Payment Map and in the Tax Map by name; the shop IDs are stored as before."
+msgstr "Holt Bestellstatus, Versanddienstleister, Zahlungsklassen und Steuersätze aus dem Shop (die Verbindung wird vorher gespeichert). Danach wählen Sie die Werte unten, in der Zahlungszuordnung und in der Steuerzuordnung nach Namen aus; gespeichert werden wie bisher die Shop-IDs."
+
+msgid "Choose Import Statuses"
+msgstr "Import-Status auswählen"
+
+msgid "Tick the import statuses by name. Available after Load Shop Data."
+msgstr "Import-Status per Häkchen nach Namen auswählen. Verfügbar nach „Shop-Daten laden“."
+
+msgid "Loaded Shop Data"
+msgstr "Geladene Shop-Daten"
+
+msgid "Shop Data Loaded On"
+msgstr "Shop-Daten geladen am"
+
+msgid "When the shop data was last loaded. Load it again after changing statuses, carriers, payment modules or tax rates in the shop."
+msgstr "Zeitpunkt, zu dem die Shop-Daten zuletzt geladen wurden. Laden Sie sie erneut, nachdem Sie im Shop Bestellstatus, Versanddienstleister, Zahlungsmodule oder Steuersätze geändert haben."
+
+msgid "Shop Values"
+msgstr "Shop-Werte"
+
+msgid "Values loaded from the shop, only used to pick by name. Not editable here."
+msgstr "Aus dem Shop geladene Werte, nur zur Auswahl nach Namen. Hier nicht bearbeitbar."
+
+msgid "Modified Shop Option"
+msgstr "Modified-Shop-Wert"
+
+msgid "Shop ID"
+msgstr "Shop-ID"
+
+msgid "Name in Shop"
+msgstr "Name im Shop"
+
+msgid "Shop list this value belongs to."
+msgstr "Liste des Shops, zu der dieser Wert gehört."
+
+msgid "Value stored in the shop settings, e.g. the status ID 4 or the payment class paypal."
+msgstr "In den Shop-Einstellungen gespeicherter Wert, z. B. die Status-ID 4 oder die Zahlungsklasse paypal."
+
+msgid "Name shown by the shop, e.g. Storniert."
+msgstr "Name im Shop, z. B. Storniert."
+
+msgid "{0} must be a shop ID (a number), e.g. 4. Got: {1}"
+msgstr "{0} muss eine Shop-ID (eine Zahl) sein, z. B. 4. Eingegeben: {1}"
+
+msgid "Unexpected answer from the shop ({0})"
+msgstr "Unerwartete Antwort des Shops ({0})"
+
+msgid "ID {0} is not in the loaded shop data."
+msgstr "ID {0} ist nicht in den geladenen Shop-Daten."
+
+msgid "Selected: {0}"
+msgstr "Ausgewählt: {0}"
+
+msgid "ID {0} (not in the shop)"
+msgstr "ID {0} (nicht im Shop)"
+
+msgid "Tax rates in the shop: {0}"
+msgstr "Steuersätze im Shop: {0}"
+
+msgid "Payment classes in the shop: {0}"
+msgstr "Zahlungsklassen im Shop: {0}"
+
+msgid "Add Shop Tax Rates"
+msgstr "Steuersätze des Shops ergänzen"
+
+msgid "All tax rates of the shop are in the Tax Map."
+msgstr "Alle Steuersätze des Shops stehen in der Steuerzuordnung."
+
+msgid "{0} rows added. Choose the Item Tax Template in each new row."
+msgstr "{0} Zeilen ergänzt. Wählen Sie in jeder neuen Zeile die Artikelsteuervorlage."
+
+msgid "Order statuses"
+msgstr "Bestellstatus"
+
+msgid "Carriers"
+msgstr "Versanddienstleister"
+
+msgid "Payment classes"
+msgstr "Zahlungsklassen"
+
+msgid "Tax rates"
+msgstr "Steuersätze"
+
+msgid "{0} loaded"
+msgstr "{0} geladen"
+
+msgid "not loaded"
+msgstr "nicht geladen"
+
+msgid "Now pick the statuses and the carrier by name in the Synchronisation tab. The shop IDs are stored as before."
+msgstr "Wählen Sie jetzt im Reiter „Synchronisierung“ die Status und den Versanddienstleister nach Namen aus. Gespeichert werden wie bisher die Shop-IDs."
+
+msgid "Lists that could not be loaded keep their previous values; you can still type the IDs by hand."
+msgstr "Nicht geladene Listen behalten ihre bisherigen Werte; die IDs können Sie weiterhin von Hand eintragen."
+
+msgid "Shop Data"
+msgstr "Shop-Daten"
+
+msgid "Loading shop data …"
+msgstr "Shop-Daten werden geladen …"
+
+msgid "Orders in these statuses are imported"
+msgstr "Bestellungen in diesen Status werden importiert"
+
+msgid "Orders in the shipped status are always imported as well."
+msgstr "Bestellungen im Status der „Status-ID Versendet“ werden immer zusätzlich importiert."
+
+msgid "Choose at least one status."
+msgstr "Wählen Sie mindestens einen Status."

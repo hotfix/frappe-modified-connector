@@ -3,6 +3,7 @@
 import time
 from collections.abc import Iterator
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from zoneinfo import ZoneInfo
 
 import requests
@@ -11,6 +12,24 @@ import requests
 SHOP_TZ = ZoneInfo("Europe/Berlin")
 # Refresh slightly before the access token actually expires.
 EXPIRY_LEEWAY = 30
+# Configuration group "Module Options" (fixed id in modified), holds MODULE_PAYMENT_INSTALLED.
+MODULE_CONFIG_GROUP = 6
+# Number of newest orders whose payment_class is collected for the payment class list.
+PAYMENT_ORDER_SAMPLE = 200
+# Fallback order when a requested language is missing in a multilingual API answer.
+FALLBACK_LANGUAGES = ("de", "en")
+
+
+def _pick_language(values: dict, lang: str | None):
+	"""Value of `lang` in a {language code: value} dict, else German, English, the first one."""
+	for code in (lang, *FALLBACK_LANGUAGES):
+		if code and values.get(code):
+			return values[code]
+	return next((v for v in values.values() if v), None)
+
+
+def _rate_id(rate: Decimal) -> str:
+	return format(rate.normalize(), "f")
 
 
 class ModifiedAPIError(Exception):
@@ -188,6 +207,73 @@ class ModifiedClient:
 			return int((self.get_order(order_id, "") or {}).get("orders", {}).get("orders_status"))
 		except (TypeError, ValueError):  # fmt: skip
 			return None
+
+	# -- shop data (option lists for the setup form) -------------------------
+
+	def order_statuses(self, lang: str = "de") -> list[dict]:
+		"""Order statuses as [{id, name}]; the shop returns every language, `lang` is preferred."""
+		result = []
+		for row in self._iter_pages("/orders/status", None):
+			if "orders_status_id" not in row:  # {"de": {...}, "en": {...}}
+				row = _pick_language(row, lang) or {}
+			if row.get("orders_status_id") is not None:
+				result.append(
+					{"id": str(row["orders_status_id"]), "name": row.get("orders_status_name") or ""}
+				)
+		return result
+
+	def carriers(self) -> list[dict]:
+		"""Shipping carriers as [{id, name}]."""
+		return [
+			{"id": str(row["carrier_id"]), "name": row.get("carrier_name") or ""}
+			for row in self._iter_pages("/shipping/carriers", None)
+			if row.get("carrier_id") is not None
+		]
+
+	def payment_classes(self) -> list[dict]:
+		"""Payment module codes as [{id, name}] (name = code: the API has no payment module endpoint).
+
+		Installed modules (configuration MODULE_PAYMENT_INSTALLED, if the API user may read it) plus the
+		`payment_class` of the newest orders, so codes of uninstalled modules in old orders show up too."""
+		codes = set()
+		try:
+			config = self.request("GET", f"/configurations/{MODULE_CONFIG_GROUP}")
+		except ModifiedAPIError:
+			config = None
+		rows = config.get("data") if isinstance(config, dict) else config
+		for row in rows or []:
+			if isinstance(row, dict) and row.get("configuration_key") == "MODULE_PAYMENT_INSTALLED":
+				for module in str(row.get("configuration_value") or "").split(";"):
+					codes.add(module.strip().removesuffix(".php").lower())
+		try:
+			# newest first: one page is the last PAYMENT_ORDER_SAMPLE orders
+			page = self.request("GET", "/orders", params={"limit": PAYMENT_ORDER_SAMPLE})
+		except ModifiedAPIError as e:
+			if e.status != 404:  # 404 = no orders yet
+				raise
+			page = None
+		for order in (page or {}).get("data") or []:
+			codes.add(str((order.get("orders") or order).get("payment_class") or "").strip().lower())
+		return [{"id": code, "name": code} for code in sorted(codes - {""})]
+
+	def tax_rates(self, lang: str = "de") -> list[dict]:
+		"""Distinct tax rates as [{id, name, rate}]; id is the rate as written in the Tax Map (19, 5.5)."""
+		by_rate: dict[Decimal, list[str]] = {}
+		for row in self._iter_pages("/countries/tax_rates", None):
+			try:
+				rate = Decimal(str(row.get("tax_rate"))).normalize()
+			except InvalidOperation:
+				continue
+			description = row.get("tax_description")
+			if isinstance(description, dict):
+				description = _pick_language(description, lang)
+			names = by_rate.setdefault(rate, [])
+			if description and str(description) not in names:
+				names.append(str(description))
+		return [
+			{"id": _rate_id(rate), "name": " / ".join(names) or f"{_rate_id(rate)} %", "rate": float(rate)}
+			for rate, names in sorted(by_rate.items())
+		]
 
 	def last_history_status(self, order_id: str) -> int | None:
 		"""Status id of the newest status_history row, None if there is none."""

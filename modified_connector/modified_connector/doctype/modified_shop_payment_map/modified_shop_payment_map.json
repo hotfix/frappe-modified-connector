@@ -12,7 +12,7 @@
  "fields": [
   {
    "fieldname": "payment_class",
-   "fieldtype": "Data",
+   "fieldtype": "Autocomplete",
    "label": "Payment Class",
    "reqd": 1,
    "in_list_view": 1,
@@ -38,7 +38,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-11-17 19:00:00.000000",
+ "modified": "2026-11-25 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Modified Connector",
  "name": "Modified Shop Payment Map",

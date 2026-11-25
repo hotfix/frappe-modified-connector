@@ -46,7 +46,7 @@ def _import_order(shop: ModifiedShop, raw: dict) -> tuple[str, str | None]:
 	status = _raw_status(raw)
 	existing = _existing_invoice(shop.name, order_id) if order_id else None
 	if existing:
-		if status == shop.cancelled_status_id:
+		if status == shop.id_value("cancelled_status_id"):
 			_log_cancelled_after_import(shop, order_id, existing)
 		return SKIPPED, None
 	if _skip_raw(shop, raw, status):
@@ -86,7 +86,7 @@ def _skip_raw(shop: ModifiedShop, raw: dict, status: int | None) -> bool:
 	"""Cancelled, not (yet) in an import status, or before import_from. Unreadable status or date
 	is not skipped here: parse_order reports it as an error."""
 	if status is not None and (
-		status == shop.cancelled_status_id or status not in shop.importable_status_list()
+		status == shop.id_value("cancelled_status_id") or status not in shop.importable_status_list()
 	):
 		return True
 	purchased = _raw_purchased(raw)
@@ -95,7 +95,11 @@ def _skip_raw(shop: ModifiedShop, raw: dict, status: int | None) -> bool:
 
 def _waiting_for_status(shop: ModifiedShop, raw: dict, status: int | None) -> bool:
 	"""Skipped only because the status is not (yet) an import status."""
-	if status is None or status == shop.cancelled_status_id or status in shop.importable_status_list():
+	if (
+		status is None
+		or status == shop.id_value("cancelled_status_id")
+		or status in shop.importable_status_list()
+	):
 		return False
 	purchased = _raw_purchased(raw)
 	return not (purchased and shop.import_from and purchased < get_datetime(shop.import_from))

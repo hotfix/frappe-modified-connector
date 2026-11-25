@@ -70,18 +70,17 @@ def send_tracking(invoice: str, tracking_number: str, carrier: str = "dhl") -> N
 		client = shop.get_client()
 		# read first: a retry after a failed add_status must not add the parcel a second time
 		if not any(str(row.get("parcel_id")) == tracking_number for row in client.get_tracking(order_id)):
-			client.add_tracking(order_id, shop.dhl_carrier_id, tracking_number)
+			client.add_tracking(order_id, shop.id_value("dhl_carrier_id"), tracking_number)
 		# Only an order still in an import status is moved to "shipped", never one that is shipped already
 		# (shipped orders are importable too) or that the shop has moved on (delivered, ...), e.g. when
 		# a second parcel follows.
+		shipped = shop.id_value("shipped_status_id")
 		current = client.get_order_status(order_id)
-		if current in shop.import_status_list() and current != (
-			int(shop.shipped_status_id) if shop.shipped_status_id else None
-		):
+		if shipped and current in shop.import_status_list() and current != shipped:
 			# the history row is what the customer sees; it does not change the order status, the PUT does
-			if client.last_history_status(order_id) != int(shop.shipped_status_id):
-				client.add_status(order_id, shop.shipped_status_id, notify=True)
-			client.set_order_status(order_id, shop.shipped_status_id)
+			if client.last_history_status(order_id) != shipped:
+				client.add_status(order_id, shipped, notify=True)
+			client.set_order_status(order_id, shipped)
 	except ModifiedAPIError as exc:
 		log_error_once(shop.name, OPERATION, order_id, str(exc))
 		frappe.throw(_("The shop rejected the tracking number: {0}").format(str(exc)))

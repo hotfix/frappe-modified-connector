@@ -32,12 +32,17 @@
   "tax_map",
   "payment_map",
   "sync_tab",
+  "load_shop_data_button",
   "import_status_ids",
+  "choose_import_statuses",
   "cancelled_status_id",
   "shipped_status_id",
   "dhl_carrier_id",
   "submit_invoices",
-  "sync_stock"
+  "sync_stock",
+  "shop_data_section",
+  "shop_data_loaded_on",
+  "shop_options"
  ],
  "fields": [
   {
@@ -221,6 +226,12 @@
    "label": "Synchronisation"
   },
   {
+   "fieldname": "load_shop_data_button",
+   "fieldtype": "Button",
+   "label": "Load Shop Data",
+   "description": "Loads order statuses, carriers, payment classes and tax rates from the shop (the connection is saved first). Afterwards you pick the values below, in the Payment Map and in the Tax Map by name; the shop IDs are stored as before."
+  },
+  {
    "fieldname": "import_status_ids",
    "fieldtype": "Data",
    "label": "Import Status IDs",
@@ -229,22 +240,28 @@
    "description": "Comma-separated shop order status IDs that are ready for import, e.g. 1,2. Orders in other statuses wait and are retried within the retry window; the shop's status list shows the IDs. The shipped status (Shipped Status ID) is always imported."
   },
   {
+   "fieldname": "choose_import_statuses",
+   "fieldtype": "Button",
+   "label": "Choose Import Statuses",
+   "description": "Tick the import statuses by name. Available after Load Shop Data."
+  },
+  {
    "fieldname": "cancelled_status_id",
-   "fieldtype": "Int",
+   "fieldtype": "Autocomplete",
    "label": "Cancelled Status ID",
    "default": "4",
    "description": "Shop status ID of cancelled orders, e.g. 4. Such orders are never imported; if an imported order is cancelled later, an error is logged so you can cancel the invoice by hand."
   },
   {
    "fieldname": "shipped_status_id",
-   "fieldtype": "Int",
+   "fieldtype": "Autocomplete",
    "label": "Shipped Status ID",
    "default": "3",
    "description": "Shop status ID set on the order when a tracking number is sent, e.g. 3 (shipped), only if the order is still in an import status. Orders in this status are imported as well. The customer is notified by the shop."
   },
   {
    "fieldname": "dhl_carrier_id",
-   "fieldtype": "Int",
+   "fieldtype": "Autocomplete",
    "label": "DHL Carrier ID",
    "default": "1",
    "description": "ID of the DHL carrier in the shop, e.g. 1. It is sent with the tracking number so the shop shows the right tracking link."
@@ -262,15 +279,48 @@
    "label": "Sync Stock",
    "default": "0",
    "description": "If checked, the sellable quantity of stock items (actual minus reserved and minus open draft shop invoices) in the warehouse is sent to the shop after stock changes and in a full sync. Example: on after go-live."
+  },
+  {
+   "fieldname": "shop_data_section",
+   "fieldtype": "Section Break",
+   "label": "Loaded Shop Data",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "shop_data_loaded_on",
+   "fieldtype": "Datetime",
+   "label": "Shop Data Loaded On",
+   "read_only": 1,
+   "description": "When the shop data was last loaded. Load it again after changing statuses, carriers, payment modules or tax rates in the shop."
+  },
+  {
+   "fieldname": "shop_options",
+   "fieldtype": "Table",
+   "label": "Shop Values",
+   "options": "Modified Shop Option",
+   "read_only": 1,
+   "description": "Values loaded from the shop, only used to pick by name. Not editable here."
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [
-  {"group": "Results", "link_doctype": "Sales Invoice", "link_fieldname": "modified_shop"},
-  {"group": "Results", "link_doctype": "Customer", "link_fieldname": "modified_shop"},
-  {"group": "Log", "link_doctype": "Modified Sync Log", "link_fieldname": "shop"}
+  {
+   "group": "Results",
+   "link_doctype": "Sales Invoice",
+   "link_fieldname": "modified_shop"
+  },
+  {
+   "group": "Results",
+   "link_doctype": "Customer",
+   "link_fieldname": "modified_shop"
+  },
+  {
+   "group": "Log",
+   "link_doctype": "Modified Sync Log",
+   "link_fieldname": "shop"
+  }
  ],
- "modified": "2026-11-18 10:00:00.000000",
+ "modified": "2026-11-25 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Modified Connector",
  "name": "Modified Shop",

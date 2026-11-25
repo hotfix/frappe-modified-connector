@@ -4,11 +4,22 @@ from urllib.parse import urlsplit
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_days, cint, now_datetime
+from frappe.utils import add_days, cint, cstr, now_datetime
 from frappe.utils.background_jobs import is_job_enqueued
 
 from modified_connector import tasks
-from modified_connector.api.client import ModifiedClient
+from modified_connector.api.client import ModifiedAPIError, ModifiedClient
+
+# Shop ID fields that can be picked by name once the shop data is loaded.
+ID_FIELDS = ("cancelled_status_id", "shipped_status_id", "dhl_carrier_id")
+# Option list kind (Modified Shop Option.kind) -> client method that loads it.
+SHOP_DATA = {
+	"Order Status": "order_statuses",
+	"Carrier": "carriers",
+	"Payment Class": "payment_classes",
+	"Tax Rate": "tax_rates",
+}
+LANGUAGE_AWARE = ("order_statuses", "tax_rates")
 
 
 class ModifiedShop(Document):
@@ -17,6 +28,15 @@ class ModifiedShop(Document):
 		self._check_base_url(self.base_url)
 		if not self.import_status_list():
 			frappe.throw(_("Import Status IDs must list at least one order status id."))
+		for fieldname in ID_FIELDS:
+			value = cstr(self.get(fieldname)).strip()
+			if value and not value.isdigit():
+				frappe.throw(
+					_("{0} must be a shop ID (a number), e.g. 4. Got: {1}").format(
+						_(self.meta.get_label(fieldname)), value
+					)
+				)
+			self.set(fieldname, value)
 		if cint(self.retry_window_days) < 1:
 			frappe.throw(_("Retry Window (Days) must be at least 1."))
 		self._check_duplicates("tax_map", "tax_rate", _("Tax Map"), lambda v: Decimal(str(v)).normalize())
@@ -63,12 +83,20 @@ class ModifiedShop(Document):
 		except ValueError:
 			frappe.throw(_("Import Status IDs must be a comma separated list of integers."))
 
+	def id_value(self, fieldname: str) -> int | None:
+		"""A shop ID field (cancelled/shipped status, carrier) as int; None if empty or 0.
+
+		The fields are Autocomplete (text) so they can show the shop's names; they store the ID."""
+		value = cstr(self.get(fieldname)).strip()
+		return (int(value) or None) if value.isdigit() else None
+
 	def importable_status_list(self) -> list[int]:
 		"""Import statuses plus the shipped status: an order that is shipped before its first import
 		(e.g. a late retry) is imported as well."""
 		statuses = self.import_status_list()
-		if self.shipped_status_id and int(self.shipped_status_id) not in statuses:
-			statuses.append(int(self.shipped_status_id))
+		shipped = self.id_value("shipped_status_id")
+		if shipped and shipped not in statuses:
+			statuses.append(shipped)
 		return statuses
 
 	def item_tax_template_for(self, rate: Decimal) -> str:
@@ -92,6 +120,52 @@ def test_connection(shop: str) -> dict:
 	me = frappe.get_doc("Modified Shop", shop).get_client().me()
 	me.pop("permissions", None)
 	return me
+
+
+@frappe.whitelist(methods=["POST"])
+def load_shop_data(shop: str) -> dict:
+	"""Load the shop's order statuses, carriers, payment classes and tax rates into shop_options.
+
+	A list that cannot be loaded (e.g. an older shop without that endpoint) keeps its previous values
+	and is reported in `failed` as {kind: message}; `loaded` is {kind: number of values}."""
+	if not frappe.has_permission("Modified Shop", "write", shop):
+		raise frappe.PermissionError
+	doc = frappe.get_doc("Modified Shop", shop)
+	client = doc.get_client()
+	lang = frappe.local.lang or "de"
+	fetched: dict[str, list[dict]] = {}
+	failed: dict[str, str] = {}
+	no_connection = None  # login or connection failed: the remaining lists are not requested
+	for kind, method in SHOP_DATA.items():
+		if no_connection:
+			failed[kind] = no_connection
+			continue
+		load = getattr(client, method)
+		try:
+			rows = load(lang=lang) if method in LANGUAGE_AWARE else load()
+			fetched[kind] = [
+				{"option_id": str(r["id"]), "option_label": str(r.get("name") or r["id"])} for r in rows
+			]
+		except ModifiedAPIError as e:
+			failed[kind] = str(e)
+			if e.status is None or str(e.path).startswith("/oauth"):
+				no_connection = failed[kind]
+		except (KeyError, TypeError, ValueError, AttributeError) as e:
+			failed[kind] = _("Unexpected answer from the shop ({0})").format(type(e).__name__)
+
+	if fetched:
+		kept = [
+			{"kind": r.kind, "option_id": r.option_id, "option_label": r.option_label}
+			for r in doc.shop_options
+			if r.kind not in fetched
+		]
+		new = [{"kind": kind, **row} for kind, rows in fetched.items() for row in rows]
+		order = list(SHOP_DATA)
+		doc.set("shop_options", sorted(kept + new, key=lambda r: order.index(r["kind"])))
+		doc.shop_data_loaded_on = now_datetime()
+		doc.flags.ignore_version = True
+		doc.save()
+	return {"loaded": {kind: len(rows) for kind, rows in fetched.items()}, "failed": failed}
 
 
 def _check_action(shop: str, *, stock: bool = False) -> None:

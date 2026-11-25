@@ -99,7 +99,7 @@ def _skip_reason(shop, raw: dict) -> str | None:
 	status = order_import._raw_status(raw)
 	if not order_import._skip_raw(shop, raw, status):
 		return None
-	if status == shop.cancelled_status_id:
+	if status == shop.id_value("cancelled_status_id"):
 		return _("Order was cancelled in the shop.")
 	if status is not None and status not in shop.importable_status_list():
 		return _("Order is not in an import status.")
