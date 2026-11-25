@@ -337,12 +337,14 @@ class TestOrderImport(ShopTestCase):
 			run_import(self.shop.name)
 		self.assertEqual(len(logs(self.shop.name, order_id, "Error")), 1)
 
-		# a different error is logged, and then the first error again
+		# a different error replaces the message of the row, and then the first error again
 		raw["orders_products"][0]["products_model"] = "SKU-ALSO-MISSING"
 		run_import(self.shop.name)
 		raw["orders_products"][0]["products_model"] = "SKU-DOES-NOT-EXIST"
 		run_import(self.shop.name)
-		self.assertEqual(len(logs(self.shop.name, order_id, "Error")), 3)
+		errors = logs(self.shop.name, order_id, "Error")
+		self.assertEqual(len(errors), 1)
+		self.assertIn("SKU-DOES-NOT-EXIST", errors[0].message)
 
 	def test_order_lock(self):
 		raw = raw_order()

@@ -75,7 +75,9 @@ def send_tracking(invoice: str, tracking_number: str, carrier: str = "dhl") -> N
 		# (shipped orders are importable too) or that the shop has moved on (delivered, ...), e.g. when
 		# a second parcel follows.
 		current = client.get_order_status(order_id)
-		if current in shop.import_status_list() and current != int(shop.shipped_status_id):
+		if current in shop.import_status_list() and current != (
+			int(shop.shipped_status_id) if shop.shipped_status_id else None
+		):
 			# the history row is what the customer sees; it does not change the order status, the PUT does
 			if client.last_history_status(order_id) != int(shop.shipped_status_id):
 				client.add_status(order_id, shop.shipped_status_id, notify=True)

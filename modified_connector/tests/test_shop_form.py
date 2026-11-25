@@ -79,7 +79,6 @@ class TestApiFieldsNoAutofill(IntegrationTestCase):
 			Path(frappe.get_app_path("modified_connector"))
 			/ "modified_connector/doctype/modified_shop/modified_shop.js"
 		).read_text(encoding="utf-8")
-		for fieldname, value in (("api_username", "off"), ("api_password", "new-password")):
-			match = re.search(rf"set_autocomplete\(\s*frm,\s*\"{fieldname}\",\s*\"([\w-]+)\"", js)
-			self.assertTrue(match, fieldname)
-			self.assertEqual(match.group(1), value)
+		match = re.search(r"set_autocomplete\(\s*frm,\s*\"api_password\",\s*\"([\w-]+)\"", js)
+		self.assertTrue(match)
+		self.assertEqual(match.group(1), "new-password")

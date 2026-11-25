@@ -16,7 +16,7 @@ function queue_action(frm, method, started, running) {
 	});
 }
 
-// Keep password managers and browsers from filling the shop API login with the ERPNext login.
+// Keep the browser from filling the shop API password with the ERPNext one (Data inputs are "off" already).
 function set_autocomplete(frm, fieldname, value) {
 	const field = frm.get_field(fieldname);
 	if (field && field.$input) field.$input.attr("autocomplete", value);
@@ -24,7 +24,6 @@ function set_autocomplete(frm, fieldname, value) {
 
 frappe.ui.form.on("Modified Shop", {
 	refresh(frm) {
-		set_autocomplete(frm, "api_username", "off");
 		set_autocomplete(frm, "api_password", "new-password");
 		frm.trigger("set_status_intro");
 		if (frm.is_new()) return;

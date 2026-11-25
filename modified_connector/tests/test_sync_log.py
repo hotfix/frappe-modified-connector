@@ -183,7 +183,21 @@ class TestLogOnceLanguage(IntegrationTestCase):
 		german = "Kein Artikel gefunden für products_model SKU-X (Shop-Produkt 5, Toy)"
 		self.assertTrue(log_error_once(shop, "Import", "L1", english))
 		self.assertFalse(log_error_once(shop, "Import", "L1", german))
+		self.assertFalse(log_error_once(shop, "Import", "L1", "Plain message"))
 		self.assertFalse(log_error_once(shop, "Import", "L1", english))
 		self.assertEqual(frappe.db.count("Modified Sync Log", {"shop": shop, "reference": "L1"}), 1)
-		# a different error is still logged
-		self.assertTrue(log_error_once(shop, "Import", "L1", "No Item found for products_model OTHER (x)"))
+
+	def test_changed_message_updates_row(self):
+		from modified_connector.utils import log_error_once
+
+		shop = make_test_shop().name
+		self.assertTrue(log_error_once(shop, "Import", "L2", "ValueError: first"))
+		self.assertFalse(log_error_once(shop, "Import", "L2", "ValueError: second"))
+		rows = frappe.get_all(
+			"Modified Sync Log", filters={"shop": shop, "reference": "L2"}, fields=["message"]
+		)
+		self.assertEqual([r.message for r in rows], ["ValueError: second"])
+		# a different status is a new row
+		from modified_connector.utils import log_once
+
+		self.assertTrue(log_once(shop, "Import", "L2", "Skipped", "x"))
