@@ -264,9 +264,9 @@ Die Schaltflächen erscheinen erst, wenn der Shop gespeichert ist. „Bestellung
 
 ## 8. Probleme finden und beheben
 
-**Erneut versuchen.** Öffnen Sie einen Protokolleintrag mit Status *Fehler* (Vorgang Importieren) oder eine
+**Wiederholen.** Öffnen Sie einen Protokolleintrag mit Status *Fehler* (Vorgang Importieren) oder eine
 wartende Bestellung („Warte auf Importstatus …“) und klicken Sie nach dem Beheben der Ursache auf
-**Erneut versuchen** (ohne die App *Integration Log* heißt die Schaltfläche „Wiederholen“). Die Bestellung
+**Wiederholen**. Die Bestellung
 wird sofort neu aus dem Shop geholt und importiert, auch wenn sie älter
 als der Wiederholungszeitraum ist. Klappt es, wird der alte Eintrag auf *Übersprungen* gesetzt und verweist
 auf den neuen. Ist die Bestellung inzwischen schon importiert, im Shop storniert, nicht mehr in einem
@@ -279,18 +279,18 @@ Meldungen sind immer englisch):
 
 | Meldung (Beispiel) | Ursache | Was tun |
 | --- | --- | --- |
-| Kein Artikel gefunden für products_model HOLZ-ZUG-01 (Shop-Produkt 12, Holzeisenbahn) | Kein ERPNext-Artikel mit diesem Artikel-Code bzw. diesem Barcode. | Artikel anlegen oder Artikel-Code korrigieren, dann **Erneut versuchen**. |
-| Artikel … für products_model … ist deaktiviert | Der passende Artikel ist deaktiviert. | Artikel aktivieren, dann **Erneut versuchen**. |
-| Für den Steuersatz 7.00 % ist im Shop … keine Artikelsteuervorlage zugeordnet | In der Steuerzuordnung fehlt der Steuersatz. | Zeile in der *Steuerzuordnung* ergänzen, dann **Erneut versuchen**. |
-| Zeile 2 (…): Erwartet wurde die Artikelsteuervorlage USt 7 % …, ERPNext hat … gesetzt | Der Artikel (oder der Versandartikel) führt die Vorlage nicht auf. | Vorlage im Reiter „Steuer“ des Artikels oder seiner Artikelgruppe ergänzen, dann **Erneut versuchen**. |
+| Kein Artikel gefunden für products_model HOLZ-ZUG-01 (Shop-Produkt 12, Holzeisenbahn) | Kein ERPNext-Artikel mit diesem Artikel-Code bzw. diesem Barcode. | Artikel anlegen oder Artikel-Code korrigieren, dann **Wiederholen**. |
+| Artikel … für products_model … ist deaktiviert | Der passende Artikel ist deaktiviert. | Artikel aktivieren, dann **Wiederholen**. |
+| Für den Steuersatz 7.00 % ist im Shop … keine Artikelsteuervorlage zugeordnet | In der Steuerzuordnung fehlt der Steuersatz. | Zeile in der *Steuerzuordnung* ergänzen, dann **Wiederholen**. |
+| Zeile 2 (…): Erwartet wurde die Artikelsteuervorlage USt 7 % …, ERPNext hat … gesetzt | Der Artikel (oder der Versandartikel) führt die Vorlage nicht auf. | Vorlage im Reiter „Steuer“ des Artikels oder seiner Artikelgruppe ergänzen, dann **Wiederholen**. |
 | Bestellung …: Rechnungs-Gesamtbetrag … stimmt nicht mit dem Shop-Gesamtbetrag … überein | Rechnung und Shop weichen um mehr als einen Cent ab. | Bestellung im Shop prüfen (Preise, Versand, Rabatte) und ggf. von Hand buchen. |
-| Warte auf Importstatus (aktueller Status 3) | Kein Fehler: Die Bestellung hat (noch) keinen Status aus *Status-IDs für den Import*. | Abwarten; oder die Status-IDs anpassen bzw. den Status im Shop ändern und **Erneut versuchen**. |
+| Warte auf Importstatus (aktueller Status 3) | Kein Fehler: Die Bestellung hat (noch) keinen Status aus *Status-IDs für den Import*. | Abwarten; oder die Status-IDs anpassen bzw. den Status im Shop ändern und **Wiederholen**. |
 | gift voucher redemption (ot_gv) is not supported | Ein Geschenkgutschein wurde eingelöst. | Bestellung von Hand buchen. |
 | unsupported currency …, unsupported allow_tax (net prices), unsupported attributes on product …, unsupported total class … | Bestellung außerhalb der Grenzen dieser Version (Abschnitt 1). | Bestellung von Hand buchen. |
 | guest order without email | Gastbestellung ohne E-Mail-Adresse. | Bestellung von Hand buchen. |
 | Unbekannter Ländercode … | Das Land der Adresse ist in ERPNext nicht zu finden. | Ländercode der Adresse im Shop prüfen. |
-| Bitte tragen Sie ein Bank- oder Kassenkonto in Zahlungsweise … ein | Der Zahlungsweise fehlt das Standardkonto für Ihr Unternehmen (im Protokoll bei eingeschaltetem *Rechnungen buchen*; beim Buchen von Hand erscheint die Meldung direkt). | Konto in der Zahlungsweise eintragen, dann **Erneut versuchen** bzw. erneut buchen. |
-| 2 Einheiten von HOLZ-ZUG-01 benötigt in Lagerräume - MF zum Abschluss dieser Transaktion. (je nach Lage auch „Es werden 2 Einheiten von … in … auf … benötigt, um diesen Vorgang abzuschließen.“) | Beim Buchen (bei eingeschaltetem *Rechnungen buchen* oder von Hand) reicht der Bestand im Shop-Lager zum Bestelldatum nicht. | Bestand per Lagerbuchung oder Bestandsabgleich mit Buchungsdatum vor dem Bestelldatum einbuchen, dann **Erneut versuchen** bzw. erneut buchen. |
+| Bitte tragen Sie ein Bank- oder Kassenkonto in Zahlungsweise … ein | Der Zahlungsweise fehlt das Standardkonto für Ihr Unternehmen (im Protokoll bei eingeschaltetem *Rechnungen buchen*; beim Buchen von Hand erscheint die Meldung direkt). | Konto in der Zahlungsweise eintragen, dann **Wiederholen** bzw. erneut buchen. |
+| 2 Einheiten von HOLZ-ZUG-01 benötigt in Lagerräume - MF zum Abschluss dieser Transaktion. (je nach Lage auch „Es werden 2 Einheiten von … in … auf … benötigt, um diesen Vorgang abzuschließen.“) | Beim Buchen (bei eingeschaltetem *Rechnungen buchen* oder von Hand) reicht der Bestand im Shop-Lager zum Bestelldatum nicht. | Bestand per Lagerbuchung oder Bestandsabgleich mit Buchungsdatum vor dem Bestelldatum einbuchen, dann **Wiederholen** bzw. erneut buchen. |
 | Bestellung … wurde nach dem Import im Shop storniert; bitte Rechnung … prüfen | Die Bestellung wurde nach dem Import storniert. | Einen Rechnungsentwurf löschen; eine gebuchte Rechnung stornieren oder eine Gutschrift erstellen. |
 | Bestellimport abgebrochen: Shop API error … (Referenz „(run)“) | Der Shop war nicht erreichbar oder hat die Anmeldung abgelehnt. | Basis-URL, Zugangsdaten und **Verbindung testen** prüfen. Der nächste Lauf holt alles nach; dieser Eintrag kann nicht wiederholt werden. |
 | Der Artikel ist nicht im Shop | (Vorgang Lager) Zu diesem ERPNext-Artikel gibt es kein Shop-Produkt mit passendem Wert (Modell bzw. EAN). | Nur ein Hinweis; Artikel im Shop anlegen oder ignorieren. |

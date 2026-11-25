@@ -88,15 +88,15 @@ frappe.ui.form.on("Modified Shop", {
 					__("{0} import errors", [s.errors || 0]),
 				];
 				const links = [
-					`<a href="/app/modified-sync-log?shop=${name}">${__("Sync Log")}</a>`,
-					`<a href="/app/sales-invoice?modified_shop=${name}">${__("Sales Invoices")}</a>`,
+					`<a href="/desk/modified-sync-log?shop=${name}">${__("Sync Log")}</a>`,
+					`<a href="/desk/sales-invoice?modified_shop=${name}">${__("Sales Invoices")}</a>`,
 					guide,
 				];
 				if (s.integration_log) {
 					links.splice(
 						2,
 						0,
-						`<a href="/app/integration-log-entry?source=Modified%20Shop">${__("Integration Log")}</a>`
+						`<a href="/desk/integration-log-entry?source=Modified%20Shop">${__("Integration Log")}</a>`
 					);
 				}
 				frm.set_intro(

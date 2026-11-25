@@ -137,7 +137,8 @@ On the home screen the app appears as the tile *Shop Connector* (hook `add_to_ap
 who can read Modified Shop). Sites in the "Desktop Icons" desktop mode get the shipped Desktop Icon instead.
 The workspace *Shop Connector* and its sidebar link to the shops, the sync log and the results
 (invoices, payments, delivery notes, customers). The tile logo is served from `assets/modified_connector`,
-which `bench build` creates; run `bench --site <site> migrate` and `bench build` after installing or updating.
+which `bench build` creates for apps present in the bench where the assets are served (a plain restart
+does not recreate the symlink); run `bench --site <site> migrate` and `bench build` after installing or updating.
 
 ## Integration hooks
 
