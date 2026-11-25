@@ -12,6 +12,7 @@ from erpnext.accounts.utils import get_account_currency
 from frappe import _
 from frappe.utils import cint, get_datetime
 
+from modified_connector import integration
 from modified_connector.api.client import ModifiedAPIError
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
 from modified_connector.sync.invoice import assert_tax_templates, build_invoice
@@ -125,6 +126,7 @@ def _link_waiting_logs(shop: str, order_id: str, invoice: str) -> None:
 			frappe.db.set_value(
 				"Modified Sync Log", name, {"ref_doctype": "Sales Invoice", "ref_name": invoice}
 			)
+			integration.notify_changed(name)
 
 
 def _rollback_order(save_point: str) -> None:

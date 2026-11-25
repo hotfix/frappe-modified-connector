@@ -2,6 +2,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from modified_connector import integration
 from modified_connector.sync import order_import
 
 
@@ -89,6 +90,7 @@ def _close(doc, message: str, invoice: str | None = None) -> None:
 	if invoice:
 		values.update({"ref_doctype": "Sales Invoice", "ref_name": invoice})
 	frappe.db.set_value("Modified Sync Log", doc.name, values)
+	integration.notify_changed(doc.name)
 	doc.status = "Skipped"
 
 

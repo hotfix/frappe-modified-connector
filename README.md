@@ -142,6 +142,21 @@ for method in frappe.get_hooks("on_shipping_label_created"):
 `carrier` is a lowercase string (`"dhl"`). Implementations ignore documents they do not own. Labels made
 by hand can be sent with the "Send Tracking Number" button (Modified menu) on the Sales Invoice.
 
+## Integration Log
+
+If the app [integration_log](https://github.com/hotfix/frappe-integration-log) is installed on the site,
+the Modified Sync Log is registered with it (hook `integration_logs`). Nothing changes without it; this
+app has no dependency on it.
+
+- Logs with status **Error** are mirrored as errors.
+- Logs of orders that wait for an import status (status "Skipped", message "Waiting for import status",
+  no invoice yet) are mirrored as warnings. Other "Skipped" and "Success" logs are not mirrored.
+- Group: shop, operation and reference. A later log for the same order that is not an error or warning
+  (for example a successful import), or a retry that closes the log, resolves the open entries
+  automatically.
+- Retry is offered in the Integration Log for rows that can be retried here (failed or waiting order
+  imports).
+
 ## Security notes
 
 - Create a dedicated API user in the shop with the minimum rights this app needs: read orders and products,

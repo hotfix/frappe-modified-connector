@@ -21,6 +21,23 @@ doc_events = {
 	"Stock Ledger Entry": {"on_submit": "modified_connector.sync.stock.on_stock_change"},
 }
 
+# Optional: mirrors errors and waiting orders into the central log app "integration_log" (if installed).
+integration_logs = [
+	{
+		"doctype": "Modified Sync Log",
+		"source": "Modified Shop",
+		"status_field": "status",
+		"severity_map": {"Error": "error", "Skipped": "info", "Success": "info"},
+		"severity_method": "modified_connector.integration.severity",
+		"message_field": "message",
+		"context_fields": ["shop", "operation", "reference"],
+		"group_fields": ["shop", "operation", "reference"],
+		"link_fields": ["ref_doctype", "ref_name"],
+		"retry_method": "modified_connector.integration.retry",
+		"can_retry_method": "modified_connector.integration.can_retry",
+	}
+]
+
 doctype_js = {"Sales Invoice": "public/js/sales_invoice.js"}
 
 # Custom hook: label apps call these after storing a label (see README, "Integration hooks").

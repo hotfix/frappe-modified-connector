@@ -307,7 +307,9 @@ class TestOrderImport(ShopTestCase):
 			for raw in skipped:
 				self.assertIsNone(import_order(self.shop, raw))
 		parse.assert_not_called()
-		savepoint.assert_not_called()
+		# integration_log (if installed) sets its own savepoint when mirroring the waiting log
+		own = [c for c in savepoint.call_args_list if not str(c.args[0]).startswith("integration_log")]
+		self.assertEqual(own, [])
 		cancelled, waiting, too_old = (raw["orders"]["orders_id"] for raw in skipped)
 		self.assertEqual(logs(self.shop.name, cancelled), [])
 		self.assertEqual([w.status for w in logs(self.shop.name, waiting)], ["Skipped"])
