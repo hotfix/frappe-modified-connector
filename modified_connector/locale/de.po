@@ -454,8 +454,12 @@ msgstr "Lager, aus dem Shop-Bestellungen bedient werden und dessen Bestand an de
 msgid "Customer group for new customers created from shop orders, e.g. 'Individual' (German: Einzelperson). Must not be a group."
 msgstr "Kundengruppe für neue Kunden aus Shop-Bestellungen, z. B. „Einzelperson“. Darf keine Gruppe sein."
 
-msgid "Territory for new customers created from shop orders, e.g. 'Germany' (German: Deutschland). Must not be a group."
-msgstr "Gebiet für neue Kunden aus Shop-Bestellungen, z. B. „Deutschland“. Darf keine Gruppe sein."
+msgid "Used for new customers whose country has no matching Territory. A Territory named like the customer's country (e.g. 'Austria' or 'Österreich') is used instead if it exists. Must not be a group."
+msgstr "Gilt für neue Kunden, deren Land kein passendes Gebiet hat. Gibt es ein Gebiet mit dem Namen des Kundenlands (z. B. „Austria“ oder „Österreich“), wird stattdessen dieses verwendet. Darf keine Gruppe sein."
+
+#. Label of the territory (Link) field in DocType 'Modified Shop'
+msgid "Standard Territory"
+msgstr "Standard-Gebiet"
 
 msgid "Naming series for imported invoices, e.g. ACC-SINV-.YYYY.-. The series must exist in the naming series list of Sales Invoice. Leave empty to use the default series."
 msgstr "Nummernkreis für importierte Rechnungen, z. B. ACC-SINV-.YYYY.-. Der Nummernkreis muss in der Nummernkreisliste der Ausgangsrechnung vorhanden sein. Leer lassen für den Standard-Nummernkreis."
@@ -478,14 +482,14 @@ msgstr "Ordnet dem Steuersatz jeder Bestellposition eine Artikelsteuervorlage zu
 msgid "Maps the shop payment method of an order to an ERPNext Mode of Payment. Optional: payment methods without a row are imported without a payment."
 msgstr "Ordnet die Zahlungsart einer Shop-Bestellung einer ERPNext-Zahlungsweise zu. Optional: Zahlungsarten ohne Zeile werden ohne Zahlung importiert."
 
-msgid "Comma-separated shop order status IDs that are ready for import, e.g. 1,2. Orders in other statuses wait and are retried within the retry window; the shop's status list shows the IDs."
-msgstr "Kommagetrennte Shop-Bestellstatus-IDs, die importiert werden sollen, z. B. 1,2. Bestellungen mit anderem Status warten und werden innerhalb des Wiederholungsfensters erneut versucht; die IDs stehen in der Statusliste des Shops."
+msgid "Comma-separated shop order status IDs that are ready for import, e.g. 1,2. Orders in other statuses wait and are retried within the retry window; the shop's status list shows the IDs. The shipped status (Shipped Status ID) is always imported."
+msgstr "Kommagetrennte Shop-Bestellstatus-IDs, die importiert werden sollen, z. B. 1,2. Bestellungen mit anderem Status warten und werden innerhalb des Wiederholungsfensters erneut versucht; die IDs stehen in der Statusliste des Shops. Der Status „Versendet“ (Status-ID Versendet) wird immer importiert."
 
 msgid "Shop status ID of cancelled orders, e.g. 4. Such orders are never imported; if an imported order is cancelled later, an error is logged so you can cancel the invoice by hand."
 msgstr "Shop-Status-ID stornierter Bestellungen, z. B. 4. Solche Bestellungen werden nie importiert; wird eine bereits importierte Bestellung später storniert, wird ein Fehler protokolliert, damit Sie die Rechnung manuell stornieren."
 
-msgid "Shop status ID set on the order when a tracking number is sent, e.g. 3 (shipped), only if the order is still in an import status. The customer is notified by the shop."
-msgstr "Shop-Status-ID, die beim Senden einer Sendungsnummer gesetzt wird, z. B. 3 (versendet), nur wenn sich die Bestellung noch in einem Importstatus befindet. Der Kunde wird vom Shop benachrichtigt."
+msgid "Shop status ID set on the order when a tracking number is sent, e.g. 3 (shipped), only if the order is still in an import status. Orders in this status are imported as well. The customer is notified by the shop."
+msgstr "Shop-Status-ID, die beim Senden einer Sendungsnummer gesetzt wird, z. B. 3 (versendet), nur wenn sich die Bestellung noch in einem Importstatus befindet. Bestellungen in diesem Status werden ebenfalls importiert. Der Kunde wird vom Shop benachrichtigt."
 
 msgid "ID of the DHL carrier in the shop, e.g. 1. It is sent with the tracking number so the shop shows the right tracking link."
 msgstr "ID des Versanddienstleisters DHL im Shop, z. B. 1. Sie wird mit der Sendungsnummer übermittelt, damit der Shop den richtigen Tracking-Link anzeigt."
@@ -548,7 +552,7 @@ msgid "Stock sync already running"
 msgstr "Bestandsabgleich läuft bereits"
 
 msgid "Fill in the tabs, test the connection, then enable the shop."
-msgstr "Füllen Sie die Tabs aus, testen Sie die Verbindung und aktivieren Sie dann den Shop."
+msgstr "Füllen Sie die Reiter aus, testen Sie die Verbindung und aktivieren Sie dann den Shop."
 
 msgid "Last import: {0}"
 msgstr "Letzter Import: {0}"

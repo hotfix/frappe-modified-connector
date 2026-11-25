@@ -142,11 +142,11 @@
   {
    "fieldname": "territory",
    "fieldtype": "Link",
-   "label": "Territory",
+   "label": "Standard Territory",
    "link_filters": "[[\"Territory\",\"is_group\",\"=\",0]]",
    "options": "Territory",
    "reqd": 1,
-   "description": "Territory for new customers created from shop orders, e.g. 'Germany' (German: Deutschland). Must not be a group."
+   "description": "Used for new customers whose country has no matching Territory. A Territory named like the customer's country (e.g. 'Austria' or 'Österreich') is used instead if it exists. Must not be a group."
   },
   {
    "fieldname": "invoice_naming_series",
@@ -226,7 +226,7 @@
    "label": "Import Status IDs",
    "reqd": 1,
    "default": "1,2",
-   "description": "Comma-separated shop order status IDs that are ready for import, e.g. 1,2. Orders in other statuses wait and are retried within the retry window; the shop's status list shows the IDs."
+   "description": "Comma-separated shop order status IDs that are ready for import, e.g. 1,2. Orders in other statuses wait and are retried within the retry window; the shop's status list shows the IDs. The shipped status (Shipped Status ID) is always imported."
   },
   {
    "fieldname": "cancelled_status_id",
@@ -240,7 +240,7 @@
    "fieldtype": "Int",
    "label": "Shipped Status ID",
    "default": "3",
-   "description": "Shop status ID set on the order when a tracking number is sent, e.g. 3 (shipped), only if the order is still in an import status. The customer is notified by the shop."
+   "description": "Shop status ID set on the order when a tracking number is sent, e.g. 3 (shipped), only if the order is still in an import status. Orders in this status are imported as well. The customer is notified by the shop."
   },
   {
    "fieldname": "dhl_carrier_id",

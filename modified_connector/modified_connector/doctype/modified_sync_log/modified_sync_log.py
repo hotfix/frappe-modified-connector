@@ -101,6 +101,6 @@ def _skip_reason(shop, raw: dict) -> str | None:
 		return None
 	if status == shop.cancelled_status_id:
 		return _("Order was cancelled in the shop.")
-	if status is not None and status not in shop.import_status_list():
+	if status is not None and status not in shop.importable_status_list():
 		return _("Order is not in an import status.")
 	return _("Order was purchased before the import start of the shop.")

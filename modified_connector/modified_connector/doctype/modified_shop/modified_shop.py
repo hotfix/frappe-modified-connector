@@ -63,6 +63,14 @@ class ModifiedShop(Document):
 		except ValueError:
 			frappe.throw(_("Import Status IDs must be a comma separated list of integers."))
 
+	def importable_status_list(self) -> list[int]:
+		"""Import statuses plus the shipped status: an order that is shipped before its first import
+		(e.g. a late retry) is imported as well."""
+		statuses = self.import_status_list()
+		if self.shipped_status_id and int(self.shipped_status_id) not in statuses:
+			statuses.append(int(self.shipped_status_id))
+		return statuses
+
 	def item_tax_template_for(self, rate: Decimal) -> str:
 		wanted = Decimal(str(rate)).normalize()
 		for row in self.tax_map:

@@ -1,7 +1,8 @@
 import frappe
+from frappe import _
 from frappe.tests import IntegrationTestCase
 
-from modified_connector.sync.customer import ensure_customer
+from modified_connector.sync.customer import ensure_customer, territory_for_country
 from modified_connector.sync.mapping import parse_order
 from modified_connector.tests.utils import load_raw, make_test_shop
 
@@ -17,6 +18,57 @@ def linked(parenttype: str, customer: str) -> list[str]:
 class TestCustomer(IntegrationTestCase):
 	def setUp(self):
 		self.shop = make_test_shop()
+
+	def territory(self, name, is_group=0):
+		if not frappe.db.exists("Territory", name):
+			frappe.get_doc(
+				{
+					"doctype": "Territory",
+					"territory_name": name,
+					"parent_territory": "All Territories",
+					"is_group": is_group,
+				}
+			).insert(ignore_permissions=True)
+		return name
+
+	def free_country(self):
+		"""A country (name, ISO code, German name) that has no Territory yet, in either language."""
+		for name, code in (("Hungary", "HU"), ("Portugal", "PT"), ("Iceland", "IS"), ("Estonia", "EE")):
+			german = _(name, lang="de")
+			if german != name and not frappe.db.exists("Territory", {"name": ("in", [name, german])}):
+				return name, code, german
+		self.skipTest("no free country")
+
+	def test_territory_from_country(self):
+		default = self.shop.territory
+		name, code, _german = self.free_country()
+		self.assertEqual(territory_for_country(name, default), default)  # no such territory yet
+		self.territory(name)
+		self.assertEqual(territory_for_country(name, default), name)
+		self.assertEqual(territory_for_country(code, default), name)  # ISO code
+		self.assertEqual(territory_for_country(None, default), default)
+		self.assertEqual(territory_for_country("", default), default)
+		self.assertEqual(territory_for_country("Narnia", default), default)
+
+	def test_territory_from_german_country_name(self):
+		default = self.shop.territory
+		name, _code, german = self.free_country()
+		self.territory(german)
+		self.assertEqual(territory_for_country(name, default), german)
+
+	def test_group_territory_falls_back_to_shop_default(self):
+		default = self.shop.territory
+		self.territory("Switzerland", is_group=1)
+		self.assertEqual(territory_for_country("Switzerland", default), default)
+
+	def test_customer_gets_territory_of_billing_country(self):
+		name, code, _german = self.free_country()
+		self.territory(name)
+		raw = load_raw("order_basic")
+		raw["orders"]["billing_country_iso_code_2"] = code
+		raw["orders"]["customers_id"] = "98765432"
+		customer, _b, _s = ensure_customer(self.shop, parse_order(raw))
+		self.assertEqual(frappe.db.get_value("Customer", customer, "territory"), name)
 
 	def test_customer_created_once(self):
 		order = parse_order(load_raw("order_basic"))

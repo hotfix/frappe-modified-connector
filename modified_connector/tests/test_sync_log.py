@@ -172,3 +172,18 @@ class TestSyncLogRetry(IntegrationTestCase):
 		self.assertEqual(old.status, "Skipped")
 		self.assertIn("cancelled", old.message)
 		self.assertEqual(invoices(self.shop.name, order_id), [])
+
+
+class TestLogOnceLanguage(IntegrationTestCase):
+	def test_log_once_language_independent(self):
+		from modified_connector.utils import log_error_once
+
+		shop = make_test_shop().name
+		english = "No Item found for products_model SKU-X (shop product 5, Toy)"
+		german = "Kein Artikel gefunden für products_model SKU-X (Shop-Produkt 5, Toy)"
+		self.assertTrue(log_error_once(shop, "Import", "L1", english))
+		self.assertFalse(log_error_once(shop, "Import", "L1", german))
+		self.assertFalse(log_error_once(shop, "Import", "L1", english))
+		self.assertEqual(frappe.db.count("Modified Sync Log", {"shop": shop, "reference": "L1"}), 1)
+		# a different error is still logged
+		self.assertTrue(log_error_once(shop, "Import", "L1", "No Item found for products_model OTHER (x)"))

@@ -37,13 +37,33 @@ def _create_customer(shop: ModifiedShop, order: ShopOrder) -> str:
 			"customer_name": company or order.billing.name.strip() or order.email,
 			"customer_type": "Company" if company else "Individual",
 			"customer_group": shop.customer_group,
-			"territory": shop.territory,
+			"territory": territory_for_country(order.billing.country_iso2, shop.territory),
 			"modified_shop": shop.name,
 			"modified_customer_key": order.customer_key,
 		}
 	)
 	doc.insert(ignore_permissions=True)
 	return doc.name
+
+
+def territory_for_country(country: str | None, default: str) -> str:
+	"""Territory named like the country (ISO 3166 alpha-2 code or country name), also by its German
+	name; `default` if there is none or it is a group."""
+	country = (country or "").strip()
+	if not country:
+		return default
+	names = [country]
+	if len(country) == 2:
+		names = [frappe.db.get_value("Country", {"code": country.lower()}, "name") or country]
+	for lang in ("de", frappe.local.lang):  # Territory names follow the language of the site
+		translated = _(names[0], lang=lang)
+		if translated not in names:
+			names.append(translated)
+	for name in names:
+		is_group = frappe.db.get_value("Territory", name, "is_group")
+		if is_group is not None:
+			return default if is_group else name
+	return default
 
 
 def _linked(parenttype: str, customer: str):

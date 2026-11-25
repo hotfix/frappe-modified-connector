@@ -63,6 +63,18 @@ class TestShipping(IntegrationTestCase):
 		self.client.set_order_status.assert_not_called()
 		self.assertEqual(self.number(), "X9")
 
+	def test_order_already_shipped_is_not_set_again(self):
+		# shipped is importable now; even if it is also an import status, the status is never set again
+		for import_ids in ("1,2", "1,2,3"):
+			frappe.db.set_value("Modified Shop", self.shop.name, "import_status_ids", import_ids)
+			self.client.reset_mock()
+			self.client.get_tracking.return_value = []
+			self.client.get_order_status.return_value = 3
+			send_tracking(self.invoice, f"S{import_ids}")
+			self.client.add_tracking.assert_called_once()
+			self.client.add_status.assert_not_called()
+			self.client.set_order_status.assert_not_called()
+
 	def test_status_put_failure_is_logged_and_retry_completes(self):
 		self.client.set_order_status.side_effect = ModifiedAPIError(500, "/x", "boom")
 		with self.assertRaises(frappe.ValidationError):

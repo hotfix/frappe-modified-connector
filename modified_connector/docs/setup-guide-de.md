@@ -19,7 +19,7 @@ Jede Bestellung wird genau einmal importiert, auch wenn sie bei späteren Läufe
 importierte Bestellung entsteht:
 
 - ein **Kunde**: Kunden mit Kundenkonto im Shop werden über ihre Shop-Kundennummer wiedererkannt, Gastbesteller
-  über ihre E-Mail-Adresse. Ist der Kunde neu, wird er mit der eingestellten *Kundengruppe* und dem *Gebiet*
+  über ihre E-Mail-Adresse. Ist der Kunde neu, wird er mit der eingestellten *Kundengruppe* und dem *Standard-Gebiet*
   angelegt, dazu ein Kontakt mit der E-Mail-Adresse und die Rechnungsadresse. Weicht die Lieferadresse ab
   (anderer Empfänger oder andere Anschrift), bekommt sie eine eigene Lieferadresse.
 - eine **Ausgangsrechnung** mit dem Bestelldatum als Buchungsdatum. Die Positionen werden mit den
@@ -67,7 +67,7 @@ Namen in die Suchleiste oben eingeben (in Klammern der englische Name, falls Ihr
 | Unternehmen | Unternehmen (Company) | Meine Firma GmbH, Kürzel MF | Währung EUR. |
 | Lager | Lager (Warehouse) | Lagerräume - MF | Ein Lager des Unternehmens, kein Gruppenlager; aus ihm wird versandt und sein Bestand an den Shop gemeldet. |
 | Kundengruppe | Kundengruppe (Customer Group) | Einzelperson | Darf keine Gruppe sein. Wurde ERPNext auf Englisch eingerichtet, heißt sie „Individual“. |
-| Gebiet | Gebiet (Territory) | Germany | Keine Gruppe. Der Einrichtungsassistent legt das Gebiet mit dem englischen Ländernamen an; Sie können auch ein eigenes Gebiet „Deutschland“ anlegen. |
+| Standard-Gebiet | Gebiet (Territory) | Germany | Keine Gruppe. Der Einrichtungsassistent legt das Gebiet mit dem englischen Ländernamen an; Sie können auch ein eigenes Gebiet „Deutschland“ anlegen. |
 | Umsatzsteuerkonten | Kontenplan (Chart of Accounts) | Umsatzsteuer 19 %, Umsatzsteuer 7 % | Je Steuersatz ein eigenes Konto. |
 | Artikelsteuervorlagen | Artikelsteuervorlage (Item Tax Template) | „USt 19 %“ und „USt 7 %“ | Je Steuersatz eine Vorlage (siehe unten). |
 | Umsatzsteuervorlage | Vorlage für Verkaufssteuern und -abgaben (Sales Taxes and Charges Template) | „Inland - MF“ | Eine Zeile je Steuersatz (siehe unten). |
@@ -133,7 +133,7 @@ synchronisieren* aus.
 | Unternehmen | Meine Firma GmbH | Unternehmen der Rechnungen. Die Umsatzsteuervorlage muss zu diesem Unternehmen gehören. |
 | Lager | Lagerräume - MF | Aus diesem Lager wird geliefert; sein Bestand wird an den Shop gemeldet. |
 | Kundengruppe | Einzelperson | Für neu angelegte Kunden. Darf keine Gruppe sein. |
-| Gebiet | Germany | Für neu angelegte Kunden. Darf keine Gruppe sein. |
+| Standard-Gebiet | Germany | Für neu angelegte Kunden, deren Land kein Gebiet mit passendem Namen hat. Darf keine Gruppe sein. |
 | Nummernkreis der Rechnungen | leer oder `SHOP-.YYYY.-` | Optional. Leer: der Standard-Nummernkreis der Ausgangsrechnung (z. B. `ACC-SINV-.YYYY.-`). Ein eigener Nummernkreis muss vorher in den Dokumentenbenennungseinstellungen für die Ausgangsrechnung eingetragen sein. |
 
 ### Reiter „Artikel, Steuern & Zahlungen“
@@ -216,7 +216,7 @@ API-Benutzer (`POST /api/v1/oauth`) liefern diese Abfragen die Werte:
 ## 6. Erster Start
 
 1. Stammdaten aus Abschnitt 2 anlegen, den Modified-Shop wie in Abschnitt 4 ausfüllen (noch **nicht**
-   aktiviert) und speichern. Oben im Formular steht: „Füllen Sie die Tabs aus, testen Sie die Verbindung und
+   aktiviert) und speichern. Oben im Formular steht: „Füllen Sie die Reiter aus, testen Sie die Verbindung und
    aktivieren Sie dann den Shop.“
 2. Menü **Aktionen** → **Verbindung testen**. Bei Erfolg erscheint „Verbindung erfolgreich“ mit den Daten des
    API-Benutzers (Kundennummer, E-Mail, Vor- und Nachname). Diese Schaltfläche dürfen nur Benutzer mit der

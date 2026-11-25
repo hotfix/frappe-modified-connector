@@ -181,6 +181,20 @@ class TestOrderImport(ShopTestCase):
 		waiting = logs(self.shop.name, pending_id, "Skipped")
 		self.assertEqual([(w.ref_doctype, w.ref_name) for w in waiting], [("Sales Invoice", name)])
 
+	def test_shipped_status_is_importable(self):
+		# shipped before the first import: imported, not waiting, although not in import_status_ids
+		self.shop = make_test_shop(import_status_ids="1,2", shipped_status_id=3)
+		raw = raw_order(status=3)
+		order_id = raw["orders"]["orders_id"]
+		name = import_order(self.shop, raw)
+		self.assertTrue(name)
+		self.assertEqual(invoices(self.shop.name, order_id), [name])
+		self.assertEqual([w.status for w in logs(self.shop.name, order_id)], ["Success"])
+		self.assertFalse(order_import._waiting_for_status(self.shop, raw, 3))
+		self.assertFalse(order_import._skip_raw(self.shop, raw, 3))
+		# other statuses still wait
+		self.assertTrue(order_import._skip_raw(self.shop, raw_order(status=5), 5))
+
 	def test_no_waiting_log_for_cancelled_or_too_old_orders(self):
 		self.shop = make_test_shop(import_status_ids="2", import_from="2026-10-01 00:00:00")
 		cancelled = raw_order(status=self.shop.cancelled_status_id)
@@ -295,7 +309,7 @@ class TestOrderImport(ShopTestCase):
 		self.shop = make_test_shop(import_from="2026-10-01 00:00:00")
 		skipped = [
 			raw_order(status=self.shop.cancelled_status_id),
-			raw_order(status="3"),
+			raw_order(status="5"),
 			raw_order(purchased="2026-09-30 23:59:59"),
 		]
 		for raw in skipped:
