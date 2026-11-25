@@ -654,3 +654,57 @@ msgstr "Artikel, Steuern & Zahlungen"
 
 msgid "Synchronisation"
 msgstr "Synchronisierung"
+
+msgid "Import Orders Now"
+msgstr "Bestellungen jetzt importieren"
+
+msgid "Sync Stock Now"
+msgstr "Bestand jetzt abgleichen"
+
+msgid "Actions"
+msgstr "Aktionen"
+
+msgid "Sync Log"
+msgstr "Synchronisierungsprotokoll"
+
+msgid "Sales Invoices"
+msgstr "Ausgangsrechnungen"
+
+msgid "Setup guide"
+msgstr "Einrichtungsanleitung"
+
+msgid "Enable the shop first."
+msgstr "Aktivieren Sie zuerst den Shop."
+
+msgid "Stock sync is switched off for this shop. Check 'Sync Stock' first."
+msgstr "Der Bestandsabgleich ist für diesen Shop ausgeschaltet. Aktivieren Sie zuerst „Bestand synchronisieren“."
+
+msgid "Import started — results appear in the Sync Log and as Sales Invoices"
+msgstr "Import gestartet – die Ergebnisse erscheinen im Synchronisierungsprotokoll und als Ausgangsrechnungen"
+
+msgid "Import already running"
+msgstr "Import läuft bereits"
+
+msgid "Stock sync started"
+msgstr "Bestandsabgleich gestartet"
+
+msgid "Stock sync already running"
+msgstr "Bestandsabgleich läuft bereits"
+
+msgid "Fill in the tabs, test the connection, then enable the shop."
+msgstr "Füllen Sie die Tabs aus, testen Sie die Verbindung und aktivieren Sie dann den Shop."
+
+msgid "Last import: {0}"
+msgstr "Letzter Import: {0}"
+
+msgid "never"
+msgstr "nie"
+
+msgid "{0} imported in the last 7 days"
+msgstr "{0} in den letzten 7 Tagen importiert"
+
+msgid "{0} waiting for import status"
+msgstr "{0} warten auf den Importstatus"
+
+msgid "{0} errors"
+msgstr "{0} Fehler"

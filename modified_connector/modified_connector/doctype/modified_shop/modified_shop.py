@@ -4,8 +4,9 @@ from urllib.parse import urlsplit
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import cint
+from frappe.utils import add_days, cint, now_datetime
 
+from modified_connector import tasks
 from modified_connector.api.client import ModifiedClient
 
 
@@ -82,3 +83,65 @@ def test_connection(shop: str) -> dict:
 	me = frappe.get_doc("Modified Shop", shop).get_client().me()
 	me.pop("permissions", None)
 	return me
+
+
+def _check_action(shop: str, *, stock: bool = False) -> None:
+	if not frappe.has_permission("Modified Shop", "write", shop):
+		raise frappe.PermissionError
+	values = frappe.db.get_value("Modified Shop", shop, ["enabled", "sync_stock"], as_dict=True)
+	if not values or not values.enabled:
+		frappe.throw(_("Enable the shop first."))
+	if stock and not values.sync_stock:
+		frappe.throw(_("Stock sync is switched off for this shop. Check 'Sync Stock' first."))
+
+
+@frappe.whitelist(methods=["POST"])
+def import_now(shop: str) -> dict:
+	"""Queue the order import of this shop now. queued=False if one is already waiting or running."""
+	_check_action(shop)
+	if tasks.is_job_enqueued(tasks.import_job_id(shop)):
+		return {"queued": False}
+	tasks.enqueue_import(shop)
+	return {"queued": True}
+
+
+@frappe.whitelist(methods=["POST"])
+def sync_stock_now(shop: str) -> dict:
+	"""Queue a full stock push of this shop now. queued=False if one is already waiting or running."""
+	_check_action(shop, stock=True)
+	if tasks.is_job_enqueued(tasks.stock_job_id(shop)):
+		return {"queued": False}
+	tasks.enqueue_stock_sync(shop)
+	return {"queued": True}
+
+
+@frappe.whitelist()
+def get_status(shop: str) -> dict:
+	"""Headline numbers from the Sync Log of a shop.
+
+	errors: rows with status Error. A failed order stays Error until a retry imports it, which marks the
+	row Skipped (see modified_sync_log.retry), so every Error row is still open.
+	waiting: orders waiting for an import status (Skipped, not yet linked to an invoice).
+	imported_7d: successful order imports of the last 7 days."""
+	if not frappe.has_permission("Modified Shop", "read", shop):
+		raise frappe.PermissionError
+	from modified_connector.sync import order_import
+
+	log = "Modified Sync Log"
+	skipped = frappe.get_all(
+		log, filters={"shop": shop, "status": "Skipped", "ref_name": ["is", "not set"]}, pluck="message"
+	)
+	return {
+		"last_import": frappe.db.get_value("Modified Shop", shop, "last_import"),
+		"errors": frappe.db.count(log, {"shop": shop, "status": "Error"}),
+		"waiting": sum(1 for m in skipped if order_import.is_waiting_message(m)),
+		"imported_7d": frappe.db.count(
+			log,
+			{
+				"shop": shop,
+				"status": "Success",
+				"operation": order_import.OPERATION,
+				"creation": [">=", add_days(now_datetime(), -7)],
+			},
+		),
+	}

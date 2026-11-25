@@ -265,7 +265,11 @@
   }
  ],
  "index_web_pages_for_search": 1,
- "links": [],
+ "links": [
+  {"group": "Results", "link_doctype": "Sales Invoice", "link_fieldname": "modified_shop"},
+  {"group": "Results", "link_doctype": "Customer", "link_fieldname": "modified_shop"},
+  {"group": "Log", "link_doctype": "Modified Sync Log", "link_fieldname": "shop"}
+ ],
  "modified": "2026-11-18 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Modified Connector",
