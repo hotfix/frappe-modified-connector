@@ -1,5 +1,4 @@
 import frappe
-from frappe.utils.background_jobs import is_job_enqueued  # noqa: F401  (used via tasks.is_job_enqueued)
 
 IMPORT_METHOD = "modified_connector.sync.order_import.run_import"
 STOCK_METHOD = "modified_connector.sync.stock.full_sync"

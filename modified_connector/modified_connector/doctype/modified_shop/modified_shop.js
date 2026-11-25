@@ -85,13 +85,20 @@ frappe.ui.form.on("Modified Shop", {
 					__("Last import: {0}", [last]),
 					__("{0} imported in the last 7 days", [s.imported_7d || 0]),
 					__("{0} waiting for import status", [s.waiting || 0]),
-					__("{0} errors", [s.errors || 0]),
+					__("{0} import errors", [s.errors || 0]),
 				];
 				const links = [
 					`<a href="/app/modified-sync-log?shop=${name}">${__("Sync Log")}</a>`,
 					`<a href="/app/sales-invoice?modified_shop=${name}">${__("Sales Invoices")}</a>`,
 					guide,
 				];
+				if (s.integration_log) {
+					links.splice(
+						2,
+						0,
+						`<a href="/app/integration-log-entry?source=Modified%20Shop">${__("Integration Log")}</a>`
+					);
+				}
 				frm.set_intro(
 					`${frappe.utils.escape_html(parts.join(" · "))}<br>${links.join(" · ")}`,
 					s.errors ? "red" : "green"

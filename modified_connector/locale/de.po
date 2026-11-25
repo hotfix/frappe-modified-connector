@@ -706,5 +706,8 @@ msgstr "{0} in den letzten 7 Tagen importiert"
 msgid "{0} waiting for import status"
 msgstr "{0} warten auf den Importstatus"
 
-msgid "{0} errors"
-msgstr "{0} Fehler"
+msgid "{0} import errors"
+msgstr "{0} Importfehler"
+
+msgid "Integration Log"
+msgstr "Integrationsprotokoll"

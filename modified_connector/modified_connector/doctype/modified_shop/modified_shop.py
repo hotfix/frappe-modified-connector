@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, cint, now_datetime
+from frappe.utils.background_jobs import is_job_enqueued
 
 from modified_connector import tasks
 from modified_connector.api.client import ModifiedClient
@@ -99,7 +100,7 @@ def _check_action(shop: str, *, stock: bool = False) -> None:
 def import_now(shop: str) -> dict:
 	"""Queue the order import of this shop now. queued=False if one is already waiting or running."""
 	_check_action(shop)
-	if tasks.is_job_enqueued(tasks.import_job_id(shop)):
+	if is_job_enqueued(tasks.import_job_id(shop)):
 		return {"queued": False}
 	tasks.enqueue_import(shop)
 	return {"queued": True}
@@ -109,7 +110,7 @@ def import_now(shop: str) -> dict:
 def sync_stock_now(shop: str) -> dict:
 	"""Queue a full stock push of this shop now. queued=False if one is already waiting or running."""
 	_check_action(shop, stock=True)
-	if tasks.is_job_enqueued(tasks.stock_job_id(shop)):
+	if is_job_enqueued(tasks.stock_job_id(shop)):
 		return {"queued": False}
 	tasks.enqueue_stock_sync(shop)
 	return {"queued": True}
@@ -119,8 +120,9 @@ def sync_stock_now(shop: str) -> dict:
 def get_status(shop: str) -> dict:
 	"""Headline numbers from the Sync Log of a shop.
 
-	errors: rows with status Error. A failed order stays Error until a retry imports it, which marks the
-	row Skipped (see modified_sync_log.retry), so every Error row is still open.
+	errors: failed order imports (operation Import, status Error). A failed order stays Error until a retry
+	imports it, which marks the row Skipped (see modified_sync_log.retry), so every such row is open.
+	Stock and tracking errors are not counted; they are visible in the Integration Log if installed.
 	waiting: orders waiting for an import status (Skipped, not yet linked to an invoice).
 	imported_7d: successful order imports of the last 7 days."""
 	if not frappe.has_permission("Modified Shop", "read", shop):
@@ -133,7 +135,8 @@ def get_status(shop: str) -> dict:
 	)
 	return {
 		"last_import": frappe.db.get_value("Modified Shop", shop, "last_import"),
-		"errors": frappe.db.count(log, {"shop": shop, "status": "Error"}),
+		"errors": frappe.db.count(log, {"shop": shop, "status": "Error", "operation": order_import.OPERATION}),
+		"integration_log": "integration_log" in frappe.get_installed_apps(),
 		"waiting": sum(1 for m in skipped if order_import.is_waiting_message(m)),
 		"imported_7d": frappe.db.count(
 			log,

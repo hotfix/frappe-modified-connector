@@ -7,7 +7,7 @@ from modified_connector.modified_connector.doctype.modified_shop import modified
 from modified_connector.tests.utils import ShopTestCase, make_test_shop
 
 ENQUEUE = "frappe.enqueue"
-RUNNING = "modified_connector.tasks.is_job_enqueued"
+RUNNING = "modified_connector.modified_connector.doctype.modified_shop.modified_shop.is_job_enqueued"
 
 
 def _log(shop, status, **kw):
@@ -94,6 +94,11 @@ class TestShopActions(ShopTestCase):
 		self.assertEqual(status["waiting"] - before["waiting"], 1)
 		self.assertEqual(status["imported_7d"] - before["imported_7d"], 2)
 		self.assertIn("last_import", status)
+
+	def test_stock_error_not_counted(self):
+		before = ms.get_status(self.shop.name)["errors"]
+		_log(self.shop.name, "Error", operation="Stock", reference="SKU", message="boom")
+		self.assertEqual(ms.get_status(self.shop.name)["errors"], before)
 
 	def test_connections(self):
 		links = {(link.link_doctype, link.link_fieldname) for link in frappe.get_meta("Modified Shop").links}
