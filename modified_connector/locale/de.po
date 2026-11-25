@@ -521,7 +521,7 @@ msgid "Sync Stock Now"
 msgstr "Bestand jetzt abgleichen"
 
 msgid "Sync Log"
-msgstr "Synchronisierungsprotokoll"
+msgstr "Synchronisationsprotokoll"
 
 msgid "Sales Invoices"
 msgstr "Ausgangsrechnungen"
@@ -536,7 +536,7 @@ msgid "Stock sync is switched off for this shop. Check 'Sync Stock' first."
 msgstr "Der Bestandsabgleich ist für diesen Shop ausgeschaltet. Aktivieren Sie zuerst „Bestand synchronisieren“."
 
 msgid "Import started — results appear in the Sync Log and as Sales Invoices"
-msgstr "Import gestartet – die Ergebnisse erscheinen im Synchronisierungsprotokoll und als Ausgangsrechnungen"
+msgstr "Import gestartet – die Ergebnisse erscheinen im Synchronisationsprotokoll und als Ausgangsrechnungen"
 
 msgid "Import already running"
 msgstr "Import läuft bereits"

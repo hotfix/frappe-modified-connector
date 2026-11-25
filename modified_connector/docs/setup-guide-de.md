@@ -74,6 +74,7 @@ Namen in die Suchleiste oben eingeben (in Klammern der englische Name, falls Ihr
 | Artikel | Artikel (Item) | Artikel-Code `HOLZ-ZUG-01` | Der Artikel-Code (oder der Barcode) muss genau dem Wert im Shop entsprechen (siehe Reiter „Artikel, Steuern & Zahlungen“). |
 | Versandartikel | Artikel (Item) | Artikel-Code `VERSAND`, Name „Versand“ | **Ohne** Haken bei „Lager verwalten“. |
 | Zahlungsweisen | Zahlungsweise (Mode of Payment) | „PayPal“, „Überweisung“ | Jede Zeile der Zahlungszuordnung braucht eine Zahlungsweise. Für Zahlungsweisen mit *Bei Bestellung bezahlt* muss zusätzlich in der Kontentabelle der Zahlungsweise für Ihr Unternehmen ein Standardkonto eingetragen sein (z. B. ein Bankkonto „PayPal“). |
+| Anfangsbestand | Lagerbuchung (Stock Entry, Typ „Materialannahme“) oder Bestandsabgleich (Stock Reconciliation) | 10 Stück von `HOLZ-ZUG-01` im Lager „Lagerräume - MF“, mit Wertansatz | Jeder Lagerartikel braucht vor dem Buchen der Shop-Rechnungen Bestand im Shop-Lager, denn die Rechnung bucht den Bestand selbst aus. Buchungsdatum des Anfangsbestands **vor** dem ersten Bestelldatum wählen: die Rechnung wird auf das Bestelldatum gebucht. Den *Wertansatz* (Einstandspreis je Stück) angeben. |
 | Nummernkreis (optional) | Dokumentenbenennungseinstellungen (Document Naming Settings) | `SHOP-.YYYY.-` | Nur wenn Shop-Rechnungen einen eigenen Nummernkreis bekommen sollen: dort für „Ausgangsrechnung“ eintragen. |
 
 **Steuern richtig einrichten.** Shop-Preise sind Bruttopreise. So passt es zusammen:
@@ -172,7 +173,7 @@ Pflicht, wird aber nur bei *Bei Bestellung bezahlt* verwendet.
 | Feld | Beispiel | Bedeutung |
 | --- | --- | --- |
 | Status-IDs für den Import | `1,2` | Durch Komma getrennte Bestellstatus-IDs, die importiert werden. Bestellungen in einem anderen Status warten (Eintrag „Warte auf Importstatus“) und werden importiert, sobald sie innerhalb des Wiederholungszeitraums einen dieser Status erreichen. |
-| Status-ID Storniert | 4 | Stornierte Bestellungen werden nie importiert. Wird eine schon importierte Bestellung storniert, erscheint ein Fehler im Protokoll, damit Sie die Rechnung von Hand bearbeiten. |
+| Status-ID Storniert | 4 | Stornierte Bestellungen werden nie importiert. Wird eine schon importierte Bestellung storniert, erscheint ein Fehler im Protokoll, damit Sie die Rechnung von Hand bearbeiten. Das wird nur erkannt, solange die Bestellung im *Wiederholungszeitraum* liegt (also noch abgerufen wird); spätere Stornierungen im Shop bemerkt ERPNext nicht. |
 | Status-ID Versendet | 3 | Wird beim Senden einer Sendungsnummer gesetzt, wenn die Bestellung noch in einem Import-Status ist. |
 | DHL-Versanddienstleister-ID | 1 | ID von DHL in der Versanddienstleister-Liste des Shops; wird mit der Sendungsnummer übertragen, damit der Shop den richtigen Sendungsverfolgungs-Link zeigt. |
 | Rechnungen buchen | aus während der Testphase | An: importierte Rechnungen werden sofort gebucht (mit Zahlung und ggf. Lieferschein). Aus: sie bleiben Entwürfe, die Sie prüfen und selbst buchen. |
@@ -219,21 +220,24 @@ API-Benutzer (`POST /api/v1/oauth`) liefern diese Abfragen die Werte:
    aktivieren Sie dann den Shop.“
 2. Menü **Aktionen** → **Verbindung testen**. Bei Erfolg erscheint „Verbindung erfolgreich“ mit den Daten des
    API-Benutzers (Kundennummer, E-Mail, Vor- und Nachname). Diese Schaltfläche dürfen nur Benutzer mit der
-   Rolle Systemmanager verwenden.
+   Rolle System-Manager verwenden.
 3. *Import ab* prüfen (Ihr Starttermin), **Aktiviert** einschalten und speichern. Ab jetzt läuft der Import
    automatisch alle 5 Minuten.
 4. Wer nicht warten will: **Aktionen** → **Bestellungen jetzt importieren**. Es erscheint „Import gestartet –
-   die Ergebnisse erscheinen im Synchronisierungsprotokoll und als Ausgangsrechnungen“ (oder „Import läuft
+   die Ergebnisse erscheinen im Synchronisationsprotokoll und als Ausgangsrechnungen“ (oder „Import läuft
    bereits“, wenn gerade ein Import wartet oder läuft). Der Import läuft im Hintergrund; laden Sie das
    Formular nach einer Weile neu.
 5. Ergebnis prüfen: In der **Statuszeile** oben im Formular steht dann z. B. „Letzter Import: vor 2 Minuten ·
    3 in den letzten 7 Tagen importiert · 1 warten auf den Importstatus · 0 Importfehler“, darunter Links zum
-   Synchronisierungsprotokoll, zu den Ausgangsrechnungen dieses Shops, zum Integrations-Protokoll (falls
+   Synchronisationsprotokoll, zu den Ausgangsrechnungen dieses Shops, zum Integrations-Protokoll (falls
    installiert) und zu dieser Anleitung. Die Zeile ist grün, bei Importfehlern rot.
-6. Die **Ausgangsrechnungen** (Entwürfe) prüfen: Kunde, Adressen, Positionen, Steuern, Gesamtbetrag. Buchen
+6. Vor dem ersten Buchen: Für alle Lagerartikel muss der **Anfangsbestand** im Shop-Lager gebucht sein
+   (Abschnitt 2, mit Buchungsdatum vor den Bestelldaten). Sonst lehnt ERPNext das Buchen mit „… Einheiten
+   von … benötigt in … zum Abschluss dieser Transaktion.“ ab.
+7. Die **Ausgangsrechnungen** (Entwürfe) prüfen: Kunde, Adressen, Positionen, Steuern, Gesamtbetrag. Buchen
    Sie einige von Hand und prüfen Sie Zahlung und Lagerabgang bzw. Lieferschein.
-7. Wenn alles stimmt: **Rechnungen buchen** einschalten.
-8. Wenn der Anfangsbestand in ERPNext stimmt: **Bestand synchronisieren** einschalten und speichern. Danach
+8. Wenn alles stimmt: **Rechnungen buchen** einschalten.
+9. Wenn der Anfangsbestand in ERPNext stimmt: **Bestand synchronisieren** einschalten und speichern. Danach
    erscheint unter **Aktionen** die Schaltfläche **Bestand jetzt abgleichen**; sie meldet den Bestand aller
    Lagerartikel, die es auch im Shop gibt, sofort an den Shop („Bestandsabgleich gestartet“).
 
@@ -247,7 +251,7 @@ Die Schaltflächen erscheinen erst, wenn der Shop gespeichert ist. „Bestellung
 - **Zahlungen** (Zahlungseingang): beim Buchen von Rechnungen mit *Bei Bestellung bezahlt*; die Bestellnummer
   steht als Referenz darin.
 - **Lieferscheine**: nur bei Bestellungen mit Streckengeschäfts-Artikeln (siehe Abschnitt 1).
-- **Kunden**: neu angelegte Shop-Kunden tragen den Shop-Namen im Feld *Modified Shop*.
+- **Kunden**: neu angelegte Shop-Kunden tragen den Shop-Namen im Feld *Modified-Shop*.
 - **Modified-Synchronisationsprotokoll**: je Eintrag Shop, *Vorgang* (Importieren = Bestellimport, Lager =
   Bestandsmeldung, Sendungsverfolgung), *Referenz* (Bestellnummer bzw. Artikel-Code), *Status* (Erfolgreich,
   Fehler, Übersprungen) und der Meldungstext.
@@ -286,6 +290,7 @@ Meldungen sind immer englisch):
 | guest order without email | Gastbestellung ohne E-Mail-Adresse. | Bestellung von Hand buchen. |
 | Unbekannter Ländercode … | Das Land der Adresse ist in ERPNext nicht zu finden. | Ländercode der Adresse im Shop prüfen. |
 | Bitte tragen Sie ein Bank- oder Kassenkonto in Zahlungsweise … ein | Der Zahlungsweise fehlt das Standardkonto für Ihr Unternehmen (im Protokoll bei eingeschaltetem *Rechnungen buchen*; beim Buchen von Hand erscheint die Meldung direkt). | Konto in der Zahlungsweise eintragen, dann **Erneut versuchen** bzw. erneut buchen. |
+| 2 Einheiten von HOLZ-ZUG-01 benötigt in Lagerräume - MF zum Abschluss dieser Transaktion. (je nach Lage auch „Es werden 2 Einheiten von … in … auf … benötigt, um diesen Vorgang abzuschließen.“) | Beim Buchen (bei eingeschaltetem *Rechnungen buchen* oder von Hand) reicht der Bestand im Shop-Lager zum Bestelldatum nicht. | Bestand per Lagerbuchung oder Bestandsabgleich mit Buchungsdatum vor dem Bestelldatum einbuchen, dann **Erneut versuchen** bzw. erneut buchen. |
 | Bestellung … wurde nach dem Import im Shop storniert; bitte Rechnung … prüfen | Die Bestellung wurde nach dem Import storniert. | Einen Rechnungsentwurf löschen; eine gebuchte Rechnung stornieren oder eine Gutschrift erstellen. |
 | Bestellimport abgebrochen: Shop API error … (Referenz „(run)“) | Der Shop war nicht erreichbar oder hat die Anmeldung abgelehnt. | Basis-URL, Zugangsdaten und **Verbindung testen** prüfen. Der nächste Lauf holt alles nach; dieser Eintrag kann nicht wiederholt werden. |
 | Der Artikel ist nicht im Shop | (Vorgang Lager) Zu diesem ERPNext-Artikel gibt es kein Shop-Produkt mit passendem Wert (Modell bzw. EAN). | Nur ein Hinweis; Artikel im Shop anlegen oder ignorieren. |
