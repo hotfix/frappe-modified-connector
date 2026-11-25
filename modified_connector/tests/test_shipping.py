@@ -21,6 +21,7 @@ class TestShipping(IntegrationTestCase):
 		self.client = MagicMock()
 		self.client.get_tracking.return_value = []
 		self.client.last_history_status.return_value = 1
+		self.client.get_order_status.return_value = 1
 		patch.object(ModifiedShop, "get_client", return_value=self.client).start()
 		raw = raw_order(purchased=soon())
 		self.order_id = raw["orders"]["orders_id"]
@@ -53,6 +54,14 @@ class TestShipping(IntegrationTestCase):
 		send_tracking(self.invoice, "00340434")
 		self.client.add_status.assert_not_called()
 		self.client.set_order_status.assert_called_once_with(self.order_id, 3)
+
+	def test_order_already_moved_on_only_gets_tracking_row(self):
+		self.client.get_order_status.return_value = 5  # e.g. delivered; not an import status
+		send_tracking(self.invoice, "X9")
+		self.client.add_tracking.assert_called_once_with(self.order_id, 1, "X9")
+		self.client.add_status.assert_not_called()
+		self.client.set_order_status.assert_not_called()
+		self.assertEqual(self.number(), "X9")
 
 	def test_status_put_failure_is_logged_and_retry_completes(self):
 		self.client.set_order_status.side_effect = ModifiedAPIError(500, "/x", "boom")

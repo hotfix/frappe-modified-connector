@@ -47,7 +47,7 @@ check the credentials.
 | Enabled | The scheduler imports orders (every 5 minutes) and syncs stock only for enabled shops. |
 | Base URL | Shop URL without `/api/v1`. Must use `https://` (`http://` is only accepted for `localhost`). |
 | API Username / API Password | Credentials of the shop API user (the password is stored encrypted). |
-| Import From | Orders purchased before this time are never imported. Set it to the go-live time. |
+| Import From | Orders purchased before this time are never imported. Set it to the go-live time. Mandatory, so the first run never fetches the whole order history. |
 | Last Import | Set by the app: purchase time of the newest order seen. |
 | Retry Window (Days) | Every run fetches the orders of the last N days before *Last Import* again. This retries orders that failed or that were not yet in an import status when first seen. Older orders are no longer fetched; their log entry stays and can be retried by hand. Default 14. |
 | Company, Warehouse | Company of the invoices, and the warehouse that is delivered from and whose stock is pushed. |

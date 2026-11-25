@@ -182,6 +182,13 @@ class ModifiedClient:
 		"""Change `orders_status` itself; a status_history row alone leaves the order's status untouched."""
 		self.request("PUT", f"/orders/{order_id}", json={"orders_status": status_id})
 
+	def get_order_status(self, order_id: str) -> int | None:
+		"""Current `orders_status` of the order."""
+		try:
+			return int((self.get_order(order_id, "") or {}).get("orders", {}).get("orders_status"))
+		except (TypeError, ValueError):  # fmt: skip
+			return None
+
 	def last_history_status(self, order_id: str) -> int | None:
 		"""Status id of the newest status_history row, None if there is none."""
 		rows = (self.get_order(order_id, "history") or {}).get("orders_status_history") or []

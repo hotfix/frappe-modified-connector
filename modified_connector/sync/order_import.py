@@ -161,6 +161,13 @@ def run_import(shop_name: str) -> dict:
 			orders.append(raw)
 	except ModifiedAPIError as exc:
 		listing_error = exc
+	if listing_error:
+		# The API lists newest first, so a broken listing holds the newest orders: importing them would put
+		# invoice numbers against the order chronology. Nothing is imported; the next run starts over.
+		_log_error_once(shop.name, RUN_REFERENCE, _("Order import aborted: {0}").format(listing_error))
+		frappe.db.commit()
+		counts[ERROR] += 1
+		return counts
 	orders.sort(key=lambda raw: (_raw_purchased(raw) or datetime.min, _sort_id(raw)))
 	for raw in orders:
 		with order_lock(shop.name, _raw_order_id(raw)) as locked:
@@ -170,12 +177,6 @@ def run_import(shop_name: str) -> dict:
 		purchased = _raw_purchased(raw)
 		if purchased and (latest is None or purchased > latest):
 			latest = purchased
-	if listing_error:
-		# the listing broke off: the orders fetched so far are imported and committed
-		_log_error_once(shop.name, RUN_REFERENCE, _("Order import aborted: {0}").format(listing_error))
-		frappe.db.commit()
-		counts[ERROR] += 1
-		return counts
 
 	if latest and latest != get_datetime(shop.last_import):
 		frappe.db.set_value("Modified Shop", shop.name, "last_import", latest)

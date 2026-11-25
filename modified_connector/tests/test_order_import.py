@@ -414,7 +414,11 @@ class TestOrderImport(ShopTestCase):
 		self.use_client(FakeClient([good], error=ModifiedAPIError(503, "/orders", "unavailable")))
 
 		result = run_import(self.shop.name)
-		self.assertEqual(result["imported"], 1)
+		# the fetched part is the newest orders: importing it would break the chronology of invoice numbers
+		self.assertEqual(result["imported"], 0)
+		self.assertFalse(
+			frappe.db.exists("Sales Invoice", {"modified_order_id": good["orders"]["orders_id"]})
+		)
 		self.assertEqual(get_datetime(self.reload().last_import), datetime(2026, 10, 15, 10))
 		errors = logs(self.shop.name, "(run)", "Error")
 		self.assertEqual(len(errors), 1)

@@ -9,11 +9,17 @@ connector. Python 3 standard library only; run it on the host, not in the bench 
 export MODIFIED_TEST_URL=https://test.example.com   # with or without /api/v1
 export MODIFIED_TEST_USER=api-user@example.com
 export MODIFIED_TEST_PASS=...
-python dev/seed_testshop.py            # create what is missing
-python dev/seed_testshop.py --reset    # delete what the script created
+python dev/seed_testshop.py --yes            # create what is missing
+python dev/seed_testshop.py --yes --reset    # delete what the script created
 ```
 
-Never point it at a live shop: it creates customers and orders.
+Never point it at a live shop: it creates customers and orders. The script prints the target host and
+refuses to run without `--yes`. The URL must be `https` (user and password are sent with every login; plain
+`http` is accepted for localhost only).
+
+`--reset` deletes by name, not by origin: the six products with the `DEMO-*` models listed below, the
+manufacturer `DEMO Spielwaren GmbH`, the category `DEMO Spielzeug`, the three demo customers (found by e-mail) and the orders
+carrying the seed marker, even if they existed before the first run.
 
 The script is idempotent. It finds the manufacturer and category by name, products by `products_model`,
 customers by e-mail and orders by the marker `[seed-testshop:<scenario>]` in the order comment. An order that

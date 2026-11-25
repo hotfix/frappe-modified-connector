@@ -267,7 +267,7 @@ def split_by_rate(amount: Decimal, shares: dict) -> dict:
 
 
 def resolve_tax_classes(api: Api) -> None:
-	"""Tax class per rate from the shop's tax rates (German zone: the rate with the most classes)."""
+	"""Tax class per rate from the shop's tax rates (the first row with that rate)."""
 	for row in api.pages("/countries/tax_rates"):
 		rate = Decimal(str(row["tax_rate"])).normalize()
 		for wanted in TAX_CLASSES:
@@ -652,11 +652,28 @@ def reset(api: Api) -> None:
 			print("deleted category", row["categories"]["categories_id"])
 
 
+def check_target(url: str, confirmed: bool) -> None:
+	"""Refuse plain http (the password would travel in clear text) and anything not confirmed with --yes."""
+	parts = urllib.parse.urlsplit(url)
+	host = parts.hostname or ""
+	if parts.scheme != "https" and host not in ("localhost", "127.0.0.1", "::1"):
+		sys.exit(f"Refusing {url}: use https (plain http only for localhost).")
+	print(f"Target shop: {host}")
+	if not confirmed:
+		sys.exit(
+			f"Not confirmed: this creates or deletes customers and orders on {host}. "
+			"Run again with --yes if that is a test shop."
+		)
+
+
 def main() -> None:
 	parser = argparse.ArgumentParser(
 		description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
 	)
 	parser.add_argument("--reset", action="store_true", help="delete everything this script created")
+	parser.add_argument(
+		"--yes", action="store_true", help="confirm that the target is a non-productive test shop"
+	)
 	args = parser.parse_args()
 	try:
 		url, user, password = (
@@ -664,6 +681,7 @@ def main() -> None:
 		)
 	except KeyError as e:
 		sys.exit(f"Environment variable {e.args[0]} is not set.")
+	check_target(url, args.yes)
 	api = Api(url, user, password)
 	started = time.time()
 	if args.reset:

@@ -208,6 +208,11 @@ class TestModifiedClient(UnitTestCase):
 		self.assertEqual(req.call_args_list[1].args[:2], ("PUT", API + "/orders/1000"))
 		self.assertEqual(req.call_args_list[1].kwargs["json"], {"orders_status": 3})
 
+	def test_get_order_status(self):
+		with patch("requests.Session.request") as req:
+			req.side_effect = [token(), resp(200, {"orders": {"orders_id": "1000", "orders_status": "3"}})]
+			self.assertEqual(make_client().get_order_status("1000"), 3)
+
 	def test_last_history_status_picks_newest_row(self):
 		rows = [
 			{"orders_status_history_id": "5", "orders_status_id": "3", "date_added": "2026-11-25 16:00:00"},
