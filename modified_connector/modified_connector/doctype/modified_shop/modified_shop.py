@@ -135,7 +135,9 @@ def get_status(shop: str) -> dict:
 	)
 	return {
 		"last_import": frappe.db.get_value("Modified Shop", shop, "last_import"),
-		"errors": frappe.db.count(log, {"shop": shop, "status": "Error", "operation": order_import.OPERATION}),
+		"errors": frappe.db.count(
+			log, {"shop": shop, "status": "Error", "operation": order_import.OPERATION}
+		),
 		"integration_log": "integration_log" in frappe.get_installed_apps(),
 		"waiting": sum(1 for m in skipped if order_import.is_waiting_message(m)),
 		"imported_7d": frappe.db.count(
