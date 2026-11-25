@@ -47,6 +47,7 @@ class TestShopForm(IntegrationTestCase):
 	def test_tabs(self):
 		tabs = [f.fieldname for f in frappe.get_meta("Modified Shop").fields if f.fieldtype == "Tab Break"]
 		self.assertEqual(tabs, ["connection_tab", "erp_tab", "items_taxes_tab", "sync_tab"])
+		self.assertEqual(frappe.get_meta("Modified Shop").fields[0].fieldname, "connection_tab")
 
 	def test_descriptions(self):
 		for doctype in ("Modified Shop", "Modified Shop Tax Map", "Modified Shop Payment Map"):

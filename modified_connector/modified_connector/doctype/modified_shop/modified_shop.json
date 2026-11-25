@@ -6,9 +6,9 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "connection_tab",
   "shop_name",
   "enabled",
-  "connection_tab",
   "base_url",
   "api_username",
   "api_password",
@@ -41,6 +41,11 @@
  ],
  "fields": [
   {
+   "fieldname": "connection_tab",
+   "fieldtype": "Tab Break",
+   "label": "Connection"
+  },
+  {
    "fieldname": "shop_name",
    "fieldtype": "Data",
    "label": "Shop Name",
@@ -55,11 +60,6 @@
    "label": "Enabled",
    "in_list_view": 1,
    "description": "Only enabled shops are imported and synchronised by the scheduler. Keep it off until the connection test succeeds."
-  },
-  {
-   "fieldname": "connection_tab",
-   "fieldtype": "Tab Break",
-   "label": "Connection"
   },
   {
    "fieldname": "base_url",
@@ -115,7 +115,7 @@
    "label": "Company",
    "options": "Company",
    "reqd": 1,
-   "description": "Company that owns the invoices, e.g. 'My Company GmbH'. The tax template and shipping item must belong to it."
+   "description": "Company that owns the invoices, e.g. 'My Company GmbH'. The sales taxes template must belong to it."
   },
   {
    "fieldname": "warehouse",
@@ -152,7 +152,7 @@
    "fieldname": "invoice_naming_series",
    "fieldtype": "Data",
    "label": "Invoice Naming Series",
-   "description": "Naming series for imported invoices, e.g. ACC-SINV-.YYYY.-. Leave empty to use the default series of Sales Invoice."
+   "description": "Naming series for imported invoices, e.g. ACC-SINV-.YYYY.-. The series must exist in the naming series list of Sales Invoice. Leave empty to use the default series."
   },
   {
    "fieldname": "items_taxes_tab",
@@ -240,7 +240,7 @@
    "fieldtype": "Int",
    "label": "Shipped Status ID",
    "default": "3",
-   "description": "Shop status ID set on the order when a tracking number is sent, e.g. 3 (shipped). The customer is notified by the shop."
+   "description": "Shop status ID set on the order when a tracking number is sent, e.g. 3 (shipped), only if the order is still in an import status. The customer is notified by the shop."
   },
   {
    "fieldname": "dhl_carrier_id",
@@ -261,7 +261,7 @@
    "fieldtype": "Check",
    "label": "Sync Stock",
    "default": "0",
-   "description": "If checked, the sellable quantity of stock items (actual minus reserved) in the warehouse is sent to the shop after stock changes and in a full sync. Example: on after go-live."
+   "description": "If checked, the sellable quantity of stock items (actual minus reserved and minus open draft shop invoices) in the warehouse is sent to the shop after stock changes and in a full sync. Example: on after go-live."
   }
  ],
  "index_web_pages_for_search": 1,

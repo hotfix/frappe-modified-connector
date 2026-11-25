@@ -25,7 +25,7 @@
    "options": "Mode of Payment",
    "reqd": 1,
    "in_list_view": 1,
-   "description": "ERPNext Mode of Payment used for the Payment Entry, e.g. 'PayPal' or 'Bank Transfer'."
+   "description": "ERPNext Mode of Payment used for the Payment Entry, e.g. 'PayPal' or 'Bank Transfer'. Only used if 'Paid at Checkout' is checked, when the invoice is submitted."
   },
   {
    "fieldname": "mark_paid",

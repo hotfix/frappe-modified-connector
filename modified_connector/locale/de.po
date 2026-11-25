@@ -586,8 +586,8 @@ msgstr "Bestellungen, die vor diesem Zeitpunkt aufgegeben wurden, werden nie imp
 msgid "Set by the importer after each run. Not editable."
 msgstr "Wird vom Import nach jedem Lauf gesetzt. Nicht editierbar."
 
-msgid "Company that owns the invoices, e.g. 'My Company GmbH'. The tax template and shipping item must belong to it."
-msgstr "Unternehmen, dem die Rechnungen gehören, z. B. „Meine Firma GmbH“. Steuervorlage und Versandartikel müssen dazu passen."
+msgid "Company that owns the invoices, e.g. 'My Company GmbH'. The sales taxes template must belong to it."
+msgstr "Unternehmen, dem die Rechnungen gehören, z. B. „Meine Firma GmbH“. Die Umsatzsteuervorlage muss dazu passen."
 
 msgid "Warehouse that stock is taken from for shop orders and whose stock levels are sent to the shop, e.g. 'Stores'."
 msgstr "Lager, aus dem Shop-Bestellungen bedient werden und dessen Bestand an den Shop gemeldet wird, z. B. „Lager“."
@@ -598,8 +598,8 @@ msgstr "Kundengruppe für neue Kunden aus Shop-Bestellungen, z. B. „Einzelpers
 msgid "Territory for new customers created from shop orders, e.g. 'Germany' (German: Deutschland). Must not be a group."
 msgstr "Gebiet für neue Kunden aus Shop-Bestellungen, z. B. „Deutschland“. Darf keine Gruppe sein."
 
-msgid "Naming series for imported invoices, e.g. ACC-SINV-.YYYY.-. Leave empty to use the default series of Sales Invoice."
-msgstr "Nummernkreis für importierte Rechnungen, z. B. ACC-SINV-.YYYY.-. Leer lassen, um den Standard-Nummernkreis der Ausgangsrechnung zu verwenden."
+msgid "Naming series for imported invoices, e.g. ACC-SINV-.YYYY.-. The series must exist in the naming series list of Sales Invoice. Leave empty to use the default series."
+msgstr "Nummernkreis für importierte Rechnungen, z. B. ACC-SINV-.YYYY.-. Der Nummernkreis muss in der Nummernkreisliste der Ausgangsrechnung vorhanden sein. Leer lassen für den Standard-Nummernkreis."
 
 msgid "Shop product field that identifies the item: products_model (the shop's model/article number) or products_ean. Example: products_model."
 msgstr "Shop-Produktfeld, über das der Artikel erkannt wird: products_model (Modell-/Artikelnummer im Shop) oder products_ean. Beispiel: products_model."
@@ -625,8 +625,8 @@ msgstr "Kommagetrennte Shop-Bestellstatus-IDs, die importiert werden sollen, z. 
 msgid "Shop status ID of cancelled orders, e.g. 4. Such orders are never imported; if an imported order is cancelled later, an error is logged so you can cancel the invoice by hand."
 msgstr "Shop-Status-ID stornierter Bestellungen, z. B. 4. Solche Bestellungen werden nie importiert; wird eine bereits importierte Bestellung später storniert, wird ein Fehler protokolliert, damit Sie die Rechnung manuell stornieren."
 
-msgid "Shop status ID set on the order when a tracking number is sent, e.g. 3 (shipped). The customer is notified by the shop."
-msgstr "Shop-Status-ID, die beim Senden einer Sendungsnummer gesetzt wird, z. B. 3 (versendet). Der Kunde wird vom Shop benachrichtigt."
+msgid "Shop status ID set on the order when a tracking number is sent, e.g. 3 (shipped), only if the order is still in an import status. The customer is notified by the shop."
+msgstr "Shop-Status-ID, die beim Senden einer Sendungsnummer gesetzt wird, z. B. 3 (versendet), nur wenn sich die Bestellung noch in einem Importstatus befindet. Der Kunde wird vom Shop benachrichtigt."
 
 msgid "ID of the DHL carrier in the shop, e.g. 1. It is sent with the tracking number so the shop shows the right tracking link."
 msgstr "ID des Versanddienstleisters DHL im Shop, z. B. 1. Sie wird mit der Sendungsnummer übermittelt, damit der Shop den richtigen Tracking-Link anzeigt."
@@ -634,8 +634,8 @@ msgstr "ID des Versanddienstleisters DHL im Shop, z. B. 1. Sie wird mit der Send
 msgid "If checked, imported invoices are submitted automatically (and paid if the payment method is 'Paid at Checkout'); otherwise they stay as drafts to review. Example: off while testing."
 msgstr "Wenn aktiviert, werden importierte Rechnungen automatisch gebucht (und bezahlt, wenn die Zahlungsart „Bei Bestellung bezahlt“ ist); sonst bleiben sie als Entwurf zur Prüfung. Beispiel: aus während des Testens."
 
-msgid "If checked, the sellable quantity of stock items (actual minus reserved) in the warehouse is sent to the shop after stock changes and in a full sync. Example: on after go-live."
-msgstr "Wenn aktiviert, wird die verkaufbare Menge von Lagerartikeln (Ist abzüglich reserviert) des Lagers nach Bestandsänderungen und in einem Gesamtabgleich an den Shop gesendet. Beispiel: nach dem Go-Live aktivieren."
+msgid "If checked, the sellable quantity of stock items (actual minus reserved and minus open draft shop invoices) in the warehouse is sent to the shop after stock changes and in a full sync. Example: on after go-live."
+msgstr "Wenn aktiviert, wird die verkaufbare Menge von Lagerartikeln (Ist abzüglich reserviert und offener Rechnungsentwürfe des Shops) des Lagers nach Bestandsänderungen und in einem Gesamtabgleich an den Shop gesendet. Beispiel: nach dem Go-Live aktivieren."
 
 msgid "Tax rate in percent as it appears on the order lines, e.g. 19 or 7."
 msgstr "Steuersatz in Prozent, wie er in den Bestellpositionen steht, z. B. 19 oder 7."
@@ -646,8 +646,8 @@ msgstr "Artikelsteuervorlage für Positionen mit diesem Steuersatz, z. B. „USt
 msgid "Payment module code of the shop order (field payment_class), e.g. paypal, moneyorder (prepayment) or invoice. Not case-sensitive. See the setup guide for how to find it."
 msgstr "Zahlungsmodul-Code der Shop-Bestellung (Feld payment_class), z. B. paypal, moneyorder (Vorkasse) oder invoice. Groß-/Kleinschreibung egal. Siehe Einrichtungsanleitung, wie Sie ihn finden."
 
-msgid "ERPNext Mode of Payment used for the Payment Entry, e.g. 'PayPal' or 'Bank Transfer'."
-msgstr "ERPNext-Zahlungsart für die Zahlung, z. B. „PayPal“ oder „Überweisung“."
+msgid "ERPNext Mode of Payment used for the Payment Entry, e.g. 'PayPal' or 'Bank Transfer'. Only used if 'Paid at Checkout' is checked, when the invoice is submitted."
+msgstr "ERPNext-Zahlungsart für die Zahlung, z. B. „PayPal“ oder „Überweisung“. Wird nur verwendet, wenn „Bei Bestellung bezahlt“ aktiviert ist, und zwar beim Buchen der Rechnung."
 
 msgid "Items, Taxes & Payments"
 msgstr "Artikel, Steuern & Zahlungen"
