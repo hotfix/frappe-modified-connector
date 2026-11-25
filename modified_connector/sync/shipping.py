@@ -71,7 +71,10 @@ def send_tracking(invoice: str, tracking_number: str, carrier: str = "dhl") -> N
 		# read first: a retry after a failed add_status must not add the parcel a second time
 		if not any(str(row.get("parcel_id")) == tracking_number for row in client.get_tracking(order_id)):
 			client.add_tracking(order_id, shop.dhl_carrier_id, tracking_number)
-		client.add_status(order_id, shop.shipped_status_id, notify=True)
+		# the history row is what the customer sees; it does not change the order status, the PUT does
+		if client.last_history_status(order_id) != int(shop.shipped_status_id):
+			client.add_status(order_id, shop.shipped_status_id, notify=True)
+		client.set_order_status(order_id, shop.shipped_status_id)
 	except ModifiedAPIError as exc:
 		log_error_once(shop.name, OPERATION, order_id, str(exc))
 		frappe.throw(_("The shop rejected the tracking number: {0}").format(str(exc)))

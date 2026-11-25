@@ -177,3 +177,20 @@ class ModifiedClient:
 			f"/orders/{order_id}/status_history",
 			json={"orders_status_id": status_id, "comments": comment, "customer_notified": int(notify)},
 		)
+
+	def set_order_status(self, order_id: str, status_id: int) -> None:
+		"""Change `orders_status` itself; a status_history row alone leaves the order's status untouched."""
+		self.request("PUT", f"/orders/{order_id}", json={"orders_status": status_id})
+
+	def last_history_status(self, order_id: str) -> int | None:
+		"""Status id of the newest status_history row, None if there is none."""
+		rows = (self.get_order(order_id, "history") or {}).get("orders_status_history") or []
+		if not rows:
+			return None
+		newest = max(
+			rows, key=lambda r: (str(r.get("date_added") or ""), int(r.get("orders_status_history_id") or 0))
+		)
+		try:
+			return int(newest.get("orders_status_id"))
+		except (TypeError, ValueError):  # fmt: skip
+			return None

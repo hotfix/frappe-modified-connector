@@ -392,6 +392,22 @@ class TestOrderImport(ShopTestCase):
 		self.assertFalse(frappe.db.exists("Payment Entry", {"reference_no": order_id}))
 		self.assertIn("no bank", logs(self.shop.name, order_id, "Error")[0].message)
 
+	def test_orders_are_imported_oldest_first(self):
+		def ago(**kw):
+			return add_to_date(now_datetime(), **kw).strftime(FMT)
+
+		newest, oldest, middle = (
+			raw_order(purchased=ago(**kw)) for kw in ({"minutes": -1}, {"days": -1}, {"hours": -1})
+		)
+		self.use_client(FakeClient([newest, middle, oldest]))  # the API lists newest first
+
+		self.assertEqual(run_import(self.shop.name)["imported"], 3)
+		names = [
+			frappe.db.get_value("Sales Invoice", {"modified_order_id": raw["orders"]["orders_id"]}, "name")
+			for raw in (oldest, middle, newest)
+		]
+		self.assertEqual(names, sorted(names))
+
 	def test_api_error_keeps_last_import(self):
 		frappe.db.set_value("Modified Shop", self.shop.name, "last_import", "2026-10-15 10:00:00")
 		good = raw_order(purchased="2026-10-30 13:07:05")
@@ -441,8 +457,8 @@ class TestOrderImport(ShopTestCase):
 		dns = frappe.get_all(
 			"Delivery Note Item", filters={"against_sales_invoice": name}, fields=["parent", "item_code"]
 		)
-		# make_delivery_note skips the drop-shipped row; the non-stock shipping row is carried along
-		self.assertEqual({d.item_code for d in dns}, {"SKU-19", "SHIPPING"})
+		# the drop-shipped row and the non-stock shipping row stay off the delivery note
+		self.assertEqual({d.item_code for d in dns}, {"SKU-19"})
 		self.assertEqual(frappe.db.get_value("Delivery Note", dns[0].parent, "docstatus"), 1)
 
 	def test_amended_invoice_creates_no_second_payment(self):

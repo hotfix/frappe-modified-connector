@@ -201,6 +201,25 @@ class TestModifiedClient(UnitTestCase):
 			{"orders_status_id": 4, "comments": "hi", "customer_notified": 1},
 		)
 
+	def test_set_order_status_puts_only_orders_status(self):
+		with patch("requests.Session.request") as req:
+			req.side_effect = [token(), resp(201, {})]
+			make_client().set_order_status("1000", 3)
+		self.assertEqual(req.call_args_list[1].args[:2], ("PUT", API + "/orders/1000"))
+		self.assertEqual(req.call_args_list[1].kwargs["json"], {"orders_status": 3})
+
+	def test_last_history_status_picks_newest_row(self):
+		rows = [
+			{"orders_status_history_id": "5", "orders_status_id": "3", "date_added": "2026-11-25 16:00:00"},
+			{"orders_status_history_id": "4", "orders_status_id": "1", "date_added": "2026-11-20 10:00:00"},
+		]
+		with patch("requests.Session.request") as req:
+			req.side_effect = [token(), resp(200, {"orders_status_history": rows})]
+			self.assertEqual(make_client().last_history_status("1000"), 3)
+		with patch("requests.Session.request") as req:
+			req.side_effect = [token(), resp(200, {"orders_status_history": []})]
+			self.assertIsNone(make_client().last_history_status("1000"))
+
 	def test_foreign_next_url_is_rejected(self):
 		nxt = "https://evil.example/api/v1/orders?page=2"
 		page = resp(200, {"paging": {"next": nxt}, "data": [{"a": 1}]})

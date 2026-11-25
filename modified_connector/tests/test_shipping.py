@@ -20,6 +20,7 @@ class TestShipping(IntegrationTestCase):
 			stock_in(sku, 10)
 		self.client = MagicMock()
 		self.client.get_tracking.return_value = []
+		self.client.last_history_status.return_value = 1
 		patch.object(ModifiedShop, "get_client", return_value=self.client).start()
 		raw = raw_order(purchased=soon())
 		self.order_id = raw["orders"]["orders_id"]
@@ -33,6 +34,7 @@ class TestShipping(IntegrationTestCase):
 		send_tracking(self.invoice, "00340434")
 		self.client.add_tracking.assert_called_once_with(self.order_id, 1, "00340434")
 		self.client.add_status.assert_called_once_with(self.order_id, 3, notify=True)
+		self.client.set_order_status.assert_called_once_with(self.order_id, 3)
 		self.assertEqual(self.number(), "00340434")
 		self.assertTrue(
 			frappe.db.exists(
@@ -45,6 +47,25 @@ class TestShipping(IntegrationTestCase):
 				},
 			)
 		)
+
+	def test_latest_history_row_already_shipped_adds_no_duplicate_but_sets_status(self):
+		self.client.last_history_status.return_value = 3
+		send_tracking(self.invoice, "00340434")
+		self.client.add_status.assert_not_called()
+		self.client.set_order_status.assert_called_once_with(self.order_id, 3)
+
+	def test_status_put_failure_is_logged_and_retry_completes(self):
+		self.client.set_order_status.side_effect = ModifiedAPIError(500, "/x", "boom")
+		with self.assertRaises(frappe.ValidationError):
+			send_tracking(self.invoice, "X1")
+		self.assertFalse(self.number())
+		self.client.set_order_status.side_effect = None
+		self.client.last_history_status.return_value = 3
+		self.client.get_tracking.return_value = [{"parcel_id": "X1"}]
+		send_tracking(self.invoice, "X1")
+		self.client.add_tracking.assert_called_once()
+		self.client.add_status.assert_called_once()
+		self.assertEqual(self.number(), "X1")
 
 	def test_send_same_number_twice_is_noop(self):
 		send_tracking(self.invoice, "00340434")

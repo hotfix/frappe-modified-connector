@@ -153,18 +153,26 @@ def run_import(shop_name: str) -> dict:
 	latest = get_datetime(shop.last_import) if shop.last_import else None
 	# End the transaction that read the shop, so the first order's checks read fresh data (REPEATABLE READ).
 	frappe.db.commit()
+	# Oldest first, so invoice numbers follow the order chronology (the API lists newest first).
+	orders: list[dict] = []
+	listing_error: ModifiedAPIError | None = None
 	try:
 		for raw in shop.get_client().iter_orders(since):
-			with order_lock(shop.name, _raw_order_id(raw)) as locked:
-				result = _import_order(shop, raw)[0] if locked else SKIPPED
-				frappe.db.commit()  # before the lock is released
-			counts[result] += 1
-			purchased = _raw_purchased(raw)
-			if purchased and (latest is None or purchased > latest):
-				latest = purchased
+			orders.append(raw)
 	except ModifiedAPIError as exc:
-		# raised by the listing between orders: every processed order is already committed
-		_log_error_once(shop.name, RUN_REFERENCE, _("Order import aborted: {0}").format(exc))
+		listing_error = exc
+	orders.sort(key=lambda raw: (_raw_purchased(raw) or datetime.min, _sort_id(raw)))
+	for raw in orders:
+		with order_lock(shop.name, _raw_order_id(raw)) as locked:
+			result = _import_order(shop, raw)[0] if locked else SKIPPED
+			frappe.db.commit()  # before the lock is released
+		counts[result] += 1
+		purchased = _raw_purchased(raw)
+		if purchased and (latest is None or purchased > latest):
+			latest = purchased
+	if listing_error:
+		# the listing broke off: the orders fetched so far are imported and committed
+		_log_error_once(shop.name, RUN_REFERENCE, _("Order import aborted: {0}").format(listing_error))
 		frappe.db.commit()
 		counts[ERROR] += 1
 		return counts
@@ -224,6 +232,8 @@ def on_invoice_submit(doc, method=None):
 			)
 		else:
 			dn = make_delivery_note(doc.name)
+			# only stock items go on the delivery note (not shipping or other service rows)
+			dn.set("items", [row for row in dn.items if _is_stock_item(row.item_code)])
 			dn.insert(ignore_permissions=True)
 			dn.submit()
 
@@ -268,10 +278,12 @@ def _make_payment_entry(doc, mode_of_payment: str) -> None:
 	pe.submit()
 
 
+def _is_stock_item(item_code: str) -> bool:
+	return bool(frappe.get_cached_value("Item", item_code, "is_stock_item"))
+
+
 def _delivered_from_stock(row) -> bool:
-	return not row.delivered_by_supplier and bool(
-		frappe.get_cached_value("Item", row.item_code, "is_stock_item")
-	)
+	return not row.delivered_by_supplier and _is_stock_item(row.item_code)
 
 
 def _existing_invoice(shop: str, order_id: str) -> str | None:
@@ -309,6 +321,13 @@ def _raw_orders(raw) -> dict:
 
 def _raw_order_id(raw) -> str:
 	return str(_raw_orders(raw).get("orders_id") or "")
+
+
+def _sort_id(raw) -> int:
+	try:
+		return int(_raw_order_id(raw))
+	except ValueError:
+		return 0
 
 
 def _raw_status(raw) -> int | None:

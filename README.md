@@ -5,7 +5,7 @@ through the shop's REST API (`/api/v1`).
 
 - **Order import:** shop orders become Sales Invoices (customer, contact and addresses are created or reused).
 - **Stock sync:** ERPNext stock levels are pushed to the shop.
-- **Tracking:** tracking numbers are sent back to the shop and the order is set to "shipped".
+- **Tracking:** tracking numbers are sent back to the shop, a history entry is added (customer notified) and the order status is set to "shipped".
 - **Sync log:** import errors and orders waiting for an import status are logged; such an order can be
   imported again from its log entry with **Retry** once the cause is fixed.
 
@@ -130,7 +130,7 @@ second Delivery Note. Instead a "Skipped" log entry and a message tell you to al
 
 Labels are not created by this app. A label app (e.g. `dhl_connector`) announces new labels through the
 hook `on_shipping_label_created`; any channel app can implement it. For shop orders this app sends the
-tracking number to the shop and sets the order to "shipped".
+tracking number to the shop, adds the history entry and sets the order status to "shipped" (the history entry alone would not change the status).
 
 A label app calls, after storing the label:
 
