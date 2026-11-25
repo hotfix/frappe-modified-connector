@@ -38,6 +38,11 @@ Uninstalling the app removes these custom fields again.
 
 ## Configuration
 
+A step-by-step setup guide in German (prerequisites, every field with example values, first run,
+troubleshooting) is in [`modified_connector/docs/setup-guide-de.md`](modified_connector/docs/setup-guide-de.md).
+Logged-in users can read it on the site at `/modified-shop-guide` (also linked from the *Shop Connector*
+sidebar and the shop form).
+
 Create a *Modified Shop* (search "Modified Shop" in the awesome bar). Use **Test Connection** after saving to
 check the credentials.
 

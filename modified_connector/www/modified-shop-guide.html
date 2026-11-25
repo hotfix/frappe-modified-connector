@@ -1,0 +1,24 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_content %}
+<style>
+	.modified-guide { max-width: 860px; margin: 0 auto; padding: 2rem 0 4rem; line-height: 1.6; }
+	.modified-guide .guide-back { display: inline-block; margin-bottom: 1.5rem; font-size: 0.9rem; }
+	.modified-guide h1 { margin-bottom: 1.5rem; }
+	.modified-guide h2 { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color, #e5e7eb); }
+	.modified-guide h3 { margin-top: 1.75rem; }
+	.modified-guide table { width: 100%; margin: 1rem 0; font-size: 0.92rem; }
+	.modified-guide table td, .modified-guide table th { vertical-align: top; padding: 0.4rem 0.6rem; }
+	.modified-guide code { overflow-wrap: anywhere; }
+	@media (max-width: 768px) { .modified-guide table { display: block; overflow-x: auto; } }
+	.modified-guide blockquote { border-left: 3px solid var(--primary, #2490ef); padding-left: 1rem; color: var(--text-muted, #555); }
+</style>
+<article class="modified-guide">
+	<a class="guide-back" href="/desk/shop-connector">&larr; Zurück zur Shop-Anbindung</a>
+	<h1>{{ title }}</h1>
+	{{ body | safe }}
+	<p><a class="guide-back" href="/desk/shop-connector">&larr; Zurück zur Shop-Anbindung</a></p>
+</article>
+{% endblock %}
