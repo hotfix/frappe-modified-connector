@@ -1,3 +1,4 @@
+import inspect
 import json
 from unittest.mock import patch
 
@@ -57,6 +58,25 @@ class TestWorkspace(IntegrationTestCase):
 		self.assertEqual(frappe.db.count("Sidebar", {"name": "Shop Connector"}), 1)
 		self.assertEqual(len(frappe.get_doc("Sidebar", "Shop Connector").items), 10)
 
+	def test_apps_tile_title_translated(self):
+		from frappe.apps import get_apps
+
+		# get_apps is request-cached, so reset the cache around the German call
+		self._reset_apps_cache(get_apps)
+		frappe.local.lang = "de"
+		try:
+			titles = {a["name"]: a["title"] for a in get_apps()}
+		finally:
+			frappe.local.lang = "en"
+			self._reset_apps_cache(get_apps)
+		self.assertEqual(titles["modified_connector"], "Shop-Anbindung")
+
+	@staticmethod
+	def _reset_apps_cache(fn):
+		cache = getattr(frappe.local, "request_cache", None)
+		if cache is not None:
+			cache.pop(inspect.unwrap(fn), None)
+
 	def test_has_app_permission(self):
 		self.assertTrue(has_app_permission())
 		email = "mc-perm-test@example.com"
@@ -64,8 +84,13 @@ class TestWorkspace(IntegrationTestCase):
 		frappe.get_doc(
 			{"doctype": "User", "email": email, "first_name": "MCPerm", "send_welcome_email": 0}
 		).insert(ignore_permissions=True)
-		frappe.set_user(email)
-		self.assertFalse(has_app_permission())
+		try:
+			frappe.set_user(email)
+			frappe.clear_cache(user=email)
+			self.assertFalse(has_app_permission())
+		finally:
+			frappe.set_user("Administrator")
+			frappe.clear_cache(user=email)
 
 	def _remove_user(self, email, previous):
 		frappe.set_user(previous)

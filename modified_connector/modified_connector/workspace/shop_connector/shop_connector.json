@@ -31,7 +31,5 @@
  "links": [],
  "quick_lists": [],
  "custom_blocks": [],
- "roles": [
-  {"role": "System Manager"}
- ]
+ "roles": []
 }
