@@ -14,7 +14,8 @@
    "fieldtype": "Float",
    "label": "Tax Rate (%)",
    "reqd": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "description": "Tax rate in percent as it appears on the order lines, e.g. 19 or 7."
   },
   {
    "fieldname": "item_tax_template",
@@ -22,7 +23,8 @@
    "label": "Item Tax Template",
    "options": "Item Tax Template",
    "reqd": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "description": "Item Tax Template applied to lines with this rate, e.g. 'VAT 19 %'."
   }
  ],
  "index_web_pages_for_search": 1,

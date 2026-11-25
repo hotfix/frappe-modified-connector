@@ -8,20 +8,21 @@
  "field_order": [
   "shop_name",
   "enabled",
-  "connection_section",
+  "connection_tab",
   "base_url",
   "api_username",
   "api_password",
   "import_from",
   "last_import",
   "retry_window_days",
-  "erp_section",
+  "erp_tab",
   "company",
   "warehouse",
   "erp_column",
   "customer_group",
   "territory",
   "invoice_naming_series",
+  "items_taxes_tab",
   "matching_section",
   "item_match_shop_field",
   "item_match_erp_field",
@@ -30,7 +31,7 @@
   "sales_taxes_template",
   "tax_map",
   "payment_map",
-  "sync_section",
+  "sync_tab",
   "import_status_ids",
   "cancelled_status_id",
   "shipped_status_id",
@@ -45,17 +46,19 @@
    "label": "Shop Name",
    "reqd": 1,
    "unique": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "description": "Unique name of this shop connection, e.g. 'Main Shop'. It is stored on every imported invoice and customer."
   },
   {
    "fieldname": "enabled",
    "fieldtype": "Check",
    "label": "Enabled",
-   "in_list_view": 1
+   "in_list_view": 1,
+   "description": "Only enabled shops are imported and synchronised by the scheduler. Keep it off until the connection test succeeds."
   },
   {
-   "fieldname": "connection_section",
-   "fieldtype": "Section Break",
+   "fieldname": "connection_tab",
+   "fieldtype": "Tab Break",
    "label": "Connection"
   },
   {
@@ -63,31 +66,35 @@
    "fieldtype": "Data",
    "label": "Base URL",
    "reqd": 1,
-   "description": "Shop URL without /api/v1"
+   "description": "Shop address without /api/v1, e.g. https://shop.example.com. Must start with https:// (http:// only for localhost)."
   },
   {
    "fieldname": "api_username",
    "fieldtype": "Data",
    "label": "API Username",
-   "reqd": 1
+   "reqd": 1,
+   "description": "Shop user allowed to use the REST API, e.g. api@example.com. Use a dedicated user with minimal rights."
   },
   {
    "fieldname": "api_password",
    "fieldtype": "Password",
    "label": "API Password",
-   "reqd": 1
+   "reqd": 1,
+   "description": "Password of the API user. It is stored encrypted and sent to the shop over HTTPS."
   },
   {
    "fieldname": "import_from",
    "fieldtype": "Datetime",
    "label": "Import From",
-   "reqd": 1
+   "reqd": 1,
+   "description": "Orders purchased before this date and time are never imported, e.g. your go-live date 2027-01-01 00:00. The first import starts here."
   },
   {
    "fieldname": "last_import",
    "fieldtype": "Datetime",
    "label": "Last Import",
-   "read_only": 1
+   "read_only": 1,
+   "description": "Set by the importer after each run. Not editable."
   },
   {
    "fieldname": "retry_window_days",
@@ -98,8 +105,8 @@
    "description": "Each import fetches the orders of this many days before the last import again, so orders that failed or were not yet in an import status are retried."
   },
   {
-   "fieldname": "erp_section",
-   "fieldtype": "Section Break",
+   "fieldname": "erp_tab",
+   "fieldtype": "Tab Break",
    "label": "ERPNext Defaults"
   },
   {
@@ -107,14 +114,16 @@
    "fieldtype": "Link",
    "label": "Company",
    "options": "Company",
-   "reqd": 1
+   "reqd": 1,
+   "description": "Company that owns the invoices, e.g. 'My Company GmbH'. The tax template and shipping item must belong to it."
   },
   {
    "fieldname": "warehouse",
    "fieldtype": "Link",
    "label": "Warehouse",
    "options": "Warehouse",
-   "reqd": 1
+   "reqd": 1,
+   "description": "Warehouse that stock is taken from for shop orders and whose stock levels are sent to the shop, e.g. 'Stores'."
   },
   {
    "fieldname": "erp_column",
@@ -127,7 +136,8 @@
    "label": "Customer Group",
    "link_filters": "[[\"Customer Group\",\"is_group\",\"=\",0]]",
    "options": "Customer Group",
-   "reqd": 1
+   "reqd": 1,
+   "description": "Customer group for new customers created from shop orders, e.g. 'Individual' (German: Einzelperson). Must not be a group."
   },
   {
    "fieldname": "territory",
@@ -135,12 +145,19 @@
    "label": "Territory",
    "link_filters": "[[\"Territory\",\"is_group\",\"=\",0]]",
    "options": "Territory",
-   "reqd": 1
+   "reqd": 1,
+   "description": "Territory for new customers created from shop orders, e.g. 'Germany' (German: Deutschland). Must not be a group."
   },
   {
    "fieldname": "invoice_naming_series",
    "fieldtype": "Data",
-   "label": "Invoice Naming Series"
+   "label": "Invoice Naming Series",
+   "description": "Naming series for imported invoices, e.g. ACC-SINV-.YYYY.-. Leave empty to use the default series of Sales Invoice."
+  },
+  {
+   "fieldname": "items_taxes_tab",
+   "fieldtype": "Tab Break",
+   "label": "Items, Taxes & Payments"
   },
   {
    "fieldname": "matching_section",
@@ -152,14 +169,16 @@
    "fieldtype": "Select",
    "label": "Item Match Shop Field",
    "options": "products_model\nproducts_ean",
-   "default": "products_model"
+   "default": "products_model",
+   "description": "Shop product field that identifies the item: products_model (the shop's model/article number) or products_ean. Example: products_model."
   },
   {
    "fieldname": "item_match_erp_field",
    "fieldtype": "Select",
    "label": "Item Match ERP Field",
    "options": "Item Code\nBarcode",
-   "default": "Item Code"
+   "default": "Item Code",
+   "description": "ERPNext field compared with the shop value: Item Code or Barcode. Example: Item Code with products_model, Barcode with products_ean. An order line without a match is reported as an error."
   },
   {
    "fieldname": "tax_section",
@@ -171,68 +190,78 @@
    "fieldtype": "Link",
    "label": "Shipping Item",
    "options": "Item",
-   "reqd": 1
+   "reqd": 1,
+   "description": "Non-stock service item used for the shipping charge line of each invoice, e.g. 'Shipping' (German: Versand)."
   },
   {
    "fieldname": "sales_taxes_template",
    "fieldtype": "Link",
    "label": "Sales Taxes Template",
    "options": "Sales Taxes and Charges Template",
-   "reqd": 1
+   "reqd": 1,
+   "description": "Sales Taxes and Charges Template applied to imported invoices, e.g. the template for 19 % VAT. Shop prices are gross, so its taxes are treated as included in the price."
   },
   {
    "fieldname": "tax_map",
    "fieldtype": "Table",
    "label": "Tax Map",
-   "options": "Modified Shop Tax Map"
+   "options": "Modified Shop Tax Map",
+   "description": "Maps the tax rate of each order line to an Item Tax Template, e.g. 19 → 'VAT 19 %' and 7 → 'VAT 7 %'. A rate without a row is reported as an error."
   },
   {
    "fieldname": "payment_map",
    "fieldtype": "Table",
    "label": "Payment Map",
-   "options": "Modified Shop Payment Map"
+   "options": "Modified Shop Payment Map",
+   "description": "Maps the shop payment method of an order to an ERPNext Mode of Payment. Optional: payment methods without a row are imported without a payment."
   },
   {
-   "fieldname": "sync_section",
-   "fieldtype": "Section Break",
-   "label": "Sync Settings"
+   "fieldname": "sync_tab",
+   "fieldtype": "Tab Break",
+   "label": "Synchronisation"
   },
   {
    "fieldname": "import_status_ids",
    "fieldtype": "Data",
    "label": "Import Status IDs",
    "reqd": 1,
-   "default": "1,2"
+   "default": "1,2",
+   "description": "Comma-separated shop order status IDs that are ready for import, e.g. 1,2. Orders in other statuses wait and are retried within the retry window; the shop's status list shows the IDs."
   },
   {
    "fieldname": "cancelled_status_id",
    "fieldtype": "Int",
    "label": "Cancelled Status ID",
-   "default": "4"
+   "default": "4",
+   "description": "Shop status ID of cancelled orders, e.g. 4. Such orders are never imported; if an imported order is cancelled later, an error is logged so you can cancel the invoice by hand."
   },
   {
    "fieldname": "shipped_status_id",
    "fieldtype": "Int",
    "label": "Shipped Status ID",
-   "default": "3"
+   "default": "3",
+   "description": "Shop status ID set on the order when a tracking number is sent, e.g. 3 (shipped). The customer is notified by the shop."
   },
   {
    "fieldname": "dhl_carrier_id",
    "fieldtype": "Int",
    "label": "DHL Carrier ID",
-   "default": "1"
+   "default": "1",
+   "description": "ID of the DHL carrier in the shop, e.g. 1. It is sent with the tracking number so the shop shows the right tracking link."
   },
   {
    "fieldname": "submit_invoices",
    "fieldtype": "Check",
    "label": "Submit Invoices",
-   "default": "0"
+   "default": "0",
+   "description": "If checked, imported invoices are submitted automatically (and paid if the payment method is 'Paid at Checkout'); otherwise they stay as drafts to review. Example: off while testing."
   },
   {
    "fieldname": "sync_stock",
    "fieldtype": "Check",
    "label": "Sync Stock",
-   "default": "0"
+   "default": "0",
+   "description": "If checked, the sellable quantity of stock items (actual minus reserved) in the warehouse is sent to the shop after stock changes and in a full sync. Example: on after go-live."
   }
  ],
  "index_web_pages_for_search": 1,

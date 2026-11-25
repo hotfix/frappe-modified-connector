@@ -384,11 +384,6 @@ msgstr "Shop"
 msgid "Shop Name"
 msgstr "Shop-Name"
 
-#. Description of the 'Base URL' (Data) field in DocType 'Modified Shop'
-#: modified_connector/modified_connector/doctype/modified_shop/modified_shop.json:66
-msgid "Shop URL without /api/v1"
-msgstr "Shop-URL ohne /api/v1"
-
 #. Option for the 'Status' (Select) field in DocType 'Modified Sync Log'
 #: modified_connector/modified_connector/doctype/modified_sync_log/modified_sync_log.json:44
 msgid "Skipped"
@@ -569,3 +564,93 @@ msgstr "Hilfe"
 
 msgid "Setup Guide"
 msgstr "Einrichtungsanleitung"
+
+msgid "Unique name of this shop connection, e.g. 'Main Shop'. It is stored on every imported invoice and customer."
+msgstr "Eindeutiger Name dieser Shop-Verbindung, z. B. „Hauptshop“. Er wird bei jeder importierten Rechnung und jedem Kunden gespeichert."
+
+msgid "Only enabled shops are imported and synchronised by the scheduler. Keep it off until the connection test succeeds."
+msgstr "Nur aktivierte Shops werden vom Scheduler importiert und abgeglichen. Lassen Sie die Option aus, bis der Verbindungstest erfolgreich ist."
+
+msgid "Shop address without /api/v1, e.g. https://shop.example.com. Must start with https:// (http:// only for localhost)."
+msgstr "Shop-Adresse ohne /api/v1, z. B. https://shop.example.com. Muss mit https:// beginnen (http:// nur für localhost)."
+
+msgid "Shop user allowed to use the REST API, e.g. api@example.com. Use a dedicated user with minimal rights."
+msgstr "Shop-Benutzer mit Zugriff auf die REST-API, z. B. api@example.com. Verwenden Sie einen eigenen Benutzer mit minimalen Rechten."
+
+msgid "Password of the API user. It is stored encrypted and sent to the shop over HTTPS."
+msgstr "Passwort des API-Benutzers. Es wird verschlüsselt gespeichert und per HTTPS an den Shop gesendet."
+
+msgid "Orders purchased before this date and time are never imported, e.g. your go-live date 2027-01-01 00:00. The first import starts here."
+msgstr "Bestellungen, die vor diesem Zeitpunkt aufgegeben wurden, werden nie importiert, z. B. Ihr Go-Live-Datum 01.01.2027 00:00. Der erste Import beginnt hier."
+
+msgid "Set by the importer after each run. Not editable."
+msgstr "Wird vom Import nach jedem Lauf gesetzt. Nicht editierbar."
+
+msgid "Company that owns the invoices, e.g. 'My Company GmbH'. The tax template and shipping item must belong to it."
+msgstr "Unternehmen, dem die Rechnungen gehören, z. B. „Meine Firma GmbH“. Steuervorlage und Versandartikel müssen dazu passen."
+
+msgid "Warehouse that stock is taken from for shop orders and whose stock levels are sent to the shop, e.g. 'Stores'."
+msgstr "Lager, aus dem Shop-Bestellungen bedient werden und dessen Bestand an den Shop gemeldet wird, z. B. „Lager“."
+
+msgid "Customer group for new customers created from shop orders, e.g. 'Individual' (German: Einzelperson). Must not be a group."
+msgstr "Kundengruppe für neue Kunden aus Shop-Bestellungen, z. B. „Einzelperson“. Darf keine Gruppe sein."
+
+msgid "Territory for new customers created from shop orders, e.g. 'Germany' (German: Deutschland). Must not be a group."
+msgstr "Gebiet für neue Kunden aus Shop-Bestellungen, z. B. „Deutschland“. Darf keine Gruppe sein."
+
+msgid "Naming series for imported invoices, e.g. ACC-SINV-.YYYY.-. Leave empty to use the default series of Sales Invoice."
+msgstr "Nummernkreis für importierte Rechnungen, z. B. ACC-SINV-.YYYY.-. Leer lassen, um den Standard-Nummernkreis der Ausgangsrechnung zu verwenden."
+
+msgid "Shop product field that identifies the item: products_model (the shop's model/article number) or products_ean. Example: products_model."
+msgstr "Shop-Produktfeld, über das der Artikel erkannt wird: products_model (Modell-/Artikelnummer im Shop) oder products_ean. Beispiel: products_model."
+
+msgid "ERPNext field compared with the shop value: Item Code or Barcode. Example: Item Code with products_model, Barcode with products_ean. An order line without a match is reported as an error."
+msgstr "ERPNext-Feld, mit dem der Shop-Wert verglichen wird: Item Code (Artikelnummer) oder Barcode. Beispiel: Item Code mit products_model, Barcode mit products_ean. Eine Bestellposition ohne Treffer wird als Fehler gemeldet."
+
+msgid "Non-stock service item used for the shipping charge line of each invoice, e.g. 'Shipping' (German: Versand)."
+msgstr "Dienstleistungsartikel ohne Lagerführung für die Versandkostenposition jeder Rechnung, z. B. „Versand“."
+
+msgid "Sales Taxes and Charges Template applied to imported invoices, e.g. the template for 19 % VAT. Shop prices are gross, so its taxes are treated as included in the price."
+msgstr "Umsatzsteuervorlage für importierte Rechnungen, z. B. die Vorlage für 19 % USt. Shop-Preise sind Bruttopreise, daher gelten die Steuern als im Preis enthalten."
+
+msgid "Maps the tax rate of each order line to an Item Tax Template, e.g. 19 → 'VAT 19 %' and 7 → 'VAT 7 %'. A rate without a row is reported as an error."
+msgstr "Ordnet dem Steuersatz jeder Bestellposition eine Artikelsteuervorlage zu, z. B. 19 → „USt 19 %“ und 7 → „USt 7 %“. Ein Steuersatz ohne Zeile wird als Fehler gemeldet."
+
+msgid "Maps the shop payment method of an order to an ERPNext Mode of Payment. Optional: payment methods without a row are imported without a payment."
+msgstr "Ordnet die Zahlungsart einer Shop-Bestellung einer ERPNext-Zahlungsart zu. Optional: Zahlungsarten ohne Zeile werden ohne Zahlung importiert."
+
+msgid "Comma-separated shop order status IDs that are ready for import, e.g. 1,2. Orders in other statuses wait and are retried within the retry window; the shop's status list shows the IDs."
+msgstr "Kommagetrennte Shop-Bestellstatus-IDs, die importiert werden sollen, z. B. 1,2. Bestellungen mit anderem Status warten und werden innerhalb des Wiederholungsfensters erneut versucht; die IDs stehen in der Statusliste des Shops."
+
+msgid "Shop status ID of cancelled orders, e.g. 4. Such orders are never imported; if an imported order is cancelled later, an error is logged so you can cancel the invoice by hand."
+msgstr "Shop-Status-ID stornierter Bestellungen, z. B. 4. Solche Bestellungen werden nie importiert; wird eine bereits importierte Bestellung später storniert, wird ein Fehler protokolliert, damit Sie die Rechnung manuell stornieren."
+
+msgid "Shop status ID set on the order when a tracking number is sent, e.g. 3 (shipped). The customer is notified by the shop."
+msgstr "Shop-Status-ID, die beim Senden einer Sendungsnummer gesetzt wird, z. B. 3 (versendet). Der Kunde wird vom Shop benachrichtigt."
+
+msgid "ID of the DHL carrier in the shop, e.g. 1. It is sent with the tracking number so the shop shows the right tracking link."
+msgstr "ID des Versanddienstleisters DHL im Shop, z. B. 1. Sie wird mit der Sendungsnummer übermittelt, damit der Shop den richtigen Tracking-Link anzeigt."
+
+msgid "If checked, imported invoices are submitted automatically (and paid if the payment method is 'Paid at Checkout'); otherwise they stay as drafts to review. Example: off while testing."
+msgstr "Wenn aktiviert, werden importierte Rechnungen automatisch gebucht (und bezahlt, wenn die Zahlungsart „Bei Bestellung bezahlt“ ist); sonst bleiben sie als Entwurf zur Prüfung. Beispiel: aus während des Testens."
+
+msgid "If checked, the sellable quantity of stock items (actual minus reserved) in the warehouse is sent to the shop after stock changes and in a full sync. Example: on after go-live."
+msgstr "Wenn aktiviert, wird die verkaufbare Menge von Lagerartikeln (Ist abzüglich reserviert) des Lagers nach Bestandsänderungen und in einem Gesamtabgleich an den Shop gesendet. Beispiel: nach dem Go-Live aktivieren."
+
+msgid "Tax rate in percent as it appears on the order lines, e.g. 19 or 7."
+msgstr "Steuersatz in Prozent, wie er in den Bestellpositionen steht, z. B. 19 oder 7."
+
+msgid "Item Tax Template applied to lines with this rate, e.g. 'VAT 19 %'."
+msgstr "Artikelsteuervorlage für Positionen mit diesem Steuersatz, z. B. „USt 19 %“."
+
+msgid "Payment module code of the shop order (field payment_class), e.g. paypal, moneyorder (prepayment) or invoice. Not case-sensitive. See the setup guide for how to find it."
+msgstr "Zahlungsmodul-Code der Shop-Bestellung (Feld payment_class), z. B. paypal, moneyorder (Vorkasse) oder invoice. Groß-/Kleinschreibung egal. Siehe Einrichtungsanleitung, wie Sie ihn finden."
+
+msgid "ERPNext Mode of Payment used for the Payment Entry, e.g. 'PayPal' or 'Bank Transfer'."
+msgstr "ERPNext-Zahlungsart für die Zahlung, z. B. „PayPal“ oder „Überweisung“."
+
+msgid "Items, Taxes & Payments"
+msgstr "Artikel, Steuern & Zahlungen"
+
+msgid "Synchronisation"
+msgstr "Synchronisierung"
