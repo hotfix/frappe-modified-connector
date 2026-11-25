@@ -556,3 +556,16 @@ msgstr "{0} {1} ist eine Gruppe. Bitte wählen Sie eine {0} ohne Untergruppen."
 msgid "{0}: duplicate entry for {1}"
 msgstr "{0}: doppelter Eintrag für {1}"
 
+
+#: modified_connector/modified_connector/workspace/shop_connector/shop_connector.json
+msgid "Shop Connector"
+msgstr "Shop-Anbindung"
+
+msgid "Results"
+msgstr "Ergebnisse"
+
+msgid "Help"
+msgstr "Hilfe"
+
+msgid "Setup Guide"
+msgstr "Einrichtungsanleitung"

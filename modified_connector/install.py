@@ -15,3 +15,8 @@ def before_uninstall():
 			name = frappe.db.get_value("Custom Field", {"dt": doctype, "fieldname": field["fieldname"]})
 			if name:
 				frappe.delete_doc("Custom Field", name, ignore_permissions=True, force=True)
+
+
+def has_app_permission() -> bool:
+	"""Apps-screen tile is shown to users who can read Modified Shop."""
+	return bool(frappe.has_permission("Modified Shop", "read"))

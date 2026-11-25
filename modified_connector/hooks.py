@@ -7,6 +7,18 @@ app_license = "GPLv3"
 
 required_apps = ["frappe/erpnext"]
 
+# Tile on the apps screen (default "Apps" desktop mode). The "Desktop Icons" mode uses
+# desktop_icon/shop_connector.json.
+add_to_apps_screen = [
+	{
+		"name": "modified_connector",
+		"logo": "/assets/modified_connector/images/logo.svg",
+		"title": "Shop Connector",
+		"route": "/desk/shop-connector",
+		"has_permission": "modified_connector.install.has_app_permission",
+	}
+]
+
 after_install = "modified_connector.install.after_install"
 after_migrate = "modified_connector.install.after_install"
 before_uninstall = "modified_connector.install.before_uninstall"

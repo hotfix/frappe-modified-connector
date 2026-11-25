@@ -126,6 +126,14 @@ Retry requires permission to create Sales Invoices and to edit the log entry.
 second Delivery Note. Instead a "Skipped" log entry and a message tell you to allocate the existing payment with
 *Payment Reconciliation* and to check the deliveries of the original invoice.
 
+## Navigation
+
+On the home screen the app appears as the tile *Shop Connector* (hook `add_to_apps_screen`, shown to users
+who can read Modified Shop). Sites in the "Desktop Icons" desktop mode get the shipped Desktop Icon instead.
+The workspace *Shop Connector* and its sidebar link to the shops, the sync log and the results
+(invoices, payments, delivery notes, customers). The tile logo is served from `assets/modified_connector`,
+which `bench build` creates; run `bench --site <site> migrate` and `bench build` after installing or updating.
+
 ## Integration hooks
 
 Labels are not created by this app. A label app (e.g. `dhl_connector`) announces new labels through the

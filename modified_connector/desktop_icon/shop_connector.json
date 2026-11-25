@@ -1,0 +1,21 @@
+{
+ "app": "modified_connector",
+ "creation": "2026-11-25 18:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon": "store",
+ "icon_type": "Link",
+ "idx": 0,
+ "label": "Shop Connector",
+ "link_to": "Shop Connector",
+ "link_type": "Workspace Sidebar",
+ "modified": "2026-11-25 18:00:00.000000",
+ "modified_by": "Administrator",
+ "name": "Shop Connector",
+ "owner": "Administrator",
+ "restrict_removal": 0,
+ "roles": [],
+ "sidebar": "",
+ "standard": 1
+}
