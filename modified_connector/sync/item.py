@@ -82,19 +82,17 @@ def _class_rates(shop: ModifiedShop, refresh: bool = False) -> dict[str, list[st
 	return rates
 
 
-def _mapped_template(shop: ModifiedShop, rate: Decimal) -> str | None:
-	for row in shop.tax_map:
-		if Decimal(str(row.tax_rate)).normalize() == rate.normalize():
-			return row.item_tax_template
-	return None
-
-
-def tax_rate_for_class(shop: ModifiedShop, tax_class_id) -> Decimal:
+def tax_rate_for_class(shop: ModifiedShop, tax_class_id, preferred: Decimal | None = None) -> Decimal:
 	"""The VAT rate of a shop tax class.
 
-	The shop has one rate per tax class and tax zone (e.g. 19 % EU, 0 % non-EU). Rates of 0 % are
-	ignored when the class also has a non-zero rate; of several non-zero rates the one in the Tax Map is
-	taken. Tax class 0 (none) is tax-free."""
+	`preferred` (the rate of an order line) is taken as is if it is non-zero and in the Tax Map: that is
+	the rate the shop charged, also for a class with several mapped rates (OSS), and needs no shop call.
+	A 0 % line (e.g. non-EU delivery) says nothing about the product's normal rate and is not preferred.
+	Otherwise: the shop has one rate per tax class and tax zone (e.g. 19 % EU, 0 % non-EU). Rates of 0 %
+	are ignored when the class also has a non-zero rate; of several non-zero rates the one in the Tax Map
+	is taken. Tax class 0 (none) is tax-free."""
+	if preferred and shop.mapped_item_tax_template(preferred):
+		return Decimal(str(preferred)).normalize()
 	cls = str(tax_class_id or "0").strip()
 	if cls in ("", "0"):
 		return Decimal(0)
@@ -106,7 +104,7 @@ def tax_rate_for_class(shop: ModifiedShop, tax_class_id) -> Decimal:
 		raise ProductError(_("Tax class {0} has no tax rate in the shop").format(cls))
 	candidates = [r for r in values if r] or values
 	if len(candidates) > 1:
-		mapped = [r for r in candidates if _mapped_template(shop, r)]
+		mapped = [r for r in candidates if shop.mapped_item_tax_template(r)]
 		if len(mapped) != 1:
 			raise ProductError(
 				_(
@@ -197,7 +195,7 @@ def _plain(text) -> str:
 # -- creation ------------------------------------------------------------------
 
 
-def create_item_from_product(shop: ModifiedShop, product: dict) -> str:
+def create_item_from_product(shop: ModifiedShop, product: dict, preferred_rate: Decimal | None = None) -> str:
 	"""Create the ERPNext Item for a shop product row (as GET /products/{id} returns it) and return its
 	item code. If an Item with the product's match value exists already, it is returned unchanged.
 	Raises ProductError (a ValidationError) if the product cannot be taken over; nothing is created then."""
@@ -216,7 +214,7 @@ def create_item_from_product(shop: ModifiedShop, product: dict) -> str:
 	save_point = f"modified_item_{frappe.generate_hash(length=10)}"
 	frappe.db.savepoint(save_point)
 	try:
-		item_code = _create(shop, product, value)
+		item_code = _create(shop, product, value, preferred_rate)
 	except Exception:
 		frappe.db.rollback(save_point=save_point)
 		raise
@@ -224,7 +222,7 @@ def create_item_from_product(shop: ModifiedShop, product: dict) -> str:
 	return item_code
 
 
-def _create(shop: ModifiedShop, row: dict, value: str) -> str:
+def _create(shop: ModifiedShop, row: dict, value: str, preferred_rate: Decimal | None = None) -> str:
 	p = _product(row)
 	model = str(p.get("products_model") or "").strip()
 	item_code = (model or value) if _by_barcode(shop) else value
@@ -233,8 +231,8 @@ def _create(shop: ModifiedShop, row: dict, value: str) -> str:
 			_("Item {0} exists already but does not have the barcode {1}").format(item_code, value)
 		)
 
-	rate = tax_rate_for_class(shop, p.get("products_tax_class_id"))
-	template = _mapped_template(shop, rate)
+	rate = tax_rate_for_class(shop, p.get("products_tax_class_id"), preferred_rate)
+	template = shop.mapped_item_tax_template(rate)
 	if not template:
 		raise ProductError(
 			_(
@@ -293,8 +291,11 @@ def _create(shop: ModifiedShop, row: dict, value: str) -> str:
 	return item.name
 
 
-def create_item_for_order_line(shop: ModifiedShop, products_id: str, value: str) -> str:
-	"""Create the missing Item of an order line from the current shop product."""
+def create_item_for_order_line(
+	shop: ModifiedShop, products_id: str, value: str, tax_rate: Decimal | None = None
+) -> str:
+	"""Create the missing Item of an order line from the current shop product; `tax_rate` is the line's
+	rate, preferred for the Item Tax Template (see tax_rate_for_class)."""
 	try:
 		row = shop.get_client().get_product(products_id)
 	except ModifiedAPIError as exc:
@@ -312,7 +313,7 @@ def create_item_for_order_line(shop: ModifiedShop, products_id: str, value: str)
 				shop.item_match_shop_field or "products_model", value, products_id, current or "''"
 			)
 		)
-	return create_item_from_product(shop, row)
+	return create_item_from_product(shop, row, tax_rate)
 
 
 def missing_products(shop: ModifiedShop) -> list[dict]:

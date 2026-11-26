@@ -99,11 +99,18 @@ class ModifiedShop(Document):
 			statuses.append(shipped)
 		return statuses
 
-	def item_tax_template_for(self, rate: Decimal) -> str:
+	def mapped_item_tax_template(self, rate) -> str | None:
+		"""The Item Tax Template of a tax rate in the Tax Map, None if the rate is not mapped."""
 		wanted = Decimal(str(rate)).normalize()
 		for row in self.tax_map:
 			if Decimal(str(row.tax_rate)).normalize() == wanted:
 				return row.item_tax_template
+		return None
+
+	def item_tax_template_for(self, rate: Decimal) -> str:
+		template = self.mapped_item_tax_template(rate)
+		if template:
+			return template
 		frappe.throw(_("No Item Tax Template mapped for tax rate {0} % in shop {1}").format(rate, self.name))
 
 	def payment_for(self, payment_class: str):

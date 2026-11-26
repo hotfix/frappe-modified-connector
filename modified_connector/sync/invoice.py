@@ -146,7 +146,7 @@ def _resolve_item(shop: ModifiedShop, line: OrderLine) -> str:
 	item_code = find_item(shop, value)
 	if not item_code and value and shop.create_missing_items:
 		# created inside the order's savepoint: rolled back if the order fails
-		item_code = create_item_for_order_line(shop, line.products_id, value)
+		item_code = create_item_for_order_line(shop, line.products_id, value, line.tax_rate)
 	if item_code and frappe.db.get_value("Item", item_code, "disabled"):
 		raise UnknownItem(
 			_("Item {0} for {1} {2} (shop product {3}) is disabled").format(

@@ -217,6 +217,31 @@ class TestCreateItem(ItemTestCase):
 		self.assertEqual(item_sync.tax_rate_for_class(self.shop, "1"), Decimal("19"))
 		self.assertEqual(item_sync.tax_rate_for_class(self.shop, "4"), Decimal("19"))
 
+	def test_order_line_rate_preferred(self):
+		"""OSS: class 4 has 19 % and 20 %, both mapped; the order line's 20 % decides, without a shop call."""
+		from modified_connector.tests.utils import _tax_template, _vat_accounts
+
+		t20 = _tax_template("MCT 20", {_vat_accounts()[0]: 20.0})
+		tax_map = [
+			{"tax_rate": 19.0, "item_tax_template": T19},
+			{"tax_rate": 7.0, "item_tax_template": T7},
+			{"tax_rate": 20.0, "item_tax_template": t20},
+		]
+		self.use_shop(tax_map=tax_map)
+		row = product(tax_class="4", price="10.0000")
+		self.client.products = [row]
+		p = row["products"]
+		with self.assertRaises(frappe.ValidationError):  # without the line rate: ambiguous
+			create_item_from_product(self.shop, row)
+		with patch.object(FakeClient, "tax_class_rates", side_effect=AssertionError("no shop call")):
+			code = item_sync.create_item_for_order_line(
+				self.shop, p["products_id"], p["products_model"], Decimal("20.00")
+			)
+		self.assertEqual([t.item_tax_template for t in frappe.get_doc("Item", code).taxes], [t20])
+		self.assertAlmostEqual(
+			frappe.db.get_value("Item Price", {"item_code": code}, "price_list_rate"), 12.00, places=2
+		)
+
 	def test_missing_match_value(self):
 		with self.assertRaises(frappe.ValidationError):
 			create_item_from_product(self.shop, product(model=""))
