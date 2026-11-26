@@ -4,7 +4,7 @@ from pathlib import Path
 import frappe
 from frappe.model import no_value_fields, table_fields
 from frappe.tests import IntegrationTestCase
-from frappe.utils import nowdate
+from frappe.utils import getdate, nowdate
 
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
 
@@ -12,6 +12,34 @@ COMPANY = "MC Test GmbH"
 ABBR = "MCT"
 SUPPLIER = "MC Test Supplier"
 FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def before_tests() -> None:
+	"""Complete the setup wizard on a fresh site, as a person would before using the app.
+
+	Without it ERPNext's base records are missing (root groups such as "All Customer Groups",
+	warehouse types, UOMs, ...). A site that went through the wizard is left untouched."""
+	frappe.clear_cache()
+	if frappe.is_setup_complete():
+		return
+
+	from frappe.desk.page.setup_wizard.setup_wizard import setup_complete
+
+	year = getdate().year
+	setup_complete(
+		{
+			"language": "English",
+			"country": "Germany",
+			"timezone": "Europe/Berlin",
+			"currency": "EUR",
+			"company_name": "MC CI GmbH",
+			"company_abbr": "MCCI",
+			"chart_of_accounts": "Standard",
+			"fy_start_date": f"{year}-01-01",
+			"fy_end_date": f"{year}-12-31",
+		}
+	)
+	frappe.db.commit()
 
 
 def load_raw(name: str) -> dict:

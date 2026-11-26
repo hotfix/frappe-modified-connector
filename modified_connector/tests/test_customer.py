@@ -86,7 +86,11 @@ class TestCustomer(IntegrationTestCase):
 		self.assertEqual(doc.modified_customer_key, "C5")
 		self.assertEqual(doc.customer_name, "Erika Musterfrau")
 		self.assertEqual(doc.customer_type, "Individual")
-		self.assertEqual((doc.customer_group, doc.territory), (self.shop.customer_group, self.shop.territory))
+		# the site may have a Territory for Germany (the setup wizard creates one), else the shop default
+		self.assertEqual(
+			(doc.customer_group, doc.territory),
+			(self.shop.customer_group, territory_for_country("DE", self.shop.territory)),
+		)
 		addr = frappe.get_doc("Address", billing)
 		self.assertEqual(addr.address_type, "Billing")
 		self.assertEqual(addr.address_title, "Erika Musterfrau")

@@ -28,6 +28,9 @@ scheduler_events = {
 	"daily": ["modified_connector.tasks.full_stock_sync_all_shops"],
 }
 
+# A fresh site (CI) has not been through the setup wizard: run it, so ERPNext's base records exist.
+before_tests = "modified_connector.tests.utils.before_tests"
+
 doc_events = {
 	"Sales Invoice": {"on_submit": "modified_connector.sync.order_import.on_invoice_submit"},
 	"Stock Ledger Entry": {"on_submit": "modified_connector.sync.stock.on_stock_change"},

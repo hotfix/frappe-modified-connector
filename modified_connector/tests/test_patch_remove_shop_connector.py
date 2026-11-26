@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import frappe
 from frappe.tests import IntegrationTestCase
 
@@ -18,15 +20,17 @@ class TestRemoveShopConnectorPatch(IntegrationTestCase):
 				"public": 1,
 			}
 		).insert(ignore_permissions=True)
-		frappe.get_doc(
-			{
-				"doctype": "Sidebar",
-				"name": OLD,
-				"title": OLD,
-				"module": "Modified Connector",
-				"app": "modified_connector",
-			}
-		).insert(ignore_permissions=True)
+		# The old app sidebar got onto sites by import; outside developer mode only that may write it.
+		with patch.dict(frappe.flags, {"in_import": True}):
+			frappe.get_doc(
+				{
+					"doctype": "Sidebar",
+					"name": OLD,
+					"title": OLD,
+					"module": "Modified Connector",
+					"app": "modified_connector",
+				}
+			).insert(ignore_permissions=True)
 		icon = frappe.get_doc(
 			{
 				"doctype": "Desktop Icon",
