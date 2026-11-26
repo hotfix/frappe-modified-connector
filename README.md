@@ -1,23 +1,43 @@
 # Modified Connector
 
+[![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
+![Frappe v16](https://img.shields.io/badge/Frappe-v16-0089ff)
+![ERPNext v16](https://img.shields.io/badge/ERPNext-v16-0089ff)
+[![Release](https://img.shields.io/github/v/release/hotfix/frappe-modified-connector)](https://github.com/hotfix/frappe-modified-connector/releases)
 [![CI](https://github.com/hotfix/frappe-modified-connector/actions/workflows/ci.yml/badge.svg)](https://github.com/hotfix/frappe-modified-connector/actions/workflows/ci.yml)
 
 A Frappe/ERPNext v16 app that connects ERPNext to a shop running [modified eCommerce](https://www.modified-shop.org/)
-through the shop's REST API (`/api/v1`).
+through the shop's REST API (`/api/v1`). It is meant for merchants who sell through a modified shop and keep
+their books, stock and shipping in ERPNext: orders are imported as Sales Invoices, stock levels go back to the
+shop, and tracking numbers reach the shop without typing them twice.
 This is an independent community project and not an official module of the modified eCommerce project.
+
+## Features
 
 - **Order import:** shop orders become Sales Invoices (customer, contact and addresses are created or reused).
 - **Stock sync:** ERPNext stock levels are pushed to the shop.
-- **Tracking:** tracking numbers are sent back to the shop, a history entry is added (customer notified) and the order status is set to "shipped".
+- **Tracking:** tracking numbers are sent back to the shop, a history entry is added (customer notified) and
+  the order status is set to "shipped".
 - **Shop data:** order statuses, carriers, payment classes and tax rates are loaded from the shop
   (**Load Shop Data**) and picked by name instead of by id. Orders in the shipped status are always imported.
 - **Items from the shop:** shop products without an Item can be taken over from a dialog (**Take Over Missing
   Items**) or created during the order import (*Create Missing Items on Import*): name, EAN barcode, Item Tax
   Template from the Tax Map and the gross price in the default selling price list. No opening stock is booked.
 - **Customers:** the Territory of a new customer follows the billing country (a Territory named like the
-  country, else the default territory).
+  country, else the shop's *Standard Territory*).
 - **Sync log:** import errors and orders waiting for an import status are logged; such an order can be
   imported again from its log entry with **Retry** once the cause is fixed.
+- **Integration Log (optional):** with the companion app
+  [integration_log](https://github.com/hotfix/frappe-integration-log) installed, sync errors and waiting orders
+  also show up in its central log, with Retry (see [Integration Log](#integration-log)).
+
+## Requirements
+
+- Frappe v16 and ERPNext v16.
+- A shop running modified eCommerce with its REST API (`/api/v1`) reachable over HTTPS, and an API user for
+  this app (see [Security notes](#security-notes)).
+- Recommended: [integration_log](https://github.com/hotfix/frappe-integration-log) for one central log of all
+  integrations. It is optional; this app works without it.
 
 ## Limits of version 1
 
@@ -40,17 +60,33 @@ log entry is what is left, and the order can still be imported from there with *
 ```bash
 bench get-app https://github.com/hotfix/frappe-modified-connector
 bench --site <site> install-app modified_connector
+bench build --app modified_connector
 ```
 
 The app requires ERPNext. Installing it adds custom fields (`modified_shop`, `modified_order_id`,
 `modified_payment_class`, `modified_tracking_number`) to the Sales Invoice and two fields to the Customer.
 Uninstalling the app removes these custom fields again.
 
+## Quick start
+
+1. Open the tile *modified Shop* on the home screen and create a *Modified Shop* with the base URL and the
+   credentials of the shop API user. Leave *Enabled*, *Submit Invoices* and *Sync Stock* off and save.
+2. Click **Test Connection** (menu *Actions*).
+3. Click **Load Shop Data**, then choose the statuses, the Tax Map and the Payment Map by name.
+   **Take Over Missing Items** creates Items for shop products that do not exist in ERPNext yet.
+4. Check *Import From* (your go-live time), tick *Enabled* and save. Orders are imported every 5 minutes, or
+   right away with **Import Orders Now**. Imported invoices stay drafts while *Submit Invoices* is off.
+5. Review the draft invoices and the *Modified Sync Log*. When the results are right, turn on
+   *Submit Invoices*, and *Sync Stock* once the opening stock in ERPNext is correct.
+
+The German [setup guide](modified_connector/docs/setup-guide-de.md) walks through every field with example
+values, the first run and troubleshooting.
+
 ## Configuration
 
 A step-by-step setup guide in German (prerequisites, every field with example values, first run,
 troubleshooting) is in [`modified_connector/docs/setup-guide-de.md`](modified_connector/docs/setup-guide-de.md).
-Logged-in users can read it on the site at `/modified-shop-guide` (also linked from the *modified Shop*
+Logged-in users can read it on the site at `/modified-shop-guide` (also linked from the *modified Shops*
 sidebar and the shop form).
 
 Create a *Modified Shop* (search "Modified Shop" in the awesome bar). Use **Test Connection** after saving to
@@ -66,9 +102,11 @@ check the credentials.
 | Last Import | Set by the app: purchase time of the newest order seen. |
 | Retry Window (Days) | Every run fetches the orders of the last N days before *Last Import* again. This retries orders that failed or that were not yet in an import status when first seen. Older orders are no longer fetched; their log entry stays and can be retried by hand. Default 14. |
 | Company, Warehouse | Company of the invoices, and the warehouse that is delivered from and whose stock is pushed. |
-| Customer Group, Territory | Used for customers created by the import (non-group records). |
+| Customer Group, Standard Territory | Used for customers created by the import (non-group records). The Standard Territory is used when no Territory is named like the billing country. |
 | Invoice Naming Series | Optional naming series for the imported invoices. |
 | Item Match Shop Field / Item Match ERP Field | How shop products are matched to items: shop `products_model` or `products_ean` against the ERPNext Item Code or Barcode. Default: `products_model` = Item Code. |
+| Create Missing Items on Import | Off (default): an order line without a matching Item rejects the order. On: the Item is created from the shop product during the import. |
+| Item Group for New Items, New Items Are Stock Items | Item Group (empty: the default of the Stock Settings) and stock flag of Items created from shop products. No opening stock is booked. |
 | Shipping Item | Non-stock item used for the shipping rows. **It must list the Item Tax Template of every rate in the Tax Map.** Shipping is split over the tax rates (see below), and ERPNext silently replaces a row template that is not listed on the item. The import detects this and rejects the order instead of booking wrong VAT. |
 | Sales Taxes Template | Template with one tax row per VAT rate (separate accounts for 19 % and 7 %, as in SKR03). Rows are treated as included in the price. |
 | Tax Map | Tax rate (%) of a shop order line to the *Item Tax Template* used for that line. **Every item must list the Item Tax Template of its shop rate**, directly or through its Item Group. ERPNext replaces a template that is not listed with one that is; with a 19 % template on the root Item Group, every 7 % item therefore needs the 7 % template on the item (or its group). The import rejects an order where this happened instead of booking wrong VAT. |
@@ -144,17 +182,22 @@ second Delivery Note. Instead a "Skipped" log entry and a message tell you to al
 ## Navigation
 
 On the home screen the app appears as the tile *modified Shop* (hook `add_to_apps_screen`, shown to users
-who can read Modified Shop). Sites in the "Desktop Icons" desktop mode get the shipped Desktop Icon instead.
-The workspace *modified Shops* (route `/desk/modified-shops`, so it does not collide with the list route of the DocType Modified Shop) and its sidebar link to the shops, the sync log and the results
-(invoices, payments, delivery notes, customers). The tile logo is served from `assets/modified_connector`,
-which `bench build` creates for apps present in the bench where the assets are served (a plain restart
-does not recreate the symlink); run `bench --site <site> migrate` and `bench build` after installing or updating.
+who can read Modified Shop). Sites in the "Desktop Icons" desktop mode get the shipped Desktop Icon
+*modified Shops* instead. Both open the workspace *modified Shops* at `/desk/modified-shops`. The workspace
+is named differently from the DocType so that its route does not collide with the list route of the DocType
+Modified Shop. The workspace and its sidebar link to the shops, the sync log, the results (invoices,
+payments, delivery notes, customers) and the setup guide.
+
+The tile logo is served from `assets/modified_connector`, which `bench build` creates for apps present in the
+bench where the assets are served (a plain restart does not recreate the symlink). Run
+`bench --site <site> migrate` and `bench build` after installing or updating.
 
 ## Integration hooks
 
 Labels are not created by this app. A label app (e.g. `dhl_connector`) announces new labels through the
 hook `on_shipping_label_created`; any channel app can implement it. For shop orders this app sends the
-tracking number to the shop, adds the history entry and sets the order status to "shipped" (the history entry alone would not change the status).
+tracking number to the shop, adds the history entry and sets the order status to "shipped" (the history entry
+alone would not change the status).
 
 A label app calls, after storing the label:
 
@@ -198,8 +241,23 @@ German translations are included (`modified_connector/locale/de.po`). To refresh
 `bench --site <site> generate-pot-file --app modified_connector`, then `update-po-files` and
 `compile-po-to-mo`.
 
-## Support
+## Feedback and contributing
 
-Provided as is, with no guaranteed support. Issues and pull requests are welcome but may not be answered.
+Reports from real shops make this app better, so please get in touch:
 
-License: GPLv3
+- **Found a bug?** [Open an issue](https://github.com/hotfix/frappe-modified-connector/issues/new/choose) with
+  the steps to reproduce it and your versions of Frappe, ERPNext, this app and modified eCommerce.
+- **Missing a feature or have an idea?** Open a feature request on the same page. Questions are welcome too.
+- **Want to fix something yourself?** Pull requests are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Security issue?** Please do not open a public issue; see [SECURITY.md](SECURITY.md).
+
+The app is maintained in spare time and provided as is, so there are no guaranteed response times, but every
+report is read.
+
+If the app is useful to you, a ⭐ on GitHub helps others find it.
+
+Changes per version are listed in [CHANGELOG.md](CHANGELOG.md).
+
+## License
+
+GPLv3, see [LICENSE](LICENSE).

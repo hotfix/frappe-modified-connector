@@ -5,10 +5,10 @@ ERPNext mit einem Shop, der mit modified eCommerce betrieben wird, und holt die 
 des Shops (`/api/v1`) ab. Alle Beispielwerte (Shop-Adresse, Firmenname, Kontonamen) sind Platzhalter, die Sie
 durch Ihre eigenen Werte ersetzen.
 
-Sie finden die Anbindung auf der Startseite von ERPNext als Kachel **modified Shop**. Die Seitenleiste dort
-enthält: **Modified-Shop** (die Einstellungen), **Modified-Synchronisationsprotokoll**, unter *Ergebnisse*
-die **Ausgangsrechnungen**, **Zahlungen**, **Lieferscheine** und **Kunden** sowie unter *Hilfe* diese
-Einrichtungsanleitung.
+Sie finden die Anbindung auf der Startseite von ERPNext als Kachel **modified Shop**. Sie öffnet den
+Arbeitsbereich **modified Shops** (`/desk/modified-shops`). Dessen Seitenleiste enthält: **Modified-Shop** (die
+Einstellungen), **Modified-Synchronisationsprotokoll**, unter *Ergebnisse* die **Ausgangsrechnungen**,
+**Zahlungen**, **Lieferscheine** und **Kunden** sowie unter *Hilfe* diese Einrichtungsanleitung.
 
 ## 1. Was die Anbindung macht
 
@@ -122,9 +122,9 @@ Regel der Fall; sonst fragen Sie Ihren Administrator).
 
 ## 4. Den Modified-Shop anlegen – Feld für Feld
 
-Öffnen Sie in der Seitenleiste von modified Shop **Modified-Shop** und legen Sie einen neuen Eintrag an. Das
-Formular hat vier Reiter. Lassen Sie beim ersten Speichern *Aktiviert*, *Rechnungen buchen* und *Bestand
-synchronisieren* aus.
+Öffnen Sie in der Seitenleiste **modified Shops** die Liste **Modified-Shop** und legen Sie einen neuen Eintrag
+an. Das Formular hat vier Reiter. Lassen Sie beim ersten Speichern *Aktiviert*, *Rechnungen buchen* und
+*Bestand synchronisieren* aus.
 
 ### Reiter „Verbindung“
 
