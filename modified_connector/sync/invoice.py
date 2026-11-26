@@ -7,7 +7,7 @@ from erpnext.controllers.accounts_controller import get_taxes_and_charges
 from frappe import _
 
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
-from modified_connector.sync.customer import ensure_customer
+from modified_connector.sync.customer import ensure_customer, order_language
 from modified_connector.sync.item import create_item_for_order_line, find_item
 from modified_connector.sync.mapping import OrderLine, ShopOrder, split_by_rate
 
@@ -43,6 +43,7 @@ def build_invoice(shop: ModifiedShop, order: ShopOrder):
 		{
 			"company": shop.company,
 			"customer": customer,
+			"language": frappe.db.get_value("Customer", customer, "language") or order_language(order),
 			"customer_address": billing,
 			"shipping_address_name": shipping or billing,
 			"currency": order.currency,

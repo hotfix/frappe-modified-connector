@@ -13,7 +13,11 @@ def ensure_customer(shop: ModifiedShop, order: ShopOrder) -> tuple[str, str, str
 
 	Addresses are matched by recipient (company and name) and street, postcode and city: a parcel to
 	another person at the same street gets its own shipping address."""
-	customer = _find_customer(shop, order) or _create_customer(shop, order)
+	customer = _find_customer(shop, order)
+	if customer:
+		_ensure_language(customer, order)
+	else:
+		customer = _create_customer(shop, order)
 	if order.email:
 		_ensure_contact(customer, order)
 	billing = _ensure_address(customer, order.billing, "Billing")
@@ -40,10 +44,46 @@ def _create_customer(shop: ModifiedShop, order: ShopOrder) -> str:
 			"territory": territory_for_country(order.billing.country_iso2, shop.territory),
 			"modified_shop": shop.name,
 			"modified_customer_key": order.customer_key,
+			"language": order_language(order),
 		}
 	)
 	doc.insert(ignore_permissions=True)
 	return doc.name
+
+
+# Language names as the shop sends them (English names) -> Frappe language codes.
+LANGUAGE_CODES = {
+	"german": "de",
+	"english": "en",
+	"french": "fr",
+	"spanish": "es",
+	"italian": "it",
+	"dutch": "nl",
+	"polish": "pl",
+	"portuguese": "pt",
+	"czech": "cs",
+	"danish": "da",
+	"swedish": "sv",
+	"turkish": "tr",
+}
+
+
+def order_language(order: ShopOrder) -> str:
+	"""Frappe language code for the order's language; System Settings language, then "en" if unknown.
+
+	Explicit on purpose: in a background job `frappe.local.lang` is "en" and new documents would
+	get the global default language."""
+	name = (order.language or "").strip().lower()
+	code = LANGUAGE_CODES.get(name) or (name if len(name) == 2 else "")
+	if code and frappe.db.get_value("Language", {"name": code, "enabled": 1}):
+		return code
+	return frappe.db.get_single_value("System Settings", "language") or "en"
+
+
+def _ensure_language(customer: str, order: ShopOrder) -> None:
+	"""Set the print language of an existing customer that has none; never overwrite one."""
+	if not frappe.db.get_value("Customer", customer, "language"):
+		frappe.db.set_value("Customer", customer, "language", order_language(order))
 
 
 def territory_for_country(country: str | None, default: str) -> str:

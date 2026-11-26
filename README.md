@@ -15,6 +15,7 @@ This is an independent community project and not an official module of the modif
 ## Features
 
 - **Order import:** shop orders become Sales Invoices (customer, contact and addresses are created or reused).
+  Customers and invoices get the language of the shop order; this is the language of the printed invoice.
 - **Stock sync:** ERPNext stock levels are pushed to the shop.
 - **Tracking:** tracking numbers are sent back to the shop, a history entry is added (customer notified) and
   the order status is set to "shipped".

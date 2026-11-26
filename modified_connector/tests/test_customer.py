@@ -180,3 +180,46 @@ class TestCustomer(IntegrationTestCase):
 		# matched again by recipient and street, not duplicated
 		self.assertEqual(ensure_customer(self.shop, parse_order(raw)), (customer, billing, shipping))
 		self.assertEqual(len(linked("Address", customer)), 2)
+
+
+class TestCustomerLanguage(IntegrationTestCase):
+	def setUp(self):
+		self.shop = make_test_shop()
+
+	def import_order(self, language, key, system_language="en"):
+		"""Customer for an order, in a worker-like context (local lang "en")."""
+		from unittest.mock import patch
+
+		raw = load_raw("order_basic")
+		raw["orders"]["language"] = language
+		raw["orders"]["customers_id"] = key
+		frappe.db.set_single_value("System Settings", "language", system_language)
+		with patch.object(frappe.local, "lang", "en"):
+			customer = ensure_customer(self.shop, parse_order(raw))[0]
+			return customer
+
+	def test_customer_gets_order_language(self):
+		customer = self.import_order("german", "70001")
+		self.assertEqual(frappe.db.get_value("Customer", customer, "language"), "de")
+		_c = self.import_order("english", "70002")
+		self.assertEqual(frappe.db.get_value("Customer", _c, "language"), "en")
+		_c = self.import_order("fr", "70003")  # 2-letter code as is
+		self.assertEqual(frappe.db.get_value("Customer", _c, "language"), "fr")
+
+	def test_unknown_language_falls_back_to_system_language(self):
+		for value in ("klingon", ""):
+			customer = self.import_order(value, "7000" + str(len(value)), system_language="de")
+			self.assertEqual(frappe.db.get_value("Customer", customer, "language"), "de")
+
+	def test_existing_customer_keeps_language(self):
+		customer = self.import_order("german", "70010")
+		frappe.db.set_value("Customer", customer, "language", "fr")
+		again = self.import_order("german", "70010")
+		self.assertEqual(again, customer)
+		self.assertEqual(frappe.db.get_value("Customer", customer, "language"), "fr")
+
+	def test_existing_customer_without_language_gets_one(self):
+		customer = self.import_order("english", "70011")
+		frappe.db.set_value("Customer", customer, "language", None)
+		self.import_order("german", "70011")
+		self.assertEqual(frappe.db.get_value("Customer", customer, "language"), "de")

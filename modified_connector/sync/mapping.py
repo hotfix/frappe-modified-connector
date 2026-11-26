@@ -55,6 +55,7 @@ class ShopOrder:
 	discount_gross: Decimal
 	total_gross: Decimal
 	comment: str
+	language: str = ""  # language name or code as sent by the shop, e.g. "german"
 
 
 def _dec(value, quantum=CENT) -> Decimal:
@@ -156,6 +157,7 @@ def _parse_order(raw: dict) -> ShopOrder:
 		discount_gross=discount,
 		total_gross=total,
 		comment=o.get("comments") or "",
+		language=str(o.get("language") or "").strip(),
 	)
 
 
