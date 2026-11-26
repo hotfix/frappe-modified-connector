@@ -1,5 +1,7 @@
 # Modified Connector
 
+[![CI](https://github.com/hotfix/frappe-modified-connector/actions/workflows/ci.yml/badge.svg)](https://github.com/hotfix/frappe-modified-connector/actions/workflows/ci.yml)
+
 A Frappe/ERPNext v16 app that connects ERPNext to a shop running [modified eCommerce](https://www.modified-shop.org/)
 through the shop's REST API (`/api/v1`).
 This is an independent community project and not an official module of the modified eCommerce project.
