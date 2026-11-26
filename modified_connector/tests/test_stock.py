@@ -179,6 +179,29 @@ class TestStock(ShopTestCase):
 			on_stock_change(doc, "on_submit")
 		enqueue.assert_not_called()
 
+	def _group_warehouse(self):
+		self._set_bin("SKU-19", 5)
+		frappe.db.set_value("Modified Shop", self.shop.name, "warehouse", "All Warehouses - MCT")
+
+	def _stock_errors(self):
+		return frappe.get_all(
+			"Modified Sync Log", filters={"shop": self.shop.name, "operation": "Stock", "status": "Error"}
+		)
+
+	def test_push_item_with_group_warehouse_pushes_nothing_and_logs(self):
+		self._group_warehouse()
+		push_item(self.shop.name, "SKU-19")
+		push_item(self.shop.name, "SKU-19")
+		self.client.set_stock.assert_not_called()
+		self.assertEqual(len(self._stock_errors()), 1)
+
+	def test_full_sync_with_group_warehouse_pushes_nothing_and_logs(self):
+		self._group_warehouse()
+		result = full_sync(self.shop.name)
+		self.client.set_stock.assert_not_called()
+		self.assertEqual(result, {"pushed": 0, "skipped": 0, "errors": 1})
+		self.assertEqual(len(self._stock_errors()), 1)
+
 	def test_full_sync_pushes_all_mapped_items(self):
 		self._set_bin("SKU-19", 5)
 		self._set_bin("SKU-7", 6)

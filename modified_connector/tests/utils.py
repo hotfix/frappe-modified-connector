@@ -88,7 +88,9 @@ def other_company_warehouse() -> str:
 				"chart_of_accounts": "Standard",
 			}
 		).insert(ignore_permissions=True)
-	return frappe.db.get_value("Warehouse", {"company": name, "is_group": 0}, "name")
+	warehouse = frappe.db.get_value("Warehouse", {"company": name, "is_group": 0}, "name")
+	assert warehouse, f"Company {name} has no non-group warehouse (Company setup did not create defaults)"
+	return warehouse
 
 
 def _vat_accounts() -> tuple[str, str]:

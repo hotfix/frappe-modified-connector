@@ -100,6 +100,7 @@ def push_item(shop_name: str, item_code: str) -> None:
 
 
 def _push(shop: ModifiedShop, item_code: str, ids: dict[str, str] | None = None) -> str:
+	shop.check_warehouse()  # a group or foreign warehouse has no Bin: it would push 0 for every item
 	if not _pushable(item_code):
 		return SKIPPED
 	value = _match_value(shop, item_code)
@@ -152,6 +153,7 @@ def full_sync(shop_name: str) -> dict:
 	shop = frappe.get_doc("Modified Shop", shop_name)
 	counts = {PUSHED: 0, SKIPPED: 0, ERROR: 0}
 	try:
+		shop.check_warehouse()
 		ids = product_ids(shop, refresh=True)
 	except Exception as exc:
 		frappe.clear_messages()

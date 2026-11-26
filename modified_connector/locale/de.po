@@ -578,7 +578,7 @@ msgstr "Shop"
 #. Menu group of the shop actions on the Sales Invoice
 msgctxt "Sales Invoice"
 msgid "Modified"
-msgstr "Modified"
+msgstr "Modified-Shop"
 
 #. Load Shop Data: field labels and descriptions, messages of modified_shop.py/.js
 msgid "Load Shop Data"
