@@ -269,6 +269,126 @@ function choose_import_statuses(frm) {
 	dialog.show();
 }
 
+// -- take over missing items ---------------------------------------------------------------------
+function item_link(code) {
+	return `<a href="/desk/item/${encodeURIComponent(code)}">${esc(code)}</a>`;
+}
+
+function show_take_over_result(r) {
+	if (r.queued !== undefined) {
+		frappe.msgprint({
+			title: __("Take Over Missing Items"),
+			indicator: r.queued ? "green" : "orange",
+			message: r.queued
+				? __(
+						"{0} items are being created in the background. The results appear in the Sync Log (operation Item).",
+						[r.count]
+				  )
+				: __("A take-over is already running for this shop."),
+		});
+		return;
+	}
+	const created = r.created || [];
+	const existing = r.existing || [];
+	const failed = Object.entries(r.failed || {});
+	let html = "";
+	if (created.length) {
+		html += `<p><b>${__("Created")} (${created.length})</b></p><ul>${created
+			.map((c) => `<li>${item_link(c.item_code)}</li>`)
+			.join("")}</ul>`;
+	}
+	if (existing.length) {
+		html += `<p><b>${__("Already existed")} (${existing.length})</b></p><ul>${existing
+			.map((c) => `<li>${item_link(c.item_code)}</li>`)
+			.join("")}</ul>`;
+	}
+	if (failed.length) {
+		html += `<p><b>${__("Failed")} (${failed.length})</b></p><ul>${failed
+			.map(([id, msg]) => `<li>${__("Shop product {0}", [esc(id)])}: ${esc(msg)}</li>`)
+			.join("")}</ul>`;
+	}
+	frappe.msgprint({
+		title: __("Take Over Missing Items"),
+		indicator: failed.length ? (created.length ? "orange" : "red") : "green",
+		message: html,
+	});
+}
+
+function take_over_dialog(frm, products) {
+	const rows = products
+		.map(
+			(p) =>
+				`<tr><td><input type="checkbox" class="take-over-check" value="${esc(p.product_id)}"></td>
+				<td>${esc(p.model)}</td><td>${esc(p.name)}</td><td>${esc(p.ean)}</td>
+				<td class="text-right">${p.price === null || p.price === undefined ? "" : format_currency(p.price, "EUR")}</td></tr>`
+		)
+		.join("");
+	const dialog = new frappe.ui.Dialog({
+		title: __("Take Over Missing Items"),
+		size: "extra-large",
+		fields: [
+			{
+				fieldtype: "HTML",
+				fieldname: "products",
+				options: `<p class="text-muted small">${__(
+					"These shop products have no Item in ERPNext. Tick the ones to create. No opening stock is booked."
+				)}</p>
+				<p><button type="button" class="btn btn-xs btn-default take-over-all">${__("Select all")}</button></p>
+				<div style="max-height:50vh;overflow:auto"><table class="table table-bordered table-sm">
+				<thead><tr><th></th><th>${__("Item Number")}</th><th>${__("Name")}</th><th>${__("EAN")}</th>
+				<th class="text-right">${__("Price")}</th></tr></thead><tbody>${rows}</tbody></table></div>`,
+			},
+		],
+		primary_action_label: __("Take Over"),
+		primary_action() {
+			const ids = dialog.$wrapper
+				.find(".take-over-check:checked")
+				.map((_i, el) => el.value)
+				.get();
+			if (!ids.length) {
+				frappe.msgprint(__("Choose at least one product."));
+				return;
+			}
+			dialog.hide();
+			frappe.call({
+				method: API + "take_over_items",
+				type: "POST",
+				args: { shop: frm.doc.name, product_ids: ids },
+				freeze: true,
+				freeze_message: __("Creating items …"),
+				callback: (r) => show_take_over_result(r.message || {}),
+			});
+		},
+	});
+	dialog.$wrapper.on("click", ".take-over-all", () => {
+		const boxes = dialog.$wrapper.find(".take-over-check");
+		const all = boxes.length === boxes.filter(":checked").length;
+		boxes.prop("checked", !all);
+	});
+	dialog.show();
+}
+
+function take_over_missing_items(frm) {
+	frappe.call({
+		method: API + "get_missing_products",
+		args: { shop: frm.doc.name },
+		freeze: true,
+		freeze_message: __("Loading shop products …"),
+		callback: (r) => {
+			const products = r.message || [];
+			if (!products.length) {
+				frappe.msgprint({
+					title: __("Take Over Missing Items"),
+					message: __("All shop products exist in ERPNext"),
+					indicator: "green",
+				});
+				return;
+			}
+			take_over_dialog(frm, products);
+		},
+	});
+}
+
 frappe.ui.form.on("Modified Shop", {
 	load_shop_data_button(frm) {
 		load_shop_data(frm);
@@ -301,6 +421,7 @@ frappe.ui.form.on("Modified Shop", {
 		if (frm.is_new()) return;
 		const group = __("Actions");
 		frm.add_custom_button(__("Load Shop Data"), () => load_shop_data(frm), group);
+		frm.add_custom_button(__("Take Over Missing Items"), () => take_over_missing_items(frm), group);
 		frm.add_custom_button(
 			__("Test Connection"),
 			() => {

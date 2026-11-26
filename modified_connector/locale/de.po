@@ -763,3 +763,46 @@ msgstr "Kein Artikel gefunden für {0} {1}, und Shop-Produkt {2} existiert nicht
 
 msgid "No Item found for {0} {1}: shop product {2} now has {0} {3}, so no Item was created"
 msgstr "Kein Artikel gefunden für {0} {1}: Shop-Produkt {2} hat jetzt {0} {3}, daher wurde kein Artikel angelegt"
+
+#. Take Over Missing Items: modified_shop.js/.py
+msgid "Take Over Missing Items"
+msgstr "Fehlende Artikel aus Shop übernehmen"
+
+msgid "All shop products exist in ERPNext"
+msgstr "Alle Shop-Produkte sind in ERPNext vorhanden"
+
+msgid "These shop products have no Item in ERPNext. Tick the ones to create. No opening stock is booked."
+msgstr "Diese Shop-Produkte haben keinen Artikel in ERPNext. Setzen Sie ein Häkchen bei den Produkten, die angelegt werden sollen. Es wird kein Anfangsbestand gebucht."
+
+msgid "Select all"
+msgstr "Alle auswählen"
+
+msgid "Item Number"
+msgstr "Artikelnummer"
+
+msgid "Take Over"
+msgstr "Übernehmen"
+
+msgid "Choose at least one product."
+msgstr "Wählen Sie mindestens ein Produkt aus."
+
+msgid "Loading shop products …"
+msgstr "Shop-Produkte werden geladen …"
+
+msgid "Creating items …"
+msgstr "Artikel werden angelegt …"
+
+msgid "{0} items are being created in the background. The results appear in the Sync Log (operation Item)."
+msgstr "{0} Artikel werden im Hintergrund angelegt. Die Ergebnisse erscheinen im Synchronisationsprotokoll (Vorgang Item)."
+
+msgid "A take-over is already running for this shop."
+msgstr "Für diesen Shop läuft bereits eine Übernahme."
+
+msgid "Already existed"
+msgstr "Waren bereits vorhanden"
+
+msgid "Shop product {0}"
+msgstr "Shop-Produkt {0}"
+
+msgid "Shop product {0} was not found"
+msgstr "Shop-Produkt {0} wurde nicht gefunden"

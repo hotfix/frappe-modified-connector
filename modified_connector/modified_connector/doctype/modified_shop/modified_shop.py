@@ -213,6 +213,82 @@ def sync_stock_now(shop: str) -> dict:
 	return {"queued": True}
 
 
+TAKE_OVER_INLINE_LIMIT = 50
+
+
+def take_over_job_id(shop: str) -> str:
+	return f"modified_take_over::{shop}"
+
+
+@frappe.whitelist()
+def get_missing_products(shop: str) -> list[dict]:
+	"""Shop products without an ERPNext Item: [{product_id, model, name, ean, price}]."""
+	if not frappe.has_permission("Modified Shop", "read", shop):
+		raise frappe.PermissionError
+	from modified_connector.sync import item as item_sync
+
+	return item_sync.missing_products(frappe.get_doc("Modified Shop", shop))
+
+
+def _take_over(shop: str, product_ids: list[str], commit: bool = False) -> dict:
+	"""Create the Items of the given shop products, each in its own savepoint: one failing product
+	does not roll back the others. Returns {"created": [{product_id, item_code}], "existing": [...],
+	"failed": {product_id: message}}; failures are written to the Sync Log (once per message)."""
+	from modified_connector.sync import item as item_sync
+	from modified_connector.utils import log_error_once
+
+	doc = frappe.get_doc("Modified Shop", shop)
+	client = doc.get_client()
+	result: dict = {"created": [], "existing": [], "failed": {}}
+	for product_id in product_ids:
+		try:
+			row = client.get_product(product_id)
+			if not row:
+				raise frappe.ValidationError(_("Shop product {0} was not found").format(product_id))
+			existing = item_sync.find_item(doc, item_sync.match_value(doc, row))
+			code = existing or item_sync.create_item_from_product(doc, row)
+			result["existing" if existing else "created"].append(
+				{"product_id": product_id, "item_code": code}
+			)
+		except Exception as exc:
+			message = frappe.utils.strip_html_tags(str(exc)) or type(exc).__name__
+			result["failed"][product_id] = message
+			log_error_once(shop, item_sync.OPERATION, product_id, message)
+		if commit:
+			frappe.db.commit()  # keep finished products if a later one breaks the job
+	return result
+
+
+@frappe.whitelist(methods=["POST"])
+def take_over_items(shop: str, product_ids) -> dict:
+	"""Create Items for the chosen shop products. Up to 50 run now and return the result; more are
+	queued (one job per shop) and report in the Sync Log: {"queued": bool, "count": n}."""
+	if not frappe.has_permission("Modified Shop", "write", shop):
+		raise frappe.PermissionError
+	if not frappe.has_permission("Item", "create"):
+		raise frappe.PermissionError
+	ids = list(dict.fromkeys(str(i) for i in frappe.parse_json(product_ids) or []))
+	if len(ids) <= TAKE_OVER_INLINE_LIMIT:
+		return _take_over(shop, ids)
+	if is_job_enqueued(take_over_job_id(shop)):
+		return {"queued": False, "count": len(ids)}
+	frappe.enqueue(
+		"modified_connector.modified_connector.doctype.modified_shop.modified_shop.take_over_job",
+		shop=shop,
+		product_ids=ids,
+		queue="long",
+		job_id=take_over_job_id(shop),
+		deduplicate=True,
+		timeout=3600,
+	)
+	return {"queued": True, "count": len(ids)}
+
+
+def take_over_job(shop: str, product_ids: list[str]) -> None:
+	"""Background part of take_over_items; created Items and failures are in the Sync Log."""
+	_take_over(shop, product_ids, commit=True)
+
+
 @frappe.whitelist()
 def get_status(shop: str) -> dict:
 	"""Headline numbers from the Sync Log of a shop.
