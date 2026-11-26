@@ -102,6 +102,15 @@ class TestTakeOver(ItemTestCase):
 		)
 		self.assertTrue(any("9040" in m for m in logs))
 
+	def test_invalid_input_rejected(self):
+		for bad in ('"abc"', "5", '{"a": 1}', '[{"a": 1}]', [["x"]], list(range(10001))):
+			with self.assertRaises(frappe.ValidationError):
+				ms.take_over_items(self.shop.name, bad)
+
+	def test_unknown_product_friendly_message(self):
+		result = ms.take_over_items(self.shop.name, '["424242", 7]')
+		self.assertEqual(result["failed"]["424242"], "Shop product 424242 was not found")
+
 	def test_js_button_and_empty_state(self):
 		import pathlib
 

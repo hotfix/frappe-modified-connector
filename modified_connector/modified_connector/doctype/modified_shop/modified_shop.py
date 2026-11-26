@@ -242,7 +242,12 @@ def _take_over(shop: str, product_ids: list[str], commit: bool = False) -> dict:
 	result: dict = {"created": [], "existing": [], "failed": {}}
 	for product_id in product_ids:
 		try:
-			row = client.get_product(product_id)
+			try:
+				row = client.get_product(product_id)
+			except ModifiedAPIError as exc:
+				if exc.status != 404:
+					raise
+				row = None
 			if not row:
 				raise frappe.ValidationError(_("Shop product {0} was not found").format(product_id))
 			existing = item_sync.find_item(doc, item_sync.match_value(doc, row))
@@ -259,6 +264,26 @@ def _take_over(shop: str, product_ids: list[str], commit: bool = False) -> dict:
 	return result
 
 
+TAKE_OVER_MAX = 10000
+
+
+def _parse_product_ids(value) -> list[str]:
+	try:
+		parsed = frappe.parse_json(value) if isinstance(value, str) else value
+	except Exception:
+		parsed = None
+	if parsed is None:
+		parsed = []
+	if not isinstance(parsed, list) or not all(
+		isinstance(i, int | str) and not isinstance(i, bool) for i in parsed
+	):
+		frappe.throw(_("product_ids must be a list of shop product ids."))
+	ids = list(dict.fromkeys(str(i).strip() for i in parsed if str(i).strip()))
+	if len(ids) > TAKE_OVER_MAX:
+		frappe.throw(_("At most {0} products can be taken over at once.").format(TAKE_OVER_MAX))
+	return ids
+
+
 @frappe.whitelist(methods=["POST"])
 def take_over_items(shop: str, product_ids) -> dict:
 	"""Create Items for the chosen shop products. Up to 50 run now and return the result; more are
@@ -267,7 +292,7 @@ def take_over_items(shop: str, product_ids) -> dict:
 		raise frappe.PermissionError
 	if not frappe.has_permission("Item", "create"):
 		raise frappe.PermissionError
-	ids = list(dict.fromkeys(str(i) for i in frappe.parse_json(product_ids) or []))
+	ids = _parse_product_ids(product_ids)
 	if len(ids) <= TAKE_OVER_INLINE_LIMIT:
 		return _take_over(shop, ids)
 	if is_job_enqueued(take_over_job_id(shop)):

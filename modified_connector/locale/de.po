@@ -806,3 +806,9 @@ msgstr "Shop-Produkt {0}"
 
 msgid "Shop product {0} was not found"
 msgstr "Shop-Produkt {0} wurde nicht gefunden"
+
+msgid "product_ids must be a list of shop product ids."
+msgstr "product_ids muss eine Liste von Shop-Produkt-IDs sein."
+
+msgid "At most {0} products can be taken over at once."
+msgstr "Es können höchstens {0} Produkte auf einmal übernommen werden."
