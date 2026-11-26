@@ -74,6 +74,23 @@ def _company() -> str:
 	return COMPANY
 
 
+def other_company_warehouse() -> str:
+	"""A non-group warehouse of a second company (created with it, for a company mismatch test)."""
+	name, abbr = "MC Other GmbH", "MCO"
+	if not frappe.db.exists("Company", name):
+		frappe.get_doc(
+			{
+				"doctype": "Company",
+				"company_name": name,
+				"abbr": abbr,
+				"country": "Germany",
+				"default_currency": "EUR",
+				"chart_of_accounts": "Standard",
+			}
+		).insert(ignore_permissions=True)
+	return frappe.db.get_value("Warehouse", {"company": name, "is_group": 0}, "name")
+
+
 def _vat_accounts() -> tuple[str, str]:
 	"""Separate output VAT accounts for 19 % and 7 % (as in SKR03)."""
 	parent = frappe.db.get_value(

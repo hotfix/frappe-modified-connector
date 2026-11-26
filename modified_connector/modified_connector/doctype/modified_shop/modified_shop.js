@@ -390,6 +390,14 @@ function take_over_missing_items(frm) {
 }
 
 frappe.ui.form.on("Modified Shop", {
+	setup(frm) {
+		frm.set_query("warehouse", () => {
+			const filters = { is_group: 0 };
+			if (frm.doc.company) filters.company = frm.doc.company;
+			return { filters };
+		});
+	},
+
 	load_shop_data_button(frm) {
 		load_shop_data(frm);
 	},

@@ -59,6 +59,7 @@ def _import_order(shop: ModifiedShop, raw: dict) -> tuple[str, str | None]:
 	save_point = f"modified_import_{frappe.generate_hash(length=10)}"
 	frappe.db.savepoint(save_point)
 	try:
+		shop.check_warehouse()  # a shop saved before the check may still have a group warehouse
 		invoice = build_invoice(shop, parse_order(raw))
 		invoice.insert(ignore_permissions=True)
 		assert_tax_templates(invoice)

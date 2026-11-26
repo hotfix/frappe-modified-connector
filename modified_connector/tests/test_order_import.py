@@ -16,7 +16,7 @@ from modified_connector.api.client import ModifiedAPIError
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
 from modified_connector.sync import order_import
 from modified_connector.sync.order_import import import_order, on_invoice_submit, run_import
-from modified_connector.tests.utils import ShopTestCase, load_raw, make_test_shop, stock_in
+from modified_connector.tests.utils import ABBR, ShopTestCase, load_raw, make_test_shop, stock_in
 
 FMT = "%Y-%m-%d %H:%M:%S"
 
@@ -117,6 +117,18 @@ class TestOrderImport(ShopTestCase):
 			logs(self.shop.name, order_id),
 			[{"status": "Success", "message": "", "ref_doctype": "Sales Invoice", "ref_name": name}],
 		)
+
+	def test_import_with_group_warehouse_logs_error_and_creates_no_invoice(self):
+		frappe.db.set_value("Modified Shop", self.shop.name, "warehouse", f"All Warehouses - {ABBR}")
+		raw = raw_order()
+		order_id = raw["orders"]["orders_id"]
+		self.assertIsNone(import_order(self.reload(), raw))
+		self.assertIsNone(import_order(self.reload(), raw))
+		self.assertEqual(invoices(self.shop.name, order_id), [])
+		rows = logs(self.shop.name, order_id)
+		self.assertEqual(len(rows), 1)
+		self.assertEqual(rows[0]["status"], "Error")
+		self.assertIn("group warehouse", rows[0]["message"])
 
 	def test_import_is_idempotent(self):
 		raw = raw_order()

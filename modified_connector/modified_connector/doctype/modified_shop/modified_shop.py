@@ -43,6 +43,7 @@ class ModifiedShop(Document):
 		self._check_duplicates(
 			"payment_map", "payment_class", _("Payment Map"), lambda v: (v or "").strip().lower()
 		)
+		self.check_warehouse()
 		for doctype, fieldname in (("Customer Group", "customer_group"), ("Territory", "territory")):
 			if self.get(fieldname) and frappe.db.get_value(doctype, self.get(fieldname), "is_group"):
 				frappe.throw(
@@ -50,6 +51,25 @@ class ModifiedShop(Document):
 						_(doctype), self.get(fieldname)
 					)
 				)
+
+	def check_warehouse(self) -> None:
+		"""The warehouse must hold stock (no group) and belong to the shop's company."""
+		if not self.warehouse:
+			return
+		is_group, company = frappe.db.get_value("Warehouse", self.warehouse, ["is_group", "company"]) or (
+			0,
+			None,
+		)
+		if is_group:
+			frappe.throw(
+				_("Warehouse {0} is a group warehouse. Select a warehouse that holds stock.").format(
+					self.warehouse
+				)
+			)
+		if company and self.company and company != self.company:
+			frappe.throw(
+				_("Warehouse {0} does not belong to company {1}.").format(self.warehouse, self.company)
+			)
 
 	@staticmethod
 	def _normalise_base_url(url: str | None) -> str:

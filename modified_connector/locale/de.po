@@ -814,3 +814,9 @@ msgstr "später importiert als {0}"
 
 msgid "DHL carrier not configured in Modified Shop {0}"
 msgstr "DHL-Versanddienstleister im Modified-Shop {0} nicht konfiguriert"
+
+msgid "Warehouse {0} is a group warehouse. Select a warehouse that holds stock."
+msgstr "Lager {0} ist ein Gruppenlager. Wählen Sie ein Lager, das Bestand führt."
+
+msgid "Warehouse {0} does not belong to company {1}."
+msgstr "Lager {0} gehört nicht zum Unternehmen {1}."

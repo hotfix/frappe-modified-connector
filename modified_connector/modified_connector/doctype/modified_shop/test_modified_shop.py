@@ -3,7 +3,7 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from modified_connector.tests.utils import make_test_shop
+from modified_connector.tests.utils import ABBR, make_test_shop, other_company_warehouse
 
 # make_test_shop builds its own fixtures; skip the global test record generation.
 IGNORE_TEST_RECORD_DEPENDENCIES = [
@@ -86,6 +86,20 @@ class TestModifiedShop(IntegrationTestCase):
 		self.shop.base_url = "https://shop.example/api/v1/"
 		self.shop.save()
 		self.assertEqual(self.shop.base_url, "https://shop.example")
+
+	def test_group_warehouse_rejected(self):
+		shop = frappe.get_doc("Modified Shop", self.shop.name)
+		shop.warehouse = f"All Warehouses - {ABBR}"
+		with self.assertRaises(frappe.ValidationError) as ctx:
+			shop.save()
+		self.assertIn("group warehouse", str(ctx.exception))
+
+	def test_warehouse_of_other_company_rejected(self):
+		shop = frappe.get_doc("Modified Shop", self.shop.name)
+		shop.warehouse = other_company_warehouse()
+		with self.assertRaises(frappe.ValidationError) as ctx:
+			shop.save()
+		self.assertIn("does not belong to company", str(ctx.exception))
 
 	def test_get_client(self):
 		client = self.shop.get_client()
