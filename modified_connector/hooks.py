@@ -38,6 +38,7 @@ integration_logs = [
 	{
 		"doctype": "Modified Sync Log",
 		"source": "Modified Shop",
+		"area_field": "shop",
 		"status_field": "status",
 		"severity_map": {"Error": "error", "Skipped": "info", "Success": "info"},
 		"severity_method": "modified_connector.integration.severity",

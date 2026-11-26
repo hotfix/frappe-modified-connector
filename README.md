@@ -169,6 +169,7 @@ If the app [integration_log](https://github.com/hotfix/frappe-integration-log) i
 the Modified Sync Log is registered with it (hook `integration_logs`). Nothing changes without it; this
 app has no dependency on it.
 
+- The shop is shown as the area of each entry (hook key `area_field`).
 - Logs with status **Error** are mirrored as errors.
 - Logs of orders that wait for an import status (status "Skipped", message "Waiting for import status",
   no invoice yet) are mirrored as warnings. Other "Skipped" and "Success" logs are not mirrored.

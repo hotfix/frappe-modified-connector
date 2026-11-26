@@ -28,6 +28,12 @@ class TestSeverity(IntegrationTestCase):
 			integration.severity(doc(status="Skipped", message=waiting, ref_name="SINV-1")), "info"
 		)
 
+	def test_hook_registers_shop_as_area(self):
+		from modified_connector import hooks
+
+		[entry] = [e for e in hooks.integration_logs if e["doctype"] == "Modified Sync Log"]
+		self.assertEqual(entry["area_field"], "shop")
+
 	def test_notify_changed_noop_without_app(self):
 		with patch.object(frappe, "get_installed_apps", return_value=["frappe"]):
 			integration.notify_changed("does-not-matter")  # must not raise
@@ -37,7 +43,7 @@ def mirror(log_name: str) -> frappe._dict | None:
 	return frappe.db.get_value(
 		"Integration Log Entry",
 		{"source_doctype": "Modified Sync Log", "source_name": log_name},
-		["name", "state", "severity", "source"],
+		["name", "state", "severity", "source", "area"],
 		as_dict=True,
 	)
 
@@ -53,6 +59,10 @@ class TestIntegrationLogMirror(IntegrationTestCase):
 		name = log(self.shop.name, "Import", "9001", "Error", "boom")
 		entry = mirror(name)
 		self.assertEqual((entry.state, entry.severity, entry.source), ("Open", "error", "Modified Shop"))
+
+	def test_area_is_shop(self):
+		entry = mirror(log(self.shop.name, "Import", "9005", "Error", "boom"))
+		self.assertEqual(entry.area, self.shop.name)
 
 	def test_waiting_log_is_warning(self):
 		name = log(self.shop.name, "Import", "9002", "Skipped", order_import.WAITING_MESSAGE.format("1"))
