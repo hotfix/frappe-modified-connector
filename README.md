@@ -47,7 +47,7 @@ Uninstalling the app removes these custom fields again.
 
 A step-by-step setup guide in German (prerequisites, every field with example values, first run,
 troubleshooting) is in [`modified_connector/docs/setup-guide-de.md`](modified_connector/docs/setup-guide-de.md).
-Logged-in users can read it on the site at `/modified-shop-guide` (also linked from the *Shop Connector*
+Logged-in users can read it on the site at `/modified-shop-guide` (also linked from the *modified eCommerce*
 sidebar and the shop form).
 
 Create a *Modified Shop* (search "Modified Shop" in the awesome bar). Use **Test Connection** after saving to
@@ -140,9 +140,9 @@ second Delivery Note. Instead a "Skipped" log entry and a message tell you to al
 
 ## Navigation
 
-On the home screen the app appears as the tile *Shop Connector* (hook `add_to_apps_screen`, shown to users
+On the home screen the app appears as the tile *modified eCommerce* (hook `add_to_apps_screen`, shown to users
 who can read Modified Shop). Sites in the "Desktop Icons" desktop mode get the shipped Desktop Icon instead.
-The workspace *Shop Connector* and its sidebar link to the shops, the sync log and the results
+The workspace *modified eCommerce* and its sidebar link to the shops, the sync log and the results
 (invoices, payments, delivery notes, customers). The tile logo is served from `assets/modified_connector`,
 which `bench build` creates for apps present in the bench where the assets are served (a plain restart
 does not recreate the symlink); run `bench --site <site> migrate` and `bench build` after installing or updating.

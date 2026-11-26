@@ -54,7 +54,7 @@ class TestGuide(IntegrationTestCase):
 		self.assertEqual(response.status_code, 200)
 		html = response.get_data(as_text=True)
 		self.assertIn("Verbindung testen", html)
-		self.assertIn('href="/desk/shop-connector"', html)
+		self.assertIn('href="/desk/modified-ecommerce"', html)
 
 	def test_guide_mentions_all_field_labels(self):
 		"""Every input field of the shop and its tables, every tab and button, by the German label the user
