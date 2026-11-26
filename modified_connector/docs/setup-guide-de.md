@@ -146,7 +146,15 @@ Abschnitt *Artikelabgleich* – so findet der Import zu einer Shop-Position den 
 | Artikelabgleich: ERP-Feld | Item Code (Artikel-Code) | Womit der Shop-Wert in ERPNext verglichen wird: Artikel-Code oder Barcode (Tabelle „Strichcodes“ des Artikels). Übliche Paare: `products_model` mit Item Code, `products_ean` mit Barcode. |
 
 Eine Bestellposition ohne passenden (oder mit deaktiviertem) Artikel lässt die ganze Bestellung als Fehler
-scheitern.
+scheitern – außer *Fehlende Artikel beim Import anlegen* ist aktiviert.
+
+Abschnitt *Artikel aus dem Shop* – Artikel, die es im Shop gibt, aber noch nicht in ERPNext:
+
+| Feld | Beispiel | Bedeutung |
+| --- | --- | --- |
+| Fehlende Artikel beim Import anlegen | aus | An: fehlt zu einer Bestellposition der Artikel, legt der Import ihn aus dem Shop-Produkt an (Name, EAN als Barcode, Artikelsteuervorlage über die Steuerzuordnung, Brutto-Shoppreis in der Standard-Verkaufspreisliste der Vertriebseinstellungen). Hat der Steuersatz des Produkts keine Zeile in der Steuerzuordnung, wird kein Artikel angelegt und die Bestellung als Fehler gemeldet. Jeder angelegte Artikel steht im Synchronisationsprotokoll (Vorgang „Artikel“). |
+| Artikelgruppe für neue Artikel | Produkte | Artikelgruppe der angelegten Artikel. Leer: Standard-Artikelgruppe der Lagereinstellungen. |
+| Neue Artikel sind Lagerartikel | an | Angelegte Artikel führen Lagerbestand. **Es wird kein Anfangsbestand gebucht**: bis Bestand gebucht ist, scheitert das Buchen einer Rechnung, die den Bestand ausbucht. |
 
 Abschnitt *Steuern und Zahlungen*:
 

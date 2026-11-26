@@ -175,6 +175,14 @@ class ModifiedClient:
 		for item in self._iter_pages("/products", None):
 			yield item["products"]
 
+	def iter_product_rows(self) -> Iterator[dict]:
+		"""Full product rows: {"products": {...}, "products_description": {language code: {...}}}."""
+		yield from self._iter_pages("/products", None)
+
+	def get_product(self, products_id: str) -> dict:
+		"""One product row in the shape `iter_product_rows` yields (404 if it does not exist)."""
+		return self.request("GET", f"/products/{products_id}")
+
 	def set_stock(self, products_id: str, quantity: int) -> None:
 		self.request("PUT", f"/products/{products_id}/products", json={"products_quantity": quantity})
 
@@ -276,6 +284,18 @@ class ModifiedClient:
 			{"id": _rate_id(rate), "name": " / ".join(names) or f"{_rate_id(rate)} %", "rate": float(rate)}
 			for rate, names in sorted(by_rate.items())
 		]
+
+	def tax_class_rates(self) -> dict[str, list[str]]:
+		"""{tax_class_id: distinct rates of all tax zones, ascending, as written in the Tax Map ("19")}."""
+		rates: dict[str, set[Decimal]] = {}
+		for row in self._iter_pages("/countries/tax_rates", None, missing_ok=False):
+			try:
+				rate = Decimal(str(row.get("tax_rate"))).normalize()
+			except InvalidOperation:
+				continue
+			if row.get("tax_class_id") is not None:
+				rates.setdefault(str(row["tax_class_id"]), set()).add(rate)
+		return {cls: [_rate_id(r) for r in sorted(values)] for cls, values in sorted(rates.items())}
 
 	def last_history_status(self, order_id: str) -> int | None:
 		"""Status id of the newest status_history row, None if there is none."""

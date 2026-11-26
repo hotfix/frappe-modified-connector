@@ -15,6 +15,7 @@ IGNORE_TEST_RECORD_DEPENDENCIES = [
 	"Sales Taxes and Charges Template",
 	"Item Tax Template",
 	"Mode of Payment",
+	"Item Group",
 ]
 
 

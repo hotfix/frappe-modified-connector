@@ -8,6 +8,7 @@ from frappe import _
 
 from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
 from modified_connector.sync.customer import ensure_customer
+from modified_connector.sync.item import create_item_for_order_line, find_item
 from modified_connector.sync.mapping import OrderLine, ShopOrder, split_by_rate
 
 TOLERANCE = Decimal("0.01")
@@ -142,12 +143,10 @@ def _append_item(si, shop: ModifiedShop, item_code: str, qty: Decimal, rate: Dec
 def _resolve_item(shop: ModifiedShop, line: OrderLine) -> str:
 	field = shop.item_match_shop_field or "products_model"
 	value = (line.ean if field == "products_ean" else line.model).strip()
-	item_code = None
-	if value:
-		if (shop.item_match_erp_field or "Item Code") == "Barcode":
-			item_code = frappe.db.get_value("Item Barcode", {"barcode": value}, "parent")
-		else:
-			item_code = frappe.db.exists("Item", value)
+	item_code = find_item(shop, value)
+	if not item_code and value and shop.create_missing_items:
+		# created inside the order's savepoint: rolled back if the order fails
+		item_code = create_item_for_order_line(shop, line.products_id, value)
 	if item_code and frappe.db.get_value("Item", item_code, "disabled"):
 		raise UnknownItem(
 			_("Item {0} for {1} {2} (shop product {3}) is disabled").format(

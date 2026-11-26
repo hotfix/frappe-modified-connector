@@ -467,8 +467,8 @@ msgstr "Nummernkreis für importierte Rechnungen, z. B. ACC-SINV-.YYYY.-. Der Nu
 msgid "Shop product field that identifies the item: products_model (the shop's model/article number) or products_ean. Example: products_model."
 msgstr "Shop-Produktfeld, über das der Artikel erkannt wird: products_model (Modell-/Artikelnummer im Shop) oder products_ean. Beispiel: products_model."
 
-msgid "ERPNext field compared with the shop value: Item Code or Barcode. Example: Item Code with products_model, Barcode with products_ean. An order line without a match is reported as an error."
-msgstr "ERPNext-Feld, mit dem der Shop-Wert verglichen wird: Item Code (Artikel-Code) oder Barcode. Beispiel: Item Code mit products_model, Barcode mit products_ean. Eine Bestellposition ohne Treffer wird als Fehler gemeldet."
+msgid "ERPNext field compared with the shop value: Item Code or Barcode. Example: Item Code with products_model, Barcode with products_ean. An order line without a match is reported as an error, unless 'Create Missing Items on Import' is checked."
+msgstr "ERPNext-Feld, mit dem der Shop-Wert verglichen wird: Item Code (Artikel-Code) oder Barcode. Beispiel: Item Code mit products_model, Barcode mit products_ean. Eine Bestellposition ohne Treffer wird als Fehler gemeldet, außer 'Fehlende Artikel beim Import anlegen' ist aktiviert."
 
 msgid "Non-stock service item used for the shipping charge line of each invoice, e.g. 'Shipping' (German: Versand)."
 msgstr "Dienstleistungsartikel ohne Lagerführung für die Versandkostenposition jeder Rechnung, z. B. „Versand“."
@@ -704,3 +704,62 @@ msgstr "Der Shop hat keine Werte geliefert."
 msgid "Not available in this shop ({0})"
 msgstr "In diesem Shop nicht verfügbar ({0})"
 
+msgid "Items from the Shop"
+msgstr "Artikel aus dem Shop"
+
+msgid "Create Missing Items on Import"
+msgstr "Fehlende Artikel beim Import anlegen"
+
+msgid "Item Group for New Items"
+msgstr "Artikelgruppe für neue Artikel"
+
+msgid "New Items Are Stock Items"
+msgstr "Neue Artikel sind Lagerartikel"
+
+msgid "During the order import, an order line without a matching Item creates the Item from the shop product (name, EAN as barcode, gross shop price in the default selling price list of the Selling Settings, Item Tax Template from the Tax Map) instead of failing the order. Off: the order is reported as an error. No opening stock is booked: submitting an invoice that updates stock fails until stock of the new item is booked (unless negative stock is allowed)."
+msgstr "Beim Bestellimport legt eine Bestellposition ohne passenden Artikel den Artikel aus dem Shop-Produkt an (Name, EAN als Barcode, Brutto-Shoppreis in der Standard-Verkaufspreisliste der Vertriebseinstellungen, Artikelsteuervorlage aus der Steuerzuordnung), statt dass die Bestellung fehlschlägt. Aus: die Bestellung wird als Fehler gemeldet. Es wird kein Anfangsbestand gebucht: Das Buchen einer Rechnung, die den Lagerbestand aktualisiert, schlägt fehl, bis Bestand für den neuen Artikel gebucht ist (außer negativer Bestand ist erlaubt)."
+
+msgid "Item Group of Items created from shop products. Empty: the Default Item Group of the Stock Settings, otherwise 'All Item Groups'."
+msgstr "Artikelgruppe der aus Shop-Produkten angelegten Artikel. Leer: die Standard-Artikelgruppe der Lagereinstellungen, sonst 'All Item Groups' (Alle Artikelgruppen)."
+
+msgid "Items created from shop products maintain stock. No opening stock is booked: book it yourself, e.g. with a Stock Reconciliation. Uncheck if the shop sells drop-shipped or non-stock products."
+msgstr "Aus Shop-Produkten angelegte Artikel führen Lagerbestand. Es wird kein Anfangsbestand gebucht: Buchen Sie ihn selbst, z. B. mit einer Bestandsabgleichung. Deaktivieren, wenn der Shop Streckengeschäfts- oder Nicht-Lagerprodukte verkauft."
+
+msgid "Tax class {0} has no tax rate in the shop"
+msgstr "Steuerklasse {0} hat im Shop keinen Steuersatz"
+
+msgid "Tax class {0} has several tax rates in the shop ({1} %); map exactly one in the Tax Map"
+msgstr "Steuerklasse {0} hat im Shop mehrere Steuersätze ({1} %); ordnen Sie genau einen in der Steuerzuordnung zu"
+
+msgid "No Item Price created: no default selling price list in the Selling Settings."
+msgstr "Kein Artikelpreis angelegt: keine Standard-Verkaufspreisliste in den Vertriebseinstellungen."
+
+msgid "No Item Price created: price list {0} is in {1}, shop prices are in {2}."
+msgstr "Kein Artikelpreis angelegt: Preisliste {0} ist in {1}, Shop-Preise sind in {2}."
+
+msgid "Shop product {0} has no {1}"
+msgstr "Shop-Produkt {0} hat kein {1}"
+
+msgid "Item {0} exists already but does not have the barcode {1}"
+msgstr "Artikel {0} existiert bereits, hat aber nicht den Barcode {1}"
+
+msgid "Shop product {0} ({1}): no Item Tax Template mapped for tax rate {2} % in the Tax Map of shop {3}"
+msgstr "Shop-Produkt {0} ({1}): keine Artikelsteuervorlage für Steuersatz {2} % in der Steuerzuordnung von Shop {3}"
+
+msgid "EAN {0} is not a valid EAN and was not added as barcode."
+msgstr "EAN {0} ist keine gültige EAN und wurde nicht als Barcode übernommen."
+
+msgid "EAN {0} is already used by another Item and was not added."
+msgstr "EAN {0} wird bereits von einem anderen Artikel verwendet und wurde nicht übernommen."
+
+msgid "Item {0} would be named {1} by its naming series; set Item Naming By to Item Code in the Stock Settings"
+msgstr "Artikel {0} würde durch den Nummernkreis {1} heißen; stellen Sie in den Lagereinstellungen die Artikelbenennung auf Item Code (Artikel-Code)"
+
+msgid "No Item Price created: the shop product has no price."
+msgstr "Kein Artikelpreis angelegt: das Shop-Produkt hat keinen Preis."
+
+msgid "No Item found for {0} {1} and shop product {2} no longer exists"
+msgstr "Kein Artikel gefunden für {0} {1}, und Shop-Produkt {2} existiert nicht mehr"
+
+msgid "No Item found for {0} {1}: shop product {2} now has {0} {3}, so no Item was created"
+msgstr "Kein Artikel gefunden für {0} {1}: Shop-Produkt {2} hat jetzt {0} {3}, daher wurde kein Artikel angelegt"

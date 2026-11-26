@@ -179,6 +179,34 @@ class TestModifiedClient(UnitTestCase):
 			req.side_effect = [token(), page]
 			self.assertEqual(list(make_client().iter_products()), [{"products_id": "5"}])
 
+	def test_iter_product_rows_yields_full_rows(self):
+		row = {"products": {"products_id": "5"}, "products_description": {"de": {"products_name": "X"}}}
+		with patch("requests.Session.request") as req:
+			req.side_effect = [token(), resp(200, {"data": [row]})]
+			self.assertEqual(list(make_client().iter_product_rows()), [row])
+
+	def test_get_product(self):
+		row = {"products": {"products_id": "7"}, "products_description": {}}
+		with patch("requests.Session.request") as req:
+			req.side_effect = [token(), resp(200, row)]
+			self.assertEqual(make_client().get_product("7"), row)
+		self.assertEqual(req.call_args_list[1].args[:2], ("GET", API + "/products/7"))
+
+	def test_tax_class_rates(self):
+		page = {
+			"data": [
+				{"tax_class_id": "1", "tax_rate": "19.0000"},
+				{"tax_class_id": "2", "tax_rate": "7.0000"},
+				{"tax_class_id": "1", "tax_rate": "0.0000"},
+				{"tax_class_id": "2", "tax_rate": "0.0000"},
+				{"tax_class_id": "1", "tax_rate": "19.0000"},
+				{"tax_class_id": "3", "tax_rate": "bad"},
+			]
+		}
+		with patch("requests.Session.request") as req:
+			req.side_effect = [token(), resp(200, page)]
+			self.assertEqual(make_client().tax_class_rates(), {"1": ["0", "19"], "2": ["0", "7"]})
+
 	def test_set_stock_payload(self):
 		with patch("requests.Session.request") as req:
 			req.side_effect = [token(), resp(200, {})]

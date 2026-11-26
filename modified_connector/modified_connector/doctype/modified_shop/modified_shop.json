@@ -26,6 +26,10 @@
   "matching_section",
   "item_match_shop_field",
   "item_match_erp_field",
+  "new_items_section",
+  "create_missing_items",
+  "item_group",
+  "new_items_are_stock_items",
   "tax_section",
   "shipping_item",
   "sales_taxes_template",
@@ -183,7 +187,33 @@
    "label": "Item Match ERP Field",
    "options": "Item Code\nBarcode",
    "default": "Item Code",
-   "description": "ERPNext field compared with the shop value: Item Code or Barcode. Example: Item Code with products_model, Barcode with products_ean. An order line without a match is reported as an error."
+   "description": "ERPNext field compared with the shop value: Item Code or Barcode. Example: Item Code with products_model, Barcode with products_ean. An order line without a match is reported as an error, unless 'Create Missing Items on Import' is checked."
+  },
+  {
+   "fieldname": "new_items_section",
+   "fieldtype": "Section Break",
+   "label": "Items from the Shop"
+  },
+  {
+   "default": "0",
+   "fieldname": "create_missing_items",
+   "fieldtype": "Check",
+   "label": "Create Missing Items on Import",
+   "description": "During the order import, an order line without a matching Item creates the Item from the shop product (name, EAN as barcode, gross shop price in the default selling price list of the Selling Settings, Item Tax Template from the Tax Map) instead of failing the order. Off: the order is reported as an error. No opening stock is booked: submitting an invoice that updates stock fails until stock of the new item is booked (unless negative stock is allowed)."
+  },
+  {
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "label": "Item Group for New Items",
+   "options": "Item Group",
+   "description": "Item Group of Items created from shop products. Empty: the Default Item Group of the Stock Settings, otherwise 'All Item Groups'."
+  },
+  {
+   "default": "1",
+   "fieldname": "new_items_are_stock_items",
+   "fieldtype": "Check",
+   "label": "New Items Are Stock Items",
+   "description": "Items created from shop products maintain stock. No opening stock is booked: book it yourself, e.g. with a Stock Reconciliation. Uncheck if the shop sells drop-shipped or non-stock products."
   },
   {
    "fieldname": "tax_section",
@@ -320,7 +350,7 @@
    "link_fieldname": "shop"
   }
  ],
- "modified": "2026-11-25 12:00:00.000000",
+ "modified": "2026-11-26 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "Modified Connector",
  "name": "Modified Shop",
