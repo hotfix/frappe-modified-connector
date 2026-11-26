@@ -86,6 +86,8 @@ class TestInvoice(IntegrationTestCase):
 		self.assertEqual(tax_by_account(si), {VAT19: 3.82, VAT7: 0.39})
 
 	def test_invoice_gets_order_language(self):
+		stock_in("SKU-19", 5)
+		stock_in("SKU-7", 5)
 		from unittest.mock import patch
 
 		frappe.db.set_single_value("System Settings", "language", "en")
@@ -95,6 +97,9 @@ class TestInvoice(IntegrationTestCase):
 			self.assertEqual(frappe.db.get_value("Customer", si.customer, "language"), "de")
 			si = build_invoice(self.shop, parse_order(shop_order(customers_id="70021", language="klingon")))
 			self.assertEqual(si.language, "en")
+		si = build_invoice(self.shop, parse_order(shop_order(customers_id="70020", language="german")))
+		si.insert()  # validate() must not replace it
+		self.assertEqual(si.language, "de")
 
 	def test_naming_series(self):
 		self.shop = make_test_shop(invoice_naming_series="SHOP-.YYYY.-")

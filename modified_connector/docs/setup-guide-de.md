@@ -88,7 +88,11 @@ deutscher Name („Deutschland“) und der Name in der Sprache Ihres ERPNext. Da
 Gibt es keins, oder ist es eine **Gruppe**, bekommt der Kunde das *Standard-Gebiet*. So legen Sie ein Gebiet
 für ein Land an: in der Suchleiste *Gebiet* eingeben, **Neu**, als Namen den Ländernamen eintragen (z. B.
 `Deutschland` oder `Germany`, `Österreich` bzw. `Austria`), *Ist Gruppe* **nicht** ankreuzen, als übergeordnetes
-Gebiet z. B. „All Territories“ wählen und speichern. Bereits angelegte Kunden werden nicht verändert. Neue Kunden und ihre Rechnungen bekommen die Sprache der Shop-Bestellung (Feld „Drucksprache“ am Kunden); sie bestimmt die Sprache der gedruckten Rechnung. Eine bereits am Kunden eingetragene Sprache bleibt erhalten.
+Gebiet z. B. „All Territories“ wählen und speichern. Bereits angelegte Kunden werden nicht verändert.
+
+**Sprache.** Neue Kunden und ihre Rechnungen bekommen die Sprache der Shop-Bestellung
+(Feld „Drucksprache“ am Kunden); sie bestimmt die Sprache der gedruckten Rechnung. Eine bereits am
+Kunden eingetragene Sprache bleibt erhalten.
 
 **Steuern richtig einrichten.** Shop-Preise sind Bruttopreise. So passt es zusammen:
 

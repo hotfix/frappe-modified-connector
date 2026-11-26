@@ -77,13 +77,16 @@ def order_language(order: ShopOrder) -> str:
 	code = LANGUAGE_CODES.get(name) or (name if len(name) == 2 else "")
 	if code and frappe.db.get_value("Language", {"name": code, "enabled": 1}):
 		return code
-	return frappe.db.get_single_value("System Settings", "language") or "en"
+	system = frappe.db.get_single_value("System Settings", "language")
+	if system and frappe.db.get_value("Language", {"name": system, "enabled": 1}):
+		return system
+	return "en"
 
 
 def _ensure_language(customer: str, order: ShopOrder) -> None:
 	"""Set the print language of an existing customer that has none; never overwrite one."""
 	if not frappe.db.get_value("Customer", customer, "language"):
-		frappe.db.set_value("Customer", customer, "language", order_language(order))
+		frappe.db.set_value("Customer", customer, "language", order_language(order), update_modified=False)
 
 
 def territory_for_country(country: str | None, default: str) -> str:
