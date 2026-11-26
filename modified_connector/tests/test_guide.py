@@ -73,3 +73,16 @@ class TestGuide(IntegrationTestCase):
 		self.assertEqual(missing, [])
 		for word in ("Kundengruppe", "Gebiet", "Umsatzsteuervorlage", "Zahlungsklasse", "Status-ID"):
 			self.assertIn(word, text)
+
+	def test_guide_covers_shop_data_features(self):
+		text = GUIDE.read_text(encoding="utf-8")
+		for term in (
+			"Shop-Daten laden",
+			"Import-Status auswählen",
+			"Fehlende Artikel aus Shop übernehmen",
+			"Fehlende Artikel beim Import anlegen",
+			"Standard-Gebiet",
+			"Gebiete je Land",
+			"Anfangsbestand wird nicht gebucht",
+		):
+			self.assertIn(term, text)

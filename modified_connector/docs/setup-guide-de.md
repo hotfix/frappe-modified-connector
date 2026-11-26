@@ -14,13 +14,17 @@ Einrichtungsanleitung.
 
 **Bestellimport (alle 5 Minuten).** Für jeden aktivierten Shop holt ERPNext alle 5 Minuten die neuen
 Bestellungen ab. Importiert werden nur Bestellungen, deren Bestellstatus in den *Status-IDs für den Import*
-steht (z. B. 1 = Offen und 2 = In Bearbeitung) und die nicht vor dem Zeitpunkt *Import ab* aufgegeben wurden.
+steht (z. B. Offen und In Bearbeitung) und die nicht vor dem Zeitpunkt *Import ab* aufgegeben wurden.
+Bestellungen im Status *Status-ID Versendet* werden **immer** importiert, auch wenn dieser Status nicht in der
+Liste steht. So geht eine Bestellung nicht verloren, die im Shop schon als versendet markiert wurde, bevor der
+erste Import lief.
 Jede Bestellung wird genau einmal importiert, auch wenn sie bei späteren Läufen erneut abgerufen wird. Für jede
 importierte Bestellung entsteht:
 
 - ein **Kunde**: Kunden mit Kundenkonto im Shop werden über ihre Shop-Kundennummer wiedererkannt, Gastbesteller
-  über ihre E-Mail-Adresse. Ist der Kunde neu, wird er mit der eingestellten *Kundengruppe* und dem *Standard-Gebiet*
-  angelegt, dazu ein Kontakt mit der E-Mail-Adresse und die Rechnungsadresse. Weicht die Lieferadresse ab
+  über ihre E-Mail-Adresse. Ist der Kunde neu, wird er mit der eingestellten *Kundengruppe* angelegt. Sein Gebiet richtet
+  sich nach dem Land der Rechnungsadresse (siehe Abschnitt 2, „Gebiete je Land“); gibt es dafür kein passendes
+  Gebiet, bekommt er das *Standard-Gebiet*. Dazu ein Kontakt mit der E-Mail-Adresse und die Rechnungsadresse. Weicht die Lieferadresse ab
   (anderer Empfänger oder andere Anschrift), bekommt sie eine eigene Lieferadresse.
 - eine **Ausgangsrechnung** mit dem Bestelldatum als Buchungsdatum. Die Positionen werden mit den
   Bruttopreisen aus dem Shop übernommen, die Versandkosten als Position(en) mit dem *Versandartikel*, Gutscheine
@@ -67,15 +71,24 @@ Namen in die Suchleiste oben eingeben (in Klammern der englische Name, falls Ihr
 | Unternehmen | Unternehmen (Company) | Meine Firma GmbH, Kürzel MF | Währung EUR. |
 | Lager | Lager (Warehouse) | Lagerräume - MF | Ein Lager des Unternehmens, kein Gruppenlager; aus ihm wird versandt und sein Bestand an den Shop gemeldet. |
 | Kundengruppe | Kundengruppe (Customer Group) | Einzelperson | Darf keine Gruppe sein. Wurde ERPNext auf Englisch eingerichtet, heißt sie „Individual“. |
-| Standard-Gebiet | Gebiet (Territory) | Germany | Keine Gruppe. Der Einrichtungsassistent legt das Gebiet mit dem englischen Ländernamen an; Sie können auch ein eigenes Gebiet „Deutschland“ anlegen. |
+| Standard-Gebiet | Gebiet (Territory) | Germany | Keine Gruppe. Es gilt für Kunden, deren Land kein eigenes Gebiet hat (siehe unten „Gebiete je Land“). |
 | Umsatzsteuerkonten | Kontenplan (Chart of Accounts) | Umsatzsteuer 19 %, Umsatzsteuer 7 % | Je Steuersatz ein eigenes Konto. |
 | Artikelsteuervorlagen | Artikelsteuervorlage (Item Tax Template) | „USt 19 %“ und „USt 7 %“ | Je Steuersatz eine Vorlage (siehe unten). |
 | Umsatzsteuervorlage | Vorlage für Verkaufssteuern und -abgaben (Sales Taxes and Charges Template) | „Inland - MF“ | Eine Zeile je Steuersatz (siehe unten). |
-| Artikel | Artikel (Item) | Artikel-Code `HOLZ-ZUG-01` | Der Artikel-Code (oder der Barcode) muss genau dem Wert im Shop entsprechen (siehe Reiter „Artikel, Steuern & Zahlungen“). |
+| Artikel | Artikel (Item) | Artikel-Code `HOLZ-ZUG-01` | Der Artikel-Code (oder der Barcode) muss genau dem Wert im Shop entsprechen (siehe Reiter „Artikel, Steuern & Zahlungen“). Sie müssen die Artikel nicht von Hand anlegen: **Fehlende Artikel aus Shop übernehmen** erledigt das (Abschnitt 5b). |
 | Versandartikel | Artikel (Item) | Artikel-Code `VERSAND`, Name „Versand“ | **Ohne** Haken bei „Lager verwalten“. |
 | Zahlungsweisen | Zahlungsweise (Mode of Payment) | „PayPal“, „Überweisung“ | Jede Zeile der Zahlungszuordnung braucht eine Zahlungsweise. Für Zahlungsweisen mit *Bei Bestellung bezahlt* muss zusätzlich in der Kontentabelle der Zahlungsweise für Ihr Unternehmen ein Standardkonto eingetragen sein (z. B. ein Bankkonto „PayPal“). |
 | Anfangsbestand | Lagerbuchung (Stock Entry, Typ „Materialannahme“) oder Bestandsabgleich (Stock Reconciliation) | 10 Stück von `HOLZ-ZUG-01` im Lager „Lagerräume - MF“, mit Wertansatz | Jeder Lagerartikel braucht vor dem Buchen der Shop-Rechnungen Bestand im Shop-Lager, denn die Rechnung bucht den Bestand selbst aus. Buchungsdatum des Anfangsbestands **vor** dem ersten Bestelldatum wählen: die Rechnung wird auf das Bestelldatum gebucht. Den *Wertansatz* (Einstandspreis je Stück) angeben. |
 | Nummernkreis (optional) | Dokumentenbenennungseinstellungen (Document Naming Settings) | `SHOP-.YYYY.-` | Nur wenn Shop-Rechnungen einen eigenen Nummernkreis bekommen sollen: dort für „Ausgangsrechnung“ eintragen. |
+
+**Gebiete je Land.** Beim Anlegen eines neuen Kunden sucht der Import ein Gebiet (Territory), dessen Name zum Land
+der **Rechnungsadresse** der Bestellung passt. Gefunden wird es so: Der Shop liefert den Ländercode (z. B. `DE`);
+ERPNext macht daraus den Ländernamen (z. B. „Germany“). Probiert werden dann nacheinander dieser Name, sein
+deutscher Name („Deutschland“) und der Name in der Sprache Ihres ERPNext. Das erste vorhandene Gebiet gewinnt.
+Gibt es keins, oder ist es eine **Gruppe**, bekommt der Kunde das *Standard-Gebiet*. So legen Sie ein Gebiet
+für ein Land an: in der Suchleiste *Gebiet* eingeben, **Neu**, als Namen den Ländernamen eintragen (z. B.
+`Deutschland` oder `Germany`, `Österreich` bzw. `Austria`), *Ist Gruppe* **nicht** ankreuzen, als übergeordnetes
+Gebiet z. B. „All Territories“ wählen und speichern. Bereits angelegte Kunden werden nicht verändert.
 
 **Steuern richtig einrichten.** Shop-Preise sind Bruttopreise. So passt es zusammen:
 
@@ -133,7 +146,7 @@ synchronisieren* aus.
 | Unternehmen | Meine Firma GmbH | Unternehmen der Rechnungen. Die Umsatzsteuervorlage muss zu diesem Unternehmen gehören. |
 | Lager | Lagerräume - MF | Aus diesem Lager wird geliefert; sein Bestand wird an den Shop gemeldet. |
 | Kundengruppe | Einzelperson | Für neu angelegte Kunden. Darf keine Gruppe sein. |
-| Standard-Gebiet | Germany | Für neu angelegte Kunden, deren Land kein Gebiet mit passendem Namen hat. Darf keine Gruppe sein. |
+| Standard-Gebiet | Germany | Für neu angelegte Kunden, deren Land (laut Rechnungsadresse) kein Gebiet mit passendem Namen hat oder dessen Gebiet eine Gruppe ist. Darf selbst keine Gruppe sein. |
 | Nummernkreis der Rechnungen | leer oder `SHOP-.YYYY.-` | Optional. Leer: der Standard-Nummernkreis der Ausgangsrechnung (z. B. `ACC-SINV-.YYYY.-`). Ein eigener Nummernkreis muss vorher in den Dokumentenbenennungseinstellungen für die Ausgangsrechnung eingetragen sein. |
 
 ### Reiter „Artikel, Steuern & Zahlungen“
@@ -152,7 +165,7 @@ Abschnitt *Artikel aus dem Shop* – Artikel, die es im Shop gibt, aber noch nic
 
 | Feld | Beispiel | Bedeutung |
 | --- | --- | --- |
-| Fehlende Artikel beim Import anlegen | aus | An: fehlt zu einer Bestellposition der Artikel, legt der Import ihn aus dem Shop-Produkt an (Name, EAN als Barcode, Artikelsteuervorlage über die Steuerzuordnung, Brutto-Shoppreis in der Standard-Verkaufspreisliste der Vertriebseinstellungen). Hat der Steuersatz des Produkts keine Zeile in der Steuerzuordnung, wird kein Artikel angelegt und die Bestellung als Fehler gemeldet. Jeder angelegte Artikel steht im Synchronisationsprotokoll (Vorgang „Artikel“). |
+| Fehlende Artikel beim Import anlegen | aus | An: fehlt zu einer Bestellposition der Artikel, legt der Import ihn aus dem Shop-Produkt an (Name, EAN als Barcode, Artikelsteuervorlage über die Steuerzuordnung, Brutto-Shoppreis in der Standard-Verkaufspreisliste der Vertriebseinstellungen). Hat das Produkt im Shop keinen Preis oder gibt es keine passende Verkaufspreisliste (Euro), wird der Artikel ohne Preis angelegt; der Grund steht im Protokoll. Der Preis dient nur zur Information, die Rechnung nimmt immer den Preis der Bestellung. **Voraussetzung:** Der Steuersatz des Produkts muss in der Steuerzuordnung stehen; sonst wird kein Artikel angelegt und die Bestellung als Fehler gemeldet. Jeder angelegte Artikel steht im Synchronisationsprotokoll (Vorgang „Artikel“). |
 | Artikelgruppe für neue Artikel | Produkte | Artikelgruppe der angelegten Artikel. Leer: Standard-Artikelgruppe der Lagereinstellungen. |
 | Neue Artikel sind Lagerartikel | an | Angelegte Artikel führen Lagerbestand. **Es wird kein Anfangsbestand gebucht**: bis Bestand gebucht ist, scheitert das Buchen einer Rechnung, die den Bestand ausbucht. |
 
@@ -162,8 +175,8 @@ Abschnitt *Steuern und Zahlungen*:
 | --- | --- | --- |
 | Versandartikel | VERSAND | Artikel ohne Lagerführung für die Versandkostenzeile(n). Muss alle Artikelsteuervorlagen der Steuerzuordnung aufführen. |
 | Umsatzsteuervorlage | Inland - MF | Vorlage mit einer Zeile je Steuersatz (Abschnitt 2). Die Steuern gelten als im Preis enthalten. |
-| Steuerzuordnung | 19 → USt 19 %, 7 → USt 7 % | Tabelle: *Steuersatz (%)* wie in den Bestellpositionen des Shops und die *Artikelsteuervorlage* dafür. Ein Steuersatz ohne Zeile lässt die Bestellung scheitern. |
-| Zahlungszuordnung | siehe unten | Tabelle: *Zahlungsklasse* (Code der Zahlungsart im Shop), *Zahlungsweise* in ERPNext und *Bei Bestellung bezahlt*. Optional: Bestellungen mit einer Zahlungsklasse ohne Zeile werden trotzdem importiert, nur ohne Zahlung. |
+| Steuerzuordnung | 19 → USt 19 %, 7 → USt 7 % | Tabelle: *Steuersatz (%)* wie in den Bestellpositionen des Shops und die *Artikelsteuervorlage* dafür. Ein Steuersatz ohne Zeile lässt die Bestellung scheitern. Nach „Shop-Daten laden“ ergänzt die Schaltfläche **Steuersätze des Shops ergänzen** in der Tabelle die fehlenden Steuersätze; Sie wählen dann nur noch die Artikelsteuervorlage. |
+| Zahlungszuordnung | siehe unten | Tabelle: *Zahlungsklasse* (Code der Zahlungsart im Shop; nach „Shop-Daten laden“ werden die Codes vorgeschlagen), *Zahlungsweise* in ERPNext und *Bei Bestellung bezahlt*. Optional: Bestellungen mit einer Zahlungsklasse ohne Zeile werden trotzdem importiert, nur ohne Zahlung. |
 
 Beispiel für die **Zahlungszuordnung**:
 
@@ -180,27 +193,41 @@ Pflicht, wird aber nur bei *Bei Bestellung bezahlt* verwendet.
 
 | Feld | Beispiel | Bedeutung |
 | --- | --- | --- |
-| Status-IDs für den Import | `1,2` | Durch Komma getrennte Bestellstatus-IDs, die importiert werden. Bestellungen in einem anderen Status warten (Eintrag „Warte auf Importstatus“) und werden importiert, sobald sie innerhalb des Wiederholungszeitraums einen dieser Status erreichen. |
-| Status-ID Storniert | 4 | Stornierte Bestellungen werden nie importiert. Wird eine schon importierte Bestellung storniert, erscheint ein Fehler im Protokoll, damit Sie die Rechnung von Hand bearbeiten. Das wird nur erkannt, solange die Bestellung im *Wiederholungszeitraum* liegt (also noch abgerufen wird); spätere Stornierungen im Shop bemerkt ERPNext nicht. |
-| Status-ID Versendet | 3 | Wird beim Senden einer Sendungsnummer gesetzt, wenn die Bestellung noch in einem Import-Status ist. |
-| DHL-Versanddienstleister-ID | 1 | ID von DHL in der Versanddienstleister-Liste des Shops; wird mit der Sendungsnummer übertragen, damit der Shop den richtigen Sendungsverfolgungs-Link zeigt. |
+| Status-IDs für den Import | `1,2` | Nach „Shop-Daten laden“ wählen Sie die Status mit **Import-Status auswählen** per Häkchen nach Namen (gespeichert werden die IDs, durch Komma getrennt). Bestellungen im Status *Status-ID Versendet* werden immer importiert, auch ohne Häkchen. Bestellungen in einem anderen Status warten (Eintrag „Warte auf Importstatus“) und werden importiert, sobald sie innerhalb des Wiederholungszeitraums einen dieser Status erreichen. |
+| Status-ID Storniert | Storniert (4) | Nach „Shop-Daten laden“ per Namen wählbar. Stornierte Bestellungen werden nie importiert. Wird eine schon importierte Bestellung storniert, erscheint ein Fehler im Protokoll, damit Sie die Rechnung von Hand bearbeiten. Das wird nur erkannt, solange die Bestellung im *Wiederholungszeitraum* liegt (also noch abgerufen wird); spätere Stornierungen im Shop bemerkt ERPNext nicht. |
+| Status-ID Versendet | Versendet (3) | Nach „Shop-Daten laden“ per Namen wählbar. Wird beim Senden einer Sendungsnummer gesetzt, wenn die Bestellung noch in einem Import-Status ist (nie rückwärts: ein anderer Status bleibt unverändert). Bestellungen mit diesem Status werden immer importiert. |
+| DHL-Versanddienstleister-ID | DHL (1) | Nach „Shop-Daten laden“ per Namen wählbar. ID von DHL in der Versanddienstleister-Liste des Shops; wird mit der Sendungsnummer übertragen, damit der Shop den richtigen Sendungsverfolgungs-Link zeigt. |
 | Rechnungen buchen | aus während der Testphase | An: importierte Rechnungen werden sofort gebucht (mit Zahlung und ggf. Lieferschein). Aus: sie bleiben Entwürfe, die Sie prüfen und selbst buchen. |
 | Bestand synchronisieren | erst nach dem Go-Live an | An: der Bestand des Lagers wird an den Shop gemeldet und **überschreibt** die Menge im Shop. Erst einschalten, wenn der Anfangsbestand in ERPNext stimmt. |
 
-## 5. Status-IDs, Zahlungsklassen und DHL-ID herausfinden
+## 5. Shop-Daten laden und Artikel übernehmen
 
-**Am einfachsten: „Shop-Daten laden“.** Speichern Sie die Verbindung und klicken Sie im Reiter
-„Synchronisierung“ auf **Shop-Daten laden** (auch unter *Aktionen*). ERPNext holt Bestellstatus,
-Versanddienstleister, Zahlungsklassen und Steuersätze aus dem Shop. Danach wählen Sie *Status-ID Storniert*,
-*Status-ID Versendet* und die DHL-ID nach Namen aus (z. B. „Storniert (4)“), die Import-Status per
-**Import-Status auswählen** mit Häkchen, und in der Zahlungs- und Steuerzuordnung werden die Werte des Shops
-vorgeschlagen. Gespeichert wird weiterhin die ID. Die geladenen Werte stehen im eingeklappten Abschnitt
-„Geladene Shop-Daten“ (*Shop-Werte*, *Shop-Daten geladen am*). Eine Liste, die der Shop nicht liefert (z. B.
-bei einer älteren Shop-Version), wird gemeldet; die Felder lassen sich dann wie unten beschrieben von Hand
-mit IDs füllen.
+### 5a. Shop-Daten laden
 
-Die Werte hängen von Ihrem Shop ab. In einer Standardinstallation von modified sind es typischerweise (so auch im Testshop, mit dem diese
-Anbindung entwickelt wurde):
+Speichern Sie die Verbindung, führen Sie **Verbindung testen** aus und klicken Sie dann im Reiter
+„Synchronisierung“ ganz oben auf **Shop-Daten laden** (die Schaltfläche steht auch unter *Aktionen*). ERPNext
+holt Bestellstatus, Versanddienstleister, Zahlungsklassen und Steuersätze aus dem Shop. Ein Fenster zeigt je
+Liste, wie viele Werte geladen wurden oder warum eine Liste nicht geladen werden konnte. Eine Liste, die nicht
+geladen wurde, behält ihre bisherigen Werte. Die geladenen Werte stehen im eingeklappten Abschnitt „Geladene
+Shop-Daten“ (*Shop-Werte*, *Shop-Daten geladen am*). Laden Sie sie erneut, wenn Sie im Shop Status,
+Versanddienstleister, Zahlungsmodule oder Steuersätze geändert haben.
+
+Danach brauchen Sie keine IDs mehr nachzuschlagen:
+
+- *Status-ID Storniert*, *Status-ID Versendet* und *DHL-Versanddienstleister-ID* wählen Sie aus einer Liste mit
+  Namen aus, z. B. „Storniert (4)“. Gespeichert wird die ID. Steht im Feld eine ID, die nicht in den geladenen
+  Daten vorkommt, weist ein Hinweis darauf hin.
+- *Status-IDs für den Import*: **Import-Status auswählen** öffnet eine Liste mit einem Häkchen je Status. Der
+  Status *Versendet* wird auch ohne Häkchen importiert.
+- In der *Zahlungszuordnung* schlägt die Spalte *Zahlungsklasse* die Codes des Shops vor. Die Namen sind die
+  Codes der Zahlungsmodule; der Shop liefert keine Klartextnamen. Es sind die installierten Module und die
+  Zahlungsarten der letzten Bestellungen.
+- In der *Steuerzuordnung* listet der Hinweis die Steuersätze des Shops, und **Steuersätze des Shops ergänzen**
+  fügt die fehlenden Zeilen ein.
+
+**Fallback: IDs von Hand eintragen.** Liefert ein Shop eine Liste nicht (ältere Version, fehlende Rechte des
+API-Benutzers), meldet das Fenster das, und die Felder bleiben normale Eingabefelder, in die Sie die ID bzw. den
+Code direkt eintragen. In einer Standardinstallation von modified sind es typischerweise:
 
 | Bestellstatus | ID |
 | --- | --- |
@@ -209,27 +236,46 @@ Anbindung entwickelt wurde):
 | Versendet | 3 |
 | Storniert | 4 |
 
-**In der Shop-Administration.** Die Bestellstatus pflegen Sie in der Konfiguration der Bestellstatus, die
-Zahlungsarten in der Verwaltung der Zahlungsmodule und die Versanddienstleister in deren Liste. Wo genau diese
-Seiten liegen, hängt von Version und Einrichtung Ihres Shops ab. Die angezeigten *Namen* reichen nicht immer;
-entscheidend sind die IDs bzw. der Code des Zahlungsmoduls.
+Die IDs und Codes stehen in der Shop-Administration (Bestellstatus, Zahlungsmodule, Versanddienstleister; wo
+genau, hängt von Version und Einrichtung Ihres Shops ab) oder für technisch Versierte in der REST-API (nach
+`POST /api/v1/oauth`): `GET /api/v1/orders/status`, `GET /api/v1/shipping/carriers`, und im Feld
+`payment_class` von `GET /api/v1/orders`. Ohne Technik hilft ein erster Import mit ausgeschaltetem
+*Rechnungen buchen*: Der Code der Zahlungsart steht bei jeder Rechnung im Feld *Modified Payment Class*, und
+wartende Bestellungen stehen im Synchronisationsprotokoll mit „Warte auf Importstatus (aktueller Status 3)“;
+die Zahl ist die Status-ID.
 
-**Über die REST-API** (für technisch Versierte oder Ihren Shop-Betreuer). Nach der Anmeldung mit dem
-API-Benutzer (`POST /api/v1/oauth`) liefern diese Abfragen die Werte:
+### 5b. Fehlende Artikel aus Shop übernehmen
 
-- `GET /api/v1/orders/status` – alle Bestellstatus mit ID und Namen (`orders_status_id`,
-  `orders_status_name`).
-- `GET /api/v1/orders` – die Bestellungen; der Code der Zahlungsart steht im Feld `payment_class`, der
-  aktuelle Status in `orders_status`.
-- `GET /api/v1/shipping/carriers` – die Versanddienstleister mit `carrier_id` (z. B. DHL = 1).
+Artikel, die es im Shop, aber noch nicht in ERPNext gibt, legen Sie nicht von Hand an. Es gibt zwei Wege.
 
-**Ohne Technik, über ERPNext.** Starten Sie mit *Rechnungen buchen* aus einen ersten Import (Abschnitt 6):
+**Gezielt, vor dem Start:** Menü **Aktionen** → **Fehlende Artikel aus Shop übernehmen** (nur bei gespeichertem
+Shop). Ein Fenster listet alle Shop-Produkte, zu denen es keinen Artikel gibt (Artikelnummer, Name, EAN, Preis).
+Setzen Sie Häkchen (oder **Alle auswählen**) und klicken Sie **Übernehmen**. Danach sehen Sie, welche Artikel
+angelegt wurden, welche schon vorhanden waren und bei welchen Produkten ein Fehler auftrat (mit Grund). Bei
+mehr als 50 Produkten läuft die Übernahme im Hintergrund; das Ergebnis steht dann im Synchronisationsprotokoll.
+Sie brauchen dafür das Recht, Artikel anzulegen. Ein zweiter Klick legt nichts doppelt an.
 
-- Bei jeder importierten Rechnung steht der Code der Zahlungsart im Feld *Modified Payment Class*.
-  Tragen Sie diesen Wert als *Zahlungsklasse* ein. Typische Werte sind `paypal`, `moneyorder` (Vorkasse) und
-  `invoice` (Rechnung).
-- Bestellungen, die nicht importiert wurden, weil ihr Status fehlt, stehen im Synchronisationsprotokoll mit
-  „Warte auf Importstatus (aktueller Status 3)“. Die Zahl ist die Status-ID der Bestellung.
+**Automatisch beim Import:** Ist im Reiter „Artikel, Steuern & Zahlungen“ **Fehlende Artikel beim Import
+anlegen** eingeschaltet, legt der Import den Artikel zu einer Bestellposition selbst an, statt die Bestellung
+als Fehler abzulehnen. Scheitert die Bestellung aus anderem Grund, wird auch der Artikel nicht angelegt und beim
+nächsten Lauf erneut versucht.
+
+In beiden Fällen gilt:
+
+- Übernommen werden Artikelnummer (als Artikel-Code bzw. Barcode, je nach *Artikelabgleich*), Name,
+  Beschreibung und die EAN als Barcode (nur eine gültige EAN, die noch kein anderer Artikel hat).
+- Die *Artikelgruppe für neue Artikel* bestimmt die Gruppe (leer: Standard-Artikelgruppe der
+  Lagereinstellungen). *Neue Artikel sind Lagerartikel* bestimmt, ob die Artikel Lagerbestand führen; schalten Sie
+  es aus, wenn der Shop Streckengeschäfts- oder Nicht-Lagerprodukte verkauft.
+- Der **Bruttopreis** aus dem Shop kommt in den Artikelpreis der Standard-Verkaufspreisliste aus den
+  Vertriebseinstellungen (sonst „Standard Selling“). Die Preisliste muss in Euro sein. Hat das Produkt keinen
+  Preis oder passt die Preisliste nicht, wird der Artikel ohne Preis angelegt und der Grund steht im Protokoll.
+- **Steuerzuordnung:** Der Steuersatz des Produkts muss in der *Steuerzuordnung* stehen; daraus ergibt sich die
+  Artikelsteuervorlage des Artikels. Fehlt der Steuersatz, wird für dieses Produkt **kein** Artikel angelegt
+  (sonst würde die Umsatzsteuer falsch gebucht), und es erscheint ein Fehler.
+- **Der Anfangsbestand wird nicht gebucht.** Buchen Sie ihn selbst (Abschnitt 2). Bis dahin scheitert das Buchen
+  einer Rechnung, die den Bestand ausbucht, mit der Meldung zu fehlendem Bestand (Abschnitt 8).
+- Jeder angelegte Artikel steht im Synchronisationsprotokoll mit dem Vorgang „Artikel“.
 
 ## 6. Erster Start
 
@@ -239,23 +285,26 @@ API-Benutzer (`POST /api/v1/oauth`) liefern diese Abfragen die Werte:
 2. Menü **Aktionen** → **Verbindung testen**. Bei Erfolg erscheint „Verbindung erfolgreich“ mit den Daten des
    API-Benutzers (Kundennummer, E-Mail, Vor- und Nachname). Diese Schaltfläche dürfen nur Benutzer mit der
    Rolle System-Manager verwenden.
-3. *Import ab* prüfen (Ihr Starttermin), **Aktiviert** einschalten und speichern. Ab jetzt läuft der Import
+3. **Shop-Daten laden** (Abschnitt 5a) und danach im Reiter „Synchronisierung“ die Status, den
+   DHL-Versanddienstleister, die Zahlungs- und die Steuerzuordnung nach Namen auswählen. Danach die fehlenden
+   Artikel übernehmen (Abschnitt 5b) und deren Anfangsbestand buchen.
+4. *Import ab* prüfen (Ihr Starttermin), **Aktiviert** einschalten und speichern. Ab jetzt läuft der Import
    automatisch alle 5 Minuten.
-4. Wer nicht warten will: **Aktionen** → **Bestellungen jetzt importieren**. Es erscheint „Import gestartet –
+5. Wer nicht warten will: **Aktionen** → **Bestellungen jetzt importieren**. Es erscheint „Import gestartet –
    die Ergebnisse erscheinen im Synchronisationsprotokoll und als Ausgangsrechnungen“ (oder „Import läuft
    bereits“, wenn gerade ein Import wartet oder läuft). Der Import läuft im Hintergrund; laden Sie das
    Formular nach einer Weile neu.
-5. Ergebnis prüfen: In der **Statuszeile** oben im Formular steht dann z. B. „Letzter Import: vor 2 Minuten ·
+6. Ergebnis prüfen: In der **Statuszeile** oben im Formular steht dann z. B. „Letzter Import: vor 2 Minuten ·
    3 in den letzten 7 Tagen importiert · 1 warten auf den Importstatus · 0 Importfehler“, darunter Links zum
    Synchronisationsprotokoll, zu den Ausgangsrechnungen dieses Shops, zum Integrations-Protokoll (falls
    installiert) und zu dieser Anleitung. Die Zeile ist grün, bei Importfehlern rot.
-6. Vor dem ersten Buchen: Für alle Lagerartikel muss der **Anfangsbestand** im Shop-Lager gebucht sein
+7. Vor dem ersten Buchen: Für alle Lagerartikel muss der **Anfangsbestand** im Shop-Lager gebucht sein
    (Abschnitt 2, mit Buchungsdatum vor den Bestelldaten). Sonst lehnt ERPNext das Buchen mit „… Einheiten
    von … benötigt in … zum Abschluss dieser Transaktion.“ ab.
-7. Die **Ausgangsrechnungen** (Entwürfe) prüfen: Kunde, Adressen, Positionen, Steuern, Gesamtbetrag. Buchen
+8. Die **Ausgangsrechnungen** (Entwürfe) prüfen: Kunde, Adressen, Positionen, Steuern, Gesamtbetrag. Buchen
    Sie einige von Hand und prüfen Sie Zahlung und Lagerabgang bzw. Lieferschein.
-8. Wenn alles stimmt: **Rechnungen buchen** einschalten.
-9. Wenn der Anfangsbestand in ERPNext stimmt: **Bestand synchronisieren** einschalten und speichern. Danach
+9. Wenn alles stimmt: **Rechnungen buchen** einschalten.
+10. Wenn der Anfangsbestand in ERPNext stimmt: **Bestand synchronisieren** einschalten und speichern. Danach
    erscheint unter **Aktionen** die Schaltfläche **Bestand jetzt abgleichen**; sie meldet den Bestand aller
    Lagerartikel, die es auch im Shop gibt, sofort an den Shop („Bestandsabgleich gestartet“).
 
@@ -271,7 +320,7 @@ Die Schaltflächen erscheinen erst, wenn der Shop gespeichert ist. „Bestellung
 - **Lieferscheine**: nur bei Bestellungen mit Streckengeschäfts-Artikeln (siehe Abschnitt 1).
 - **Kunden**: neu angelegte Shop-Kunden tragen den Shop-Namen im Feld *Modified-Shop*.
 - **Modified-Synchronisationsprotokoll**: je Eintrag Shop, *Vorgang* (Importieren = Bestellimport, Lager =
-  Bestandsmeldung, Sendungsverfolgung), *Referenz* (Bestellnummer bzw. Artikel-Code), *Status* (Erfolgreich,
+  Bestandsmeldung, Sendungsverfolgung, Artikel = angelegter Artikel), *Referenz* (Bestellnummer bzw. Artikel-Code), *Status* (Erfolgreich,
   Fehler, Übersprungen) und der Meldungstext.
   Ein erfolgreicher Import verweist auf seine Rechnung. Erfolgreiche Bestandsmeldungen werden nicht
   protokolliert, nur Fehler und übersprungene Artikel. Derselbe Fehler wird nicht bei jedem Lauf erneut
@@ -300,6 +349,8 @@ Meldungen sind immer englisch):
 | Kein Artikel gefunden für products_model HOLZ-ZUG-01 (Shop-Produkt 12, Holzeisenbahn) | Kein ERPNext-Artikel mit diesem Artikel-Code bzw. diesem Barcode. | Artikel anlegen oder Artikel-Code korrigieren, dann **Wiederholen**. |
 | Artikel … für products_model … ist deaktiviert | Der passende Artikel ist deaktiviert. | Artikel aktivieren, dann **Wiederholen**. |
 | Für den Steuersatz 7.00 % ist im Shop … keine Artikelsteuervorlage zugeordnet | In der Steuerzuordnung fehlt der Steuersatz. | Zeile in der *Steuerzuordnung* ergänzen, dann **Wiederholen**. |
+| Shop-Produkt 12 (HOLZ-ZUG-01): keine Artikelsteuervorlage für Steuersatz 7 % in der Steuerzuordnung von Shop … (Vorgang Artikel) | Beim Anlegen eines Artikels aus dem Shop (Übernahme oder Import) fehlt der Steuersatz des Produkts in der Steuerzuordnung. Es wurde kein Artikel angelegt. | Zeile in der *Steuerzuordnung* ergänzen, dann erneut übernehmen bzw. **Wiederholen**. |
+| Steuerklasse … hat im Shop mehrere Steuersätze (… %); ordnen Sie genau einen in der Steuerzuordnung zu | Das Produkt hat im Shop mehrere Steuersätze (z. B. je Steuerzone), und mehrere davon stehen in der Steuerzuordnung. | Nur den gewünschten Steuersatz in der Steuerzuordnung lassen oder den Artikel von Hand anlegen. |
 | Zeile 2 (…): Erwartet wurde die Artikelsteuervorlage USt 7 % …, ERPNext hat … gesetzt | Der Artikel (oder der Versandartikel) führt die Vorlage nicht auf. | Vorlage im Reiter „Steuer“ des Artikels oder seiner Artikelgruppe ergänzen, dann **Wiederholen**. |
 | Bestellung …: Rechnungs-Gesamtbetrag … stimmt nicht mit dem Shop-Gesamtbetrag … überein | Rechnung und Shop weichen um mehr als einen Cent ab. | Bestellung im Shop prüfen (Preise, Versand, Rabatte) und ggf. von Hand buchen. |
 | Warte auf Importstatus (aktueller Status 3) | Kein Fehler: Die Bestellung hat (noch) keinen Status aus *Status-IDs für den Import*. | Abwarten; oder die Status-IDs anpassen bzw. den Status im Shop ändern und **Wiederholen**. |

@@ -6,6 +6,13 @@ through the shop's REST API (`/api/v1`).
 - **Order import:** shop orders become Sales Invoices (customer, contact and addresses are created or reused).
 - **Stock sync:** ERPNext stock levels are pushed to the shop.
 - **Tracking:** tracking numbers are sent back to the shop, a history entry is added (customer notified) and the order status is set to "shipped".
+- **Shop data:** order statuses, carriers, payment classes and tax rates are loaded from the shop
+  (**Load Shop Data**) and picked by name instead of by id. Orders in the shipped status are always imported.
+- **Items from the shop:** shop products without an Item can be taken over from a dialog (**Take Over Missing
+  Items**) or created during the order import (*Create Missing Items on Import*): name, EAN barcode, Item Tax
+  Template from the Tax Map and the gross price in the default selling price list. No opening stock is booked.
+- **Customers:** the Territory of a new customer follows the billing country (a Territory named like the
+  country, else the default territory).
 - **Sync log:** import errors and orders waiting for an import status are logged; such an order can be
   imported again from its log entry with **Retry** once the cause is fixed.
 

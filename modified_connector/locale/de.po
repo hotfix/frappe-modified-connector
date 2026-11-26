@@ -793,7 +793,7 @@ msgid "Creating items …"
 msgstr "Artikel werden angelegt …"
 
 msgid "{0} items are being created in the background. The results appear in the Sync Log (operation Item)."
-msgstr "{0} Artikel werden im Hintergrund angelegt. Die Ergebnisse erscheinen im Synchronisationsprotokoll (Vorgang Item)."
+msgstr "{0} Artikel werden im Hintergrund angelegt. Die Ergebnisse erscheinen im Synchronisationsprotokoll (Vorgang Artikel)."
 
 msgid "A take-over is already running for this shop."
 msgstr "Für diesen Shop läuft bereits eine Übernahme."
