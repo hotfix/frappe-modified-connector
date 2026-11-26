@@ -113,7 +113,7 @@ class TestInvoice(IntegrationTestCase):
 	def test_sales_channel_left_alone_without_record(self):
 		frappe.db.delete("UTM Source", {"name": SHOP_CHANNEL})
 		si = build_invoice(self.shop, parse_order(shop_order()))
-		self.assertNotEqual(si.utm_source, SHOP_CHANNEL)
+		self.assertFalse(si.utm_source)  # no other channel is invented
 
 	def test_naming_series(self):
 		self.shop = make_test_shop(invoice_naming_series="SHOP-.YYYY.-")
