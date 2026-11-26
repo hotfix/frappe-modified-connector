@@ -210,7 +210,13 @@ def make_test_shop(**overrides) -> ModifiedShop:
 		{"territory_name": "MC Test Territory"},
 		{"parent_territory": "All Territories", "is_group": 0},
 	)
-	_ensure("Supplier", {"supplier_name": SUPPLIER}, {"supplier_group": "All Supplier Groups"})
+	# Newer ERPNext v16 releases reject a Supplier in a group-type Supplier Group such as the root.
+	supplier_group = _ensure(
+		"Supplier Group",
+		{"supplier_group_name": "MC Test Suppliers"},
+		{"parent_supplier_group": "All Supplier Groups", "is_group": 0},
+	)
+	_ensure("Supplier", {"supplier_name": SUPPLIER}, {"supplier_group": supplier_group})
 	_item("SKU-19", t19)
 	_item("SKU-7", t7)
 	_item(
