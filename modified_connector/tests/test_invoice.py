@@ -5,6 +5,7 @@ from frappe.tests import IntegrationTestCase
 from frappe.utils import add_to_date, now_datetime
 
 from modified_connector.sync.invoice import (
+	SHOP_CHANNEL,
 	TaxTemplateMismatch,
 	TotalMismatch,
 	UnknownItem,
@@ -100,6 +101,19 @@ class TestInvoice(IntegrationTestCase):
 		si = build_invoice(self.shop, parse_order(shop_order(customers_id="70020", language="german")))
 		si.insert()  # validate() must not replace it
 		self.assertEqual(si.language, "de")
+
+	def test_sales_channel_set_when_record_exists(self):
+		if not frappe.db.exists("UTM Source", SHOP_CHANNEL):
+			frappe.get_doc({"doctype": "UTM Source", "name": SHOP_CHANNEL}).insert()
+		si = build_invoice(self.shop, parse_order(shop_order()))
+		self.assertEqual(si.utm_source, SHOP_CHANNEL)
+		si.insert()
+		self.assertEqual(frappe.db.get_value("Sales Invoice", si.name, "utm_source"), SHOP_CHANNEL)
+
+	def test_sales_channel_left_alone_without_record(self):
+		frappe.db.delete("UTM Source", {"name": SHOP_CHANNEL})
+		si = build_invoice(self.shop, parse_order(shop_order()))
+		self.assertNotEqual(si.utm_source, SHOP_CHANNEL)
 
 	def test_naming_series(self):
 		self.shop = make_test_shop(invoice_naming_series="SHOP-.YYYY.-")

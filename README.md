@@ -16,6 +16,8 @@ This is an independent community project and not an official module of the modif
 
 - **Order import:** shop orders become Sales Invoices (customer, contact and addresses are created or reused).
   Customers and invoices get the language of the shop order; this is the language of the printed invoice.
+  If a *UTM Source* named "Shop" exists (created e.g. by shop_desk as sales channel), imported invoices get it
+  in *Source* (`utm_source`).
 - **Stock sync:** ERPNext stock levels are pushed to the shop.
 - **Tracking:** tracking numbers are sent back to the shop, a history entry is added (customer notified) and
   the order status is set to "shipped".

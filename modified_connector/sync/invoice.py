@@ -28,6 +28,10 @@ class TaxTemplateMismatch(frappe.ValidationError):
 
 EXPECTED_TEMPLATES_FLAG = "modified_tax_templates"
 
+# Sales channel (UTM Source) of imported invoices. The record is created by apps that use the channel,
+# e.g. shop_desk; without it the field is left as it is.
+SHOP_CHANNEL = "Shop"
+
 
 def build_invoice(shop: ModifiedShop, order: ShopOrder):
 	"""Return an unsaved Sales Invoice whose grand total equals the shop order total.
@@ -61,6 +65,7 @@ def build_invoice(shop: ModifiedShop, order: ShopOrder):
 	)
 	if shop.invoice_naming_series:
 		si.naming_series = shop.invoice_naming_series
+	set_sales_channel(si)
 
 	# Shop prices are gross: every tax row is included in the item rate.
 	for tax in get_taxes_and_charges("Sales Taxes and Charges Template", shop.sales_taxes_template) or []:
@@ -104,6 +109,12 @@ def build_invoice(shop: ModifiedShop, order: ShopOrder):
 			)
 		)
 	return si
+
+
+def set_sales_channel(si) -> None:
+	"""Mark the invoice as a shop order in `utm_source`, if the field and the "Shop" record exist."""
+	if si.meta.has_field("utm_source") and frappe.db.exists("UTM Source", SHOP_CHANNEL):
+		si.utm_source = SHOP_CHANNEL
 
 
 def assert_tax_templates(invoice, expected: dict[int, str] | None = None) -> None:
