@@ -241,6 +241,7 @@ def _take_over(shop: str, product_ids: list[str], commit: bool = False) -> dict:
 	client = doc.get_client()
 	result: dict = {"created": [], "existing": [], "failed": {}}
 	for product_id in product_ids:
+		reference = product_id  # the match value once the product is known: the Item log rows use it
 		try:
 			try:
 				row = client.get_product(product_id)
@@ -250,6 +251,7 @@ def _take_over(shop: str, product_ids: list[str], commit: bool = False) -> dict:
 				row = None
 			if not row:
 				raise frappe.ValidationError(_("Shop product {0} was not found").format(product_id))
+			reference = item_sync.match_value(doc, row) or product_id
 			existing = item_sync.find_item(doc, item_sync.match_value(doc, row))
 			code = existing or item_sync.create_item_from_product(doc, row)
 			result["existing" if existing else "created"].append(
@@ -258,7 +260,7 @@ def _take_over(shop: str, product_ids: list[str], commit: bool = False) -> dict:
 		except Exception as exc:
 			message = frappe.utils.strip_html_tags(str(exc)) or type(exc).__name__
 			result["failed"][product_id] = message
-			log_error_once(shop, item_sync.OPERATION, product_id, message)
+			log_error_once(shop, item_sync.OPERATION, reference, message)
 		if commit:
 			frappe.db.commit()  # keep finished products if a later one breaks the job
 	return result
@@ -318,8 +320,9 @@ def take_over_job(shop: str, product_ids: list[str]) -> None:
 def get_status(shop: str) -> dict:
 	"""Headline numbers from the Sync Log of a shop.
 
-	errors: failed order imports (operation Import, status Error). A failed order stays Error until a retry
-	imports it, which marks the row Skipped (see modified_sync_log.retry), so every such row is open.
+	errors: failed order imports (operation Import, status Error). A failed order stays Error until it is
+	imported (automatic re-import or retry), which marks the row Skipped (see order_import._close_errors
+	and modified_sync_log.retry), so every such row is open.
 	Stock and tracking errors are not counted; they are visible in the Integration Log if installed.
 	waiting: orders waiting for an import status (Skipped, not yet linked to an invoice).
 	imported_7d: successful order imports of the last 7 days."""

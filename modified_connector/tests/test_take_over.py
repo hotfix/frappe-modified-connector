@@ -102,6 +102,23 @@ class TestTakeOver(ItemTestCase):
 		)
 		self.assertTrue(any("9040" in m for m in logs))
 
+	def test_failed_then_successful_take_over_share_one_reference(self):
+		row = product(pid="9050")
+		value = row["products"]["products_model"]
+		self.client.products = [row]
+		with patch.object(item_sync, "create_item_from_product", side_effect=item_sync.ProductError("boom")):
+			result = ms.take_over_items(self.shop.name, ["9050"])
+		self.assertEqual(list(result["failed"]), ["9050"])
+		ms.take_over_items(self.shop.name, ["9050"])
+		rows = frappe.get_all(
+			"Modified Sync Log",
+			filters={"shop": self.shop.name, "operation": "Item", "reference": ("in", [value, "9050"])},
+			fields=["reference", "status"],
+			order_by="creation asc",
+		)
+		self.assertEqual({r.reference for r in rows}, {value})
+		self.assertEqual(rows[-1].status, "Success")
+
 	def test_invalid_input_rejected(self):
 		for bad in ('"abc"', "5", '{"a": 1}', '[{"a": 1}]', [["x"]], list(range(10001))):
 			with self.assertRaises(frappe.ValidationError):

@@ -812,3 +812,9 @@ msgstr "product_ids muss eine Liste von Shop-Produkt-IDs sein."
 
 msgid "At most {0} products can be taken over at once."
 msgstr "Es können höchstens {0} Produkte auf einmal übernommen werden."
+
+msgid "imported later as {0}"
+msgstr "später importiert als {0}"
+
+msgid "DHL carrier not configured in Modified Shop {0}"
+msgstr "DHL-Versanddienstleister im Modified-Shop {0} nicht konfiguriert"

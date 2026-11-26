@@ -78,6 +78,7 @@ def _import_order(shop: ModifiedShop, raw: dict) -> tuple[str, str | None]:
 
 	frappe.db.release_savepoint(save_point)
 	_link_waiting_logs(shop.name, order_id, invoice.name)
+	_close_errors(shop.name, order_id, invoice.name)
 	log(shop.name, OPERATION, order_id, "Success", ref_doctype="Sales Invoice", ref_name=invoice.name)
 	return IMPORTED, invoice.name
 
@@ -133,6 +134,33 @@ def _link_waiting_logs(shop: str, order_id: str, invoice: str) -> None:
 				"Modified Sync Log", name, {"ref_doctype": "Sales Invoice", "ref_name": invoice}
 			)
 			integration.notify_changed(name)
+
+
+def _close_errors(shop: str, order_id: str, invoice: str) -> None:
+	"""Close the open Import Error rows of an order that is imported now (like a retry does): they
+	become Skipped and point to the invoice, so the error no longer counts as open."""
+	for name in frappe.get_all(
+		"Modified Sync Log",
+		filters={
+			"shop": shop,
+			"operation": OPERATION,
+			"reference": order_id,
+			"status": "Error",
+			"ref_name": ("is", "not set"),
+		},
+		pluck="name",
+	):
+		frappe.db.set_value(
+			"Modified Sync Log",
+			name,
+			{
+				"status": "Skipped",
+				"message": _("imported later as {0}").format(invoice),
+				"ref_doctype": "Sales Invoice",
+				"ref_name": invoice,
+			},
+		)
+		integration.notify_changed(name)
 
 
 def _rollback_order(save_point: str) -> None:

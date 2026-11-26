@@ -53,7 +53,7 @@ Streckengeschäfts-Artikel.
 Schaltfläche **Sendungsnummer senden** (oder eine Versand-App erledigt das automatisch, sobald sie ein Etikett
 erzeugt). Die Sendungsnummer wird im Shop mit dem Versanddienstleister DHL gespeichert. Ist die Bestellung
 noch in einem Import-Status, bekommt sie außerdem einen Eintrag im Bestellverlauf (markiert als „Kunde
-benachrichtigt“) und die *Status-ID Versendet*. Unterstützt wird derzeit nur DHL.
+benachrichtigt“) und, falls *Status-ID Versendet* gesetzt ist, diesen Status. Unterstützt wird derzeit nur DHL.
 
 **Grenzen dieser Version.** Folgende Bestellungen werden **nicht** gebucht, sondern als Fehler im
 Synchronisationsprotokoll gemeldet: andere Währung als EUR, Nettopreise (B2B), Artikel mit Attributen bzw.
@@ -195,7 +195,7 @@ Pflicht, wird aber nur bei *Bei Bestellung bezahlt* verwendet.
 | --- | --- | --- |
 | Status-IDs für den Import | `1,2` | Nach „Shop-Daten laden“ wählen Sie die Status mit **Import-Status auswählen** per Häkchen nach Namen (gespeichert werden die IDs, durch Komma getrennt). Bestellungen im Status *Status-ID Versendet* werden immer importiert, auch ohne Häkchen. Bestellungen in einem anderen Status warten (Eintrag „Warte auf Importstatus“) und werden importiert, sobald sie innerhalb des Wiederholungszeitraums einen dieser Status erreichen. |
 | Status-ID Storniert | Storniert (4) | Nach „Shop-Daten laden“ per Namen wählbar. Stornierte Bestellungen werden nie importiert. Wird eine schon importierte Bestellung storniert, erscheint ein Fehler im Protokoll, damit Sie die Rechnung von Hand bearbeiten. Das wird nur erkannt, solange die Bestellung im *Wiederholungszeitraum* liegt (also noch abgerufen wird); spätere Stornierungen im Shop bemerkt ERPNext nicht. |
-| Status-ID Versendet | Versendet (3) | Nach „Shop-Daten laden“ per Namen wählbar. Wird beim Senden einer Sendungsnummer gesetzt, wenn die Bestellung noch in einem Import-Status ist (nie rückwärts: ein anderer Status bleibt unverändert). Bestellungen mit diesem Status werden immer importiert. |
+| Status-ID Versendet | Versendet (3) | Nach „Shop-Daten laden“ per Namen wählbar. Wird beim Senden einer Sendungsnummer nur gesetzt, wenn dieses Feld gefüllt ist und die Bestellung noch in einem Import-Status ist (nie rückwärts: ein anderer Status bleibt unverändert). Bestellungen mit diesem Status werden immer importiert. |
 | DHL-Versanddienstleister-ID | DHL (1) | Nach „Shop-Daten laden“ per Namen wählbar. ID von DHL in der Versanddienstleister-Liste des Shops; wird mit der Sendungsnummer übertragen, damit der Shop den richtigen Sendungsverfolgungs-Link zeigt. |
 | Rechnungen buchen | aus während der Testphase | An: importierte Rechnungen werden sofort gebucht (mit Zahlung und ggf. Lieferschein). Aus: sie bleiben Entwürfe, die Sie prüfen und selbst buchen. |
 | Bestand synchronisieren | erst nach dem Go-Live an | An: der Bestand des Lagers wird an den Shop gemeldet und **überschreibt** die Menge im Shop. Erst einschalten, wenn der Anfangsbestand in ERPNext stimmt. |
@@ -263,7 +263,8 @@ nächsten Lauf erneut versucht.
 In beiden Fällen gilt:
 
 - Übernommen werden Artikelnummer (als Artikel-Code bzw. Barcode, je nach *Artikelabgleich*), Name,
-  Beschreibung und die EAN als Barcode (nur eine gültige EAN, die noch kein anderer Artikel hat).
+  Beschreibung und die EAN als Barcode (nur eine gültige EAN, die noch kein anderer Artikel hat). Bei
+  Artikelabgleich über den Barcode wird die Artikelnummer auch dann als Barcode eingetragen, wenn sie keine gültige EAN ist.
 - Die *Artikelgruppe für neue Artikel* bestimmt die Gruppe (leer: Standard-Artikelgruppe der
   Lagereinstellungen). *Neue Artikel sind Lagerartikel* bestimmt, ob die Artikel Lagerbestand führen; schalten Sie
   es aus, wenn der Shop Streckengeschäfts- oder Nicht-Lagerprodukte verkauft.
@@ -320,7 +321,7 @@ Die Schaltflächen erscheinen erst, wenn der Shop gespeichert ist. „Bestellung
 - **Lieferscheine**: nur bei Bestellungen mit Streckengeschäfts-Artikeln (siehe Abschnitt 1).
 - **Kunden**: neu angelegte Shop-Kunden tragen den Shop-Namen im Feld *Modified-Shop*.
 - **Modified-Synchronisationsprotokoll**: je Eintrag Shop, *Vorgang* (Importieren = Bestellimport, Lager =
-  Bestandsmeldung, Sendungsverfolgung, Artikel = angelegter Artikel), *Referenz* (Bestellnummer bzw. Artikel-Code), *Status* (Erfolgreich,
+  Bestandsmeldung, Sendungsverfolgung, Artikel = angelegter Artikel), *Referenz* (Bestellnummer bzw. Abgleichwert des Artikels: Artikelnummer bzw. EAN), *Status* (Erfolgreich,
   Fehler, Übersprungen) und der Meldungstext.
   Ein erfolgreicher Import verweist auf seine Rechnung. Erfolgreiche Bestandsmeldungen werden nicht
   protokolliert, nur Fehler und übersprungene Artikel. Derselbe Fehler wird nicht bei jedem Lauf erneut
@@ -349,8 +350,8 @@ Meldungen sind immer englisch):
 | Kein Artikel gefunden für products_model HOLZ-ZUG-01 (Shop-Produkt 12, Holzeisenbahn) | Kein ERPNext-Artikel mit diesem Artikel-Code bzw. diesem Barcode. | Artikel anlegen oder Artikel-Code korrigieren, dann **Wiederholen**. |
 | Artikel … für products_model … ist deaktiviert | Der passende Artikel ist deaktiviert. | Artikel aktivieren, dann **Wiederholen**. |
 | Für den Steuersatz 7.00 % ist im Shop … keine Artikelsteuervorlage zugeordnet | In der Steuerzuordnung fehlt der Steuersatz. | Zeile in der *Steuerzuordnung* ergänzen, dann **Wiederholen**. |
-| Shop-Produkt 12 (HOLZ-ZUG-01): keine Artikelsteuervorlage für Steuersatz 7 % in der Steuerzuordnung von Shop … (Vorgang Artikel) | Beim Anlegen eines Artikels aus dem Shop (Übernahme oder Import) fehlt der Steuersatz des Produkts in der Steuerzuordnung. Es wurde kein Artikel angelegt. | Zeile in der *Steuerzuordnung* ergänzen, dann erneut übernehmen bzw. **Wiederholen**. |
-| Steuerklasse … hat im Shop mehrere Steuersätze (… %); ordnen Sie genau einen in der Steuerzuordnung zu | Das Produkt hat im Shop mehrere Steuersätze (z. B. je Steuerzone), und mehrere davon stehen in der Steuerzuordnung. | Nur den gewünschten Steuersatz in der Steuerzuordnung lassen oder den Artikel von Hand anlegen. |
+| Shop-Produkt 12 (HOLZ-ZUG-01): keine Artikelsteuervorlage für Steuersatz 7 % in der Steuerzuordnung von Shop … | Beim Anlegen eines Artikels aus dem Shop fehlt der Steuersatz des Produkts in der Steuerzuordnung. Es wurde kein Artikel angelegt. Bei der Übernahme steht der Fehler unter Vorgang Artikel (Referenz = Abgleichwert), beim Bestellimport unter Vorgang Import mit der Bestellnummer. | Zeile in der *Steuerzuordnung* ergänzen, dann erneut übernehmen bzw. **Wiederholen**. |
+| Steuerklasse … hat im Shop mehrere Steuersätze (… %); ordnen Sie genau einen in der Steuerzuordnung zu | Das Produkt hat im Shop mehrere Steuersätze (z. B. je Steuerzone), und die Steuerzuordnung enthält keinen oder mehrere dieser Sätze. | Nur den gewünschten Steuersatz in der Steuerzuordnung lassen oder den Artikel von Hand anlegen. |
 | Zeile 2 (…): Erwartet wurde die Artikelsteuervorlage USt 7 % …, ERPNext hat … gesetzt | Der Artikel (oder der Versandartikel) führt die Vorlage nicht auf. | Vorlage im Reiter „Steuer“ des Artikels oder seiner Artikelgruppe ergänzen, dann **Wiederholen**. |
 | Bestellung …: Rechnungs-Gesamtbetrag … stimmt nicht mit dem Shop-Gesamtbetrag … überein | Rechnung und Shop weichen um mehr als einen Cent ab. | Bestellung im Shop prüfen (Preise, Versand, Rabatte) und ggf. von Hand buchen. |
 | Warte auf Importstatus (aktueller Status 3) | Kein Fehler: Die Bestellung hat (noch) keinen Status aus *Status-IDs für den Import*. | Abwarten; oder die Status-IDs anpassen bzw. den Status im Shop ändern und **Wiederholen**. |

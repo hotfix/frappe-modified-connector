@@ -138,6 +138,22 @@ class TestOrderImport(ShopTestCase):
 		self.assertEqual(invoices(self.shop.name, order_id), [])
 		self.assertEqual(logs(self.shop.name, order_id), [])
 
+	def test_reimport_closes_earlier_errors(self):
+		from modified_connector.modified_connector.doctype.modified_shop.modified_shop import get_status
+
+		raw = raw_order(skus=("NO-SUCH-ITEM", "SKU-7"))
+		order_id = raw["orders"]["orders_id"]
+		before = get_status(self.shop.name)["errors"]
+		self.assertIsNone(import_order(self.shop, raw))
+		self.assertEqual(get_status(self.shop.name)["errors"], before + 1)
+		fixed = raw_order(order_id=order_id)
+		invoice = import_order(self.shop, fixed)
+		self.assertTrue(invoice)
+		self.assertEqual(get_status(self.shop.name)["errors"], before)
+		self.assertEqual(logs(self.shop.name, order_id, "Error"), [])
+		closed = logs(self.shop.name, order_id, "Skipped")
+		self.assertEqual([c.ref_name for c in closed], [invoice])
+
 	def test_cancelled_after_import_logs_once(self):
 		raw = raw_order()
 		order_id = raw["orders"]["orders_id"]

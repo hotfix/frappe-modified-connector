@@ -66,11 +66,16 @@ def send_tracking(invoice: str, tracking_number: str, carrier: str = "dhl") -> N
 		return
 
 	order_id = doc.modified_order_id
+	carrier_id = shop.id_value("dhl_carrier_id")
+	if not carrier_id:
+		message = _("DHL carrier not configured in Modified Shop {0}").format(shop.name)
+		log_error_once(shop.name, OPERATION, order_id, message)
+		frappe.throw(message)
 	try:
 		client = shop.get_client()
 		# read first: a retry after a failed add_status must not add the parcel a second time
 		if not any(str(row.get("parcel_id")) == tracking_number for row in client.get_tracking(order_id)):
-			client.add_tracking(order_id, shop.id_value("dhl_carrier_id"), tracking_number)
+			client.add_tracking(order_id, carrier_id, tracking_number)
 		# Only an order still in an import status is moved to "shipped", never one that is shipped already
 		# (shipped orders are importable too) or that the shop has moved on (delivered, ...), e.g. when
 		# a second parcel follows.

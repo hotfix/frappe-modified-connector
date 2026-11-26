@@ -151,6 +151,12 @@ class TestSyncLogRetry(IntegrationTestCase):
 		order_id, log_name = self.failed_import()
 		import_order(self.shop, raw_order(skus=("SKU-19", "SKU-7"), order_id=order_id))
 		[existing] = invoices(self.shop.name, order_id)
+		# the re-import closed the row itself; reopen it to model an order imported by another path
+		frappe.db.set_value(
+			"Modified Sync Log",
+			log_name,
+			{"status": "Error", "ref_doctype": None, "ref_name": None, "message": "x"},
+		)
 
 		self.assertEqual(retry(log_name), existing)
 

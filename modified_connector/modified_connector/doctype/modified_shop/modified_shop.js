@@ -146,7 +146,7 @@ function apply_shop_options(frm) {
 			: ""
 	);
 	const tax_grid = frm.get_field("tax_map").grid;
-	const button = "Add Shop Tax Rates";
+	const button = __("Add Shop Tax Rates");
 	if (rates.length && frm.has_perm("write")) {
 		tax_grid.add_custom_button(button, () => add_missing_tax_rates(frm));
 	} else if (tax_grid.custom_buttons && tax_grid.custom_buttons[button]) {

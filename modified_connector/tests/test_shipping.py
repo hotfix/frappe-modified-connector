@@ -63,6 +63,19 @@ class TestShipping(IntegrationTestCase):
 		self.client.set_order_status.assert_not_called()
 		self.assertEqual(self.number(), "X9")
 
+	def test_missing_carrier_id_is_logged_not_sent(self):
+		frappe.db.set_value("Modified Shop", self.shop.name, "dhl_carrier_id", "")
+		with self.assertRaises(frappe.ValidationError):
+			send_tracking(self.invoice, "NOCARRIER")
+		self.client.add_tracking.assert_not_called()
+		row = frappe.get_all(
+			"Modified Sync Log",
+			filters={"shop": self.shop.name, "operation": "Tracking", "reference": self.order_id},
+			fields=["status", "message"],
+		)
+		self.assertEqual(row[0].status, "Error")
+		self.assertIn("DHL carrier", row[0].message)
+
 	def test_order_already_shipped_is_not_set_again(self):
 		# shipped is importable now; even if it is also an import status, the status is never set again
 		for import_ids in ("1,2", "1,2,3"):

@@ -5,11 +5,9 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from modified_connector import integration
-from modified_connector.modified_connector.doctype.modified_shop.modified_shop import ModifiedShop
-from modified_connector.modified_connector.doctype.modified_sync_log.modified_sync_log import retry
 from modified_connector.sync import order_import
 from modified_connector.sync.order_import import import_order
-from modified_connector.tests.test_order_import import FakeClient, invoices, raw_order
+from modified_connector.tests.test_order_import import invoices, raw_order
 from modified_connector.tests.utils import make_test_shop
 from modified_connector.utils import log
 
@@ -76,7 +74,7 @@ class TestIntegrationLogMirror(IntegrationTestCase):
 		_close(frappe.get_doc("Modified Sync Log", error), "already imported as SINV-1")
 		self.assertEqual(mirror(error).state, "Resolved")
 
-	def test_retry_already_imported_resolves(self):
+	def test_reimport_resolves_error(self):
 		raw = raw_order(skus=("NO-SUCH-ITEM", "SKU-7"))
 		order_id = raw["orders"]["orders_id"]
 		self.assertIsNone(import_order(self.shop, raw))
@@ -84,10 +82,10 @@ class TestIntegrationLogMirror(IntegrationTestCase):
 			"Modified Sync Log", filters={"reference": order_id, "status": "Error"}, pluck="name"
 		)
 		fixed = raw_order(skus=("SKU-19", "SKU-7"), order_id=order_id)
+		self.assertEqual(mirror(error).state, "Open")
 		import_order(self.shop, fixed)
 		[existing] = invoices(self.shop.name, order_id)
-		patch.object(ModifiedShop, "get_client", return_value=FakeClient([fixed])).start()
-		self.assertEqual(retry(error), existing)
+		self.assertEqual(frappe.db.get_value("Modified Sync Log", error, "ref_name"), existing)
 		self.assertEqual(mirror(error).state, "Resolved")
 
 	def test_waiting_log_link_resolves_via_notify(self):
