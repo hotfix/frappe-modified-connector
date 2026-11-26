@@ -1,11 +1,11 @@
-# Einrichtung der Anbindung an modified eCommerce
+# Einrichtung der Anbindung an einen modified-Shop
 
 Diese Anleitung führt Schritt für Schritt durch die Einrichtung der App **Modified Connector**. Sie verbindet
 ERPNext mit einem Shop, der mit modified eCommerce betrieben wird, und holt die Bestellungen über die REST-API
 des Shops (`/api/v1`) ab. Alle Beispielwerte (Shop-Adresse, Firmenname, Kontonamen) sind Platzhalter, die Sie
 durch Ihre eigenen Werte ersetzen.
 
-Sie finden die Anbindung auf der Startseite von ERPNext als Kachel **modified eCommerce**. Die Seitenleiste dort
+Sie finden die Anbindung auf der Startseite von ERPNext als Kachel **modified Shop**. Die Seitenleiste dort
 enthält: **Modified-Shop** (die Einstellungen), **Modified-Synchronisationsprotokoll**, unter *Ergebnisse*
 die **Ausgangsrechnungen**, **Zahlungen**, **Lieferscheine** und **Kunden** sowie unter *Hilfe* diese
 Einrichtungsanleitung.
@@ -122,7 +122,7 @@ Regel der Fall; sonst fragen Sie Ihren Administrator).
 
 ## 4. Den Modified-Shop anlegen – Feld für Feld
 
-Öffnen Sie in der Seitenleiste von modified eCommerce **Modified-Shop** und legen Sie einen neuen Eintrag an. Das
+Öffnen Sie in der Seitenleiste von modified Shop **Modified-Shop** und legen Sie einen neuen Eintrag an. Das
 Formular hat vier Reiter. Lassen Sie beim ersten Speichern *Aktiviert*, *Rechnungen buchen* und *Bestand
 synchronisieren* aus.
 

@@ -19,7 +19,7 @@
    "open_in_new_tab": 0,
    "show_arrow": 0,
    "type": "Link",
-   "link_to": "modified eCommerce",
+   "link_to": "modified Shops",
    "icon": "house"
   },
   {
@@ -163,8 +163,8 @@
  "modified": "2026-11-25 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Modified Connector",
- "name": "modified eCommerce",
+ "name": "modified Shops",
  "owner": "Administrator",
  "standard": 1,
- "title": "modified eCommerce"
+ "title": "modified Shops"
 }
